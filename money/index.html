@@ -1,1 +1,1475 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>大富翁 Monopoly</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 35%, #74b9ff 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: 2px;
+    aspect-ratio: 1;
+    width: 100%;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe, #fd79a8);
+    padding: 4px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  }
+  .cell {
+    background: white;
+    border-radius: 4px;
+    padding: 1px;
+    font-size: 0.5rem;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    line-height: 1.05;
+    min-width: 0;
+    transition: all 0.3s;
+  }
+  .cell.owned-cell {
+    box-shadow: inset 0 0 0 2px var(--owner-color);
+  }
+  .group-bar { width: 100%; height: 5px; border-radius: 1px; flex-shrink: 0; }
+  .cell-emoji { font-size: 0.95rem; line-height: 1.2; }
+  .cell-name { font-weight: 700; font-size: 0.5rem; }
+  .cell-price { font-size: 0.42rem; color: #666; }
+  .cell-corner-jail { background: linear-gradient(135deg, #fab1a0, #e17055); color: white; }
+  .cell-corner-park { background: linear-gradient(135deg, #55efc4, #00b894); color: white; }
+  .cell-corner-stock { background: linear-gradient(135deg, #74b9ff, #0984e3); color: white; }
+  .cell-corner-start { background: linear-gradient(135deg, #ffeaa7, #fdcb6e); }
+  .cell-chance { background: linear-gradient(135deg, #fff5cc, #ffe082); }
+  .cell-lottery { background: linear-gradient(135deg, #fff0f5, #ffd6e0); }
+  .cell-card { background: linear-gradient(135deg, #e0c3fc, #8ec5fc); }
+  .center-area {
+    grid-row: 2 / span 6;
+    grid-column: 2 / span 6;
+    background: linear-gradient(135deg, #fdcb6e, #e17055, #fd79a8);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    color: white;
+    text-align: center;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.2);
+  }
+  .building-display {
+    position: absolute;
+    top: 6px;
+    right: 2px;
+    z-index: 3;
+    transition: all 0.4s ease;
+  }
+  .bldg-1 {
+    font-size: 0.85rem;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  }
+  .bldg-2 {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 4px rgba(255,215,0,0.8)) drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  }
+  .bldg-3 {
+    font-size: 1.4rem;
+    filter: drop-shadow(0 0 8px rgba(255,215,0,1)) drop-shadow(0 0 4px rgba(255,165,0,1));
+    animation: castle-pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes castle-pulse {
+    0%, 100% { transform: scale(1) rotate(-3deg); }
+    50% { transform: scale(1.15) rotate(3deg); }
+  }
+  @keyframes new-build {
+    0% { transform: scale(0) rotate(180deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .building-display.new { animation: new-build 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .tokens {
+    position: absolute;
+    bottom: 1px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 95%;
+    z-index: 5;
+  }
+  .token {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    background: white;
+  }
+  .token.current {
+    animation: token-bounce 0.8s ease-in-out infinite;
+    box-shadow: 0 0 8px gold, 0 2px 4px rgba(0,0,0,0.5);
+  }
+  @keyframes token-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  @media (min-width: 640px) {
+    .cell { font-size: 0.65rem; padding: 2px; }
+    .cell-emoji { font-size: 1.2rem; }
+    .cell-name { font-size: 0.6rem; }
+    .cell-price { font-size: 0.55rem; }
+    .group-bar { height: 7px; }
+    .token { width: 26px; height: 26px; font-size: 16px; }
+    .bldg-1 { font-size: 1.2rem; }
+    .bldg-2 { font-size: 1.55rem; }
+    .bldg-3 { font-size: 1.9rem; }
+  }
+  .dice {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    color: #2d3436;
+  }
+  @media (min-width: 640px) {
+    .dice { width: 65px; height: 65px; font-size: 46px; }
+  }
+  @keyframes diceroll {
+    0% { transform: rotate(0) scale(1); }
+    50% { transform: rotate(180deg) scale(1.15); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  .dice.rolling { animation: diceroll 0.4s linear infinite; }
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    color: white;
+    font-size: 0.85rem;
+  }
+  .btn:active:not(:disabled) { transform: scale(0.95); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); box-shadow: 0 3px 8px rgba(238,90,111,0.4); }
+  .btn-secondary { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+  .btn-success { background: linear-gradient(135deg, #55efc4, #00b894); }
+  .btn-warning { background: linear-gradient(135deg, #fdcb6e, #e17055); }
+  .btn-purple { background: linear-gradient(135deg, #a55eea, #8854d0); }
+  .btn-gray { background: linear-gradient(135deg, #b2bec3, #636e72); }
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  @keyframes pop {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .player-card {
+    background: white;
+    border-radius: 10px;
+    padding: 8px 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border-left: 4px solid;
+    transition: all 0.2s;
+  }
+  .player-card.active {
+    background: linear-gradient(135deg, #fff9c4, #ffffff);
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(255,193,7,0.4);
+  }
+  .player-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+  }
+  .log-entry {
+    padding: 3px 6px;
+    font-size: 0.72rem;
+    border-bottom: 1px dashed #eee;
+    animation: slideIn 0.3s;
+  }
+  @keyframes slideIn {
+    from { transform: translateY(-8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .setup-card {
+    border-radius: 10px;
+    padding: 10px 4px;
+    text-align: center;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+  .game-card {
+    border-radius: 12px;
+    padding: 8px;
+    background: linear-gradient(135deg, #fff, #f0f4ff);
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.2); }
+  .game-card-emoji { font-size: 1.8rem; }
+  .game-card-name { font-size: 0.78rem; font-weight: 700; margin-top: 2px; }
+  .game-card-desc { font-size: 0.62rem; color: #666; margin-top: 2px; line-height: 1.2; }
+  @keyframes card-shine {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .card-glow {
+    background: linear-gradient(90deg, transparent, rgba(255,215,0,0.4), transparent);
+    background-size: 200% 100%;
+    animation: card-shine 2s linear infinite;
+  }
+</style>
+</head>
+<body>
+<div id="app" class="p-2 sm:p-4 max-w-6xl mx-auto"></div>
+<script>
+const characters = [
+  { name: '阿土仔',   emoji: '🤠', color: '#ef4444' },
+  { name: '钱夫人',   emoji: '👸', color: '#f59e0b' },
+  { name: '孙小美',   emoji: '👧', color: '#ec4899' },
+  { name: '金贝贝',   emoji: '🤴', color: '#3b82f6' },
+  { name: '忍者乌龙', emoji: '🥷', color: '#10b981' },
+];
+const groupColors = { red:'#ef4444', yellow:'#eab308', green:'#10b981', purple:'#a855f7' };
 
+// 28-cell board (8x8 perimeter)
+const board = [
+  { type:'start',    name:'起点',   emoji:'🏁' },                                           // 0
+  { type:'property', name:'台北',   price:1000, group:'red',    emoji:'🏯' },                // 1
+  { type:'chance',   name:'命运',   emoji:'🎴' },                                            // 2
+  { type:'property', name:'高雄',   price:1200, group:'red',    emoji:'⛵' },                // 3
+  { type:'property', name:'台中',   price:1100, group:'red',    emoji:'🏙️' },               // 4
+  { type:'card',     name:'卡牌',   emoji:'🃏' },                                            // 5
+  { type:'property', name:'屏东',   price:1300, group:'red',    emoji:'🌺' },                // 6
+  { type:'jail',     name:'监狱',   emoji:'👮' },                                            // 7
+  { type:'property', name:'北京',   price:1500, group:'yellow', emoji:'🏛️' },               // 8
+  { type:'property', name:'上海',   price:1800, group:'yellow', emoji:'🌃' },                // 9
+  { type:'chance',   name:'命运',   emoji:'🎴' },                                            // 10
+  { type:'property', name:'广州',   price:1600, group:'yellow', emoji:'🌆' },                // 11
+  { type:'lottery',  name:'抽奖',   emoji:'🎁' },                                            // 12
+  { type:'property', name:'深圳',   price:1700, group:'yellow', emoji:'🏢' },                // 13
+  { type:'park',     name:'公园',   emoji:'🌳' },                                            // 14
+  { type:'property', name:'东京',   price:2000, group:'green',  emoji:'🗼' },                // 15
+  { type:'property', name:'大阪',   price:2200, group:'green',  emoji:'🏰' },                // 16
+  { type:'card',     name:'卡牌',   emoji:'🃏' },                                            // 17
+  { type:'property', name:'首尔',   price:2100, group:'green',  emoji:'🌉' },                // 18
+  { type:'chance',   name:'命运',   emoji:'🎴' },                                            // 19
+  { type:'property', name:'香港',   price:2300, group:'green',  emoji:'🌇' },                // 20
+  { type:'stock',    name:'股市',   emoji:'📈' },                                            // 21
+  { type:'property', name:'纽约',   price:2500, group:'purple', emoji:'🗽' },                // 22
+  { type:'property', name:'洛杉矶', price:2600, group:'purple', emoji:'🌴' },                // 23
+  { type:'lottery',  name:'抽奖',   emoji:'🎁' },                                            // 24
+  { type:'property', name:'伦敦',   price:2800, group:'purple', emoji:'🎡' },                // 25
+  { type:'chance',   name:'命运',   emoji:'🎴' },                                            // 26
+  { type:'property', name:'巴黎',   price:3000, group:'purple', emoji:'🥐' },                // 27
+];
+const BOARD_SIZE = board.length;
+const START_MONEY = 10000;
+const PASS_START_BONUS = 2000;
+
+// 大幅提升的租金倍率
+const RENT_MULTIPLIERS = [0.30, 0.80, 2.00, 4.50];
+const UPGRADE_COST_RATE = 0.6;
+
+// 建筑显示
+const BUILDING_EMOJIS = ['', '🏠', '🏡', '🏰'];
+
+const chanceCards = [
+  { text:'🎉 中了红包！',     delta: 1500 },
+  { text:'💼 工作奖金！',     delta: 2000 },
+  { text:'🎓 获得奖学金！',   delta: 1000 },
+  { text:'💎 投资获利！',     delta: 2500 },
+  { text:'🏆 比赛得奖！',     delta: 3000 },
+  { text:'😱 钱包被偷',       delta: -800 },
+  { text:'🚓 违章罚款',       delta:-1200 },
+  { text:'🛒 大额消费',       delta:-1000 },
+  { text:'🏥 看病花费',       delta:-1500 },
+  { text:'📉 股市亏损',       delta:-2000 },
+];
+
+// 6 种卡牌
+const CARD_TYPES = {
+  poverty:  { id:'poverty',  name:'均贫卡',   emoji:'💸', color:'#e74c3c', desc:'所有其他玩家的金钱变为最少玩家的金钱' },
+  wealth:   { id:'wealth',   name:'均富卡',   emoji:'💰', color:'#f1c40f', desc:'所有玩家的金钱平均分配' },
+  buyland:  { id:'buyland',  name:'购地卡',   emoji:'🏞️', color:'#27ae60', desc:'立即以半价购买你脚下的无主地产' },
+  steal:    { id:'steal',    name:'抢夺卡',   emoji:'🦹', color:'#8e44ad', desc:'抢夺最富玩家的一处随机地产' },
+  immunity: { id:'immunity', name:'免租卡',   emoji:'🛡️', color:'#3498db', desc:'下次需支付租金时免除（持续）' },
+  jackpot:  { id:'jackpot',  name:'大奖卡',   emoji:'🎰', color:'#e91e63', desc:'立即获得 $3000' },
+};
+
+const state = {
+  screen: 'setup',
+  setupHumans: 1,
+  setupNpcs: 2,
+  players: [],
+  currentPlayer: 0,
+  dice: 1,
+  rolling: false,
+  moving: false,
+  log: [],
+  modal: null,
+  turnCount: 1,
+  stocks: [
+    { name:'科技股', price:100, emoji:'💻', history:[100] },
+    { name:'能源股', price: 80, emoji:'⚡', history:[80]  },
+    { name:'金融股', price:120, emoji:'🏦', history:[120] },
+    { name:'消费股', price: 90, emoji:'🛍️', history:[90]  },
+  ],
+  winner: null,
+  newBuildIdx: -1, // 用于动画
+};
+
+function getCellPosition(idx) {
+  if (idx === 0) return { row: 8, col: 8 };
+  if (idx <= 7) return { row: 8, col: 8 - idx };
+  if (idx <= 14) return { row: 8 - (idx - 7), col: 1 };
+  if (idx <= 21) return { row: 1, col: 1 + (idx - 14) };
+  return { row: 1 + (idx - 21), col: 8 };
+}
+function getRent(cellIdx) {
+  const cell = board[cellIdx];
+  const owner = state.players.find(p => p.properties && p.properties.includes(cellIdx));
+  if (!owner || !cell.price) return 0;
+  const level = owner.upgrades[cellIdx] || 0;
+  return Math.floor(cell.price * RENT_MULTIPLIERS[level]);
+}
+function getUpgradeCost(cellIdx) {
+  const cell = board[cellIdx];
+  const owner = state.players.find(p => p.properties && p.properties.includes(cellIdx));
+  if (!owner || !cell.price) return 0;
+  const level = owner.upgrades[cellIdx] || 0;
+  return Math.floor(cell.price * UPGRADE_COST_RATE * (level + 1));
+}
+function diceFace(n) { return ['⚀','⚁','⚂','⚃','⚄','⚅'][n - 1] || '⚀'; }
+function addLog(text) {
+  state.log.unshift({ text, time: Date.now() });
+  if (state.log.length > 50) state.log.pop();
+}
+
+function render() {
+  const app = document.getElementById('app');
+  let html = '';
+  if (state.screen === 'setup') html = renderSetup();
+  else if (state.screen === 'game') html = renderGame();
+  else html = renderGameOver();
+  if (state.modal) html += renderModal();
+  app.innerHTML = html;
+}
+
+function renderSetup() {
+  const total = state.setupHumans + state.setupNpcs;
+  return `
+    <div class="max-w-2xl mx-auto pt-2 sm:pt-4">
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-center my-4 sm:my-6 drop-shadow-lg" 
+          style="background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb); -webkit-background-clip: text; background-clip: text; color: transparent;">
+        🎲 大富翁 🎰
+      </h1>
+      <div class="bg-white/95 rounded-2xl p-5 shadow-2xl">
+        <h2 class="text-xl font-bold mb-3 text-gray-800">🎮 游戏设置</h2>
+        <div class="mb-4">
+          <label class="block font-semibold mb-2 text-gray-700">👤 真人玩家数量</label>
+          <div class="flex gap-2 flex-wrap">
+            ${[1,2,3,4].map(n => `
+              <button onclick="setHumans(${n})" 
+                class="flex-1 min-w-fit py-2 px-3 rounded-lg font-bold transition ${state.setupHumans===n?'bg-red-500 text-white shadow-lg scale-105':'bg-gray-200 text-gray-700'}">
+                ${n} 人
+              </button>`).join('')}
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block font-semibold mb-2 text-gray-700">🤖 NPC 电脑玩家</label>
+          <div class="flex gap-2 flex-wrap">
+            ${[0,1,2,3,4].map(n => {
+              const disabled = state.setupHumans + n > 5 || state.setupHumans + n < 2;
+              return `
+                <button onclick="setNpcs(${n})" ${disabled ? 'disabled' : ''}
+                  class="flex-1 min-w-fit py-2 px-3 rounded-lg font-bold transition ${state.setupNpcs===n?'bg-blue-500 text-white shadow-lg scale-105':'bg-gray-200 text-gray-700'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}">
+                  ${n}
+                </button>`;
+            }).join('')}
+          </div>
+          <p class="text-xs text-gray-500 mt-1">共 <b>${total}</b> 名玩家 (2-5 人)</p>
+        </div>
+        <div class="mb-4">
+          <label class="block font-semibold mb-2 text-gray-700">🎭 参赛角色</label>
+          <div class="grid grid-cols-5 gap-2">
+            ${characters.map((c, i) => {
+              const active = i < total;
+              const isHuman = i < state.setupHumans;
+              return `
+                <div class="setup-card" 
+                     style="${active ? `border-color:${c.color};background:linear-gradient(135deg,${c.color}33,#fff);transform:translateY(-2px);` : 'opacity:0.4;background:#f3f4f6;'}">
+                  <div class="text-3xl">${c.emoji}</div>
+                  <div class="text-xs font-bold mt-1">${c.name}</div>
+                  <div class="text-xs mt-1 ${active ? '' : 'text-gray-400'}">${active ? (isHuman ? '👤玩家' : '🤖电脑') : '未参与'}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>
+        <button onclick="startGame()" class="btn btn-primary w-full text-lg py-3 mt-4">
+          🎮 开始游戏
+        </button>
+        <details class="mt-5 bg-yellow-50 rounded-lg p-3">
+          <summary class="font-bold cursor-pointer text-gray-700">💡 游戏规则</summary>
+          <div class="mt-2 text-sm text-gray-700 space-y-1">
+            <div>• 初始资金 <b>$${START_MONEY}</b>，经过起点领 <b>$${PASS_START_BONUS}</b></div>
+            <div>• 购地后租金为售价 <b>30%</b>，升级后可达 <b>80%、200%、450%</b>！</div>
+            <div>• 升级后房屋会变大变漂亮：🏠 → 🏡 → 🏰</div>
+            <div>• 卡牌格 🃏 可获得 6 种功能卡：均贫、均富、购地、抢夺、免租、大奖</div>
+            <div>• 命运、抽奖、股市等多种金融玩法</div>
+            <div>• 最后一位幸存者获胜！</div>
+          </div>
+        </details>
+        <details class="mt-3 bg-purple-50 rounded-lg p-3">
+          <summary class="font-bold cursor-pointer text-gray-700">🎴 卡牌图鉴</summary>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            ${Object.values(CARD_TYPES).map(c => `
+              <div class="game-card" style="border-color:${c.color}">
+                <div class="game-card-emoji">${c.emoji}</div>
+                <div class="game-card-name" style="color:${c.color}">${c.name}</div>
+                <div class="game-card-desc">${c.desc}</div>
+              </div>`).join('')}
+          </div>
+        </details>
+      </div>
+    </div>`;
+}
+
+function setHumans(n) {
+  state.setupHumans = n;
+  if (state.setupHumans + state.setupNpcs > 5) state.setupNpcs = 5 - n;
+  if (state.setupHumans + state.setupNpcs < 2) state.setupNpcs = Math.max(0, 2 - n);
+  render();
+}
+function setNpcs(n) { state.setupNpcs = n; render(); }
+
+function startGame() {
+  const total = state.setupHumans + state.setupNpcs;
+  if (total < 2) { showAlert('至少需要2名玩家才能开始游戏！'); return; }
+  state.players = [];
+  for (let i = 0; i < total; i++) {
+    state.players.push({
+      character: characters[i],
+      isNPC: i >= state.setupHumans,
+      position: 0,
+      money: START_MONEY,
+      properties: [],
+      upgrades: {},
+      stocks: {},
+      cards: [],
+      rentImmunity: false,
+      bankrupt: false,
+      skipTurns: 0,
+    });
+  }
+  state.currentPlayer = 0;
+  state.dice = 1;
+  state.rolling = false;
+  state.moving = false;
+  state.log = [];
+  state.turnCount = 1;
+  state.modal = null;
+  state.newBuildIdx = -1;
+  state.stocks.forEach(s => { s.history = [s.price]; });
+  addLog('🎮 游戏开始！');
+  state.screen = 'game';
+  render();
+  setTimeout(maybeNpcTurn, 800);
+}
+
+function renderGame() {
+  const cells = [];
+  for (let i = 0; i < BOARD_SIZE; i++) cells.push(renderCell(i));
+  return `
+    <div class="grid lg:grid-cols-3 gap-3">
+      <div class="lg:col-span-2">
+        <div class="board">
+          ${cells.join('')}
+          <div class="center-area">${renderCenter()}</div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        ${renderPlayersPanel()}
+        ${renderActions()}
+        ${renderLog()}
+      </div>
+    </div>`;
+}
+
+function renderCell(idx) {
+  const cell = board[idx];
+  const pos = getCellPosition(idx);
+  const playersHere = state.players.filter(p => p.position === idx && !p.bankrupt);
+  const owner = state.players.find(p => p.properties.includes(idx));
+  const upgrades = owner ? (owner.upgrades[idx] || 0) : 0;
+  let cellClass = 'cell';
+  if (cell.type === 'start') cellClass += ' cell-corner-start';
+  else if (cell.type === 'jail') cellClass += ' cell-corner-jail';
+  else if (cell.type === 'park') cellClass += ' cell-corner-park';
+  else if (cell.type === 'stock') cellClass += ' cell-corner-stock';
+  else if (cell.type === 'chance') cellClass += ' cell-chance';
+  else if (cell.type === 'lottery') cellClass += ' cell-lottery';
+  else if (cell.type === 'card') cellClass += ' cell-card';
+  
+  let style = '';
+  if (owner) {
+    cellClass += ' owned-cell';
+    style = `--owner-color:${owner.character.color};`;
+  }
+  
+  let topBar = '';
+  if (cell.type === 'property') topBar = `<div class="group-bar" style="background:${groupColors[cell.group]}"></div>`;
+  else topBar = `<div style="height:3px"></div>`;
+  
+  // 建筑显示
+  let buildingHtml = '';
+  if (upgrades > 0) {
+    const newClass = state.newBuildIdx === idx ? ' new' : '';
+    buildingHtml = `<div class="building-display bldg-${upgrades}${newClass}">${BUILDING_EMOJIS[upgrades]}</div>`;
+  } else if (owner) {
+    buildingHtml = `<div class="building-display" style="top:3px;right:3px;font-size:0.6rem;">🚩</div>`;
+  }
+  
+  return `
+    <div class="${cellClass}" style="grid-row:${pos.row};grid-column:${pos.col};${style}">
+      ${topBar}
+      <div class="cell-emoji">${cell.emoji}</div>
+      <div class="cell-name">${cell.name}</div>
+      ${cell.type === 'property' && upgrades === 0 ? `<div class="cell-price">$${cell.price}</div>` : '<div style="height:1px"></div>'}
+      ${buildingHtml}
+      ${playersHere.length > 0 ? `<div class="tokens">
+        ${playersHere.map(p => {
+          const isCurrent = state.players[state.currentPlayer] === p;
+          return `<div class="token ${isCurrent ? 'current' : ''}" style="background:${p.character.color};color:white;">${p.character.emoji}</div>`;
+        }).join('')}
+      </div>` : ''}
+    </div>`;
+}
+
+function renderCenter() {
+  const player = state.players[state.currentPlayer];
+  const busy = state.rolling || state.moving || state.modal;
+  return `
+    <div class="player-avatar mx-auto mb-1" style="border-color:${player.character.color};width:56px;height:56px;font-size:36px;">
+      ${player.character.emoji}
+    </div>
+    <div class="font-bold text-base sm:text-lg">${player.character.name}${player.isNPC ? ' 🤖' : ''}</div>
+    <div class="text-xs opacity-90">第 ${state.turnCount} 回合${player.rentImmunity ? ' 🛡️免租中' : ''}</div>
+    <div class="dice mt-2 sm:mt-3 ${state.rolling ? 'rolling' : ''}">${diceFace(state.dice)}</div>
+    ${!player.isNPC ? `
+      <button onclick="rollDice()" class="btn btn-primary mt-2 sm:mt-3" ${busy ? 'disabled' : ''}>
+        🎲 掷骰子
+      </button>
+    ` : `<div class="text-xs mt-2 opacity-90 italic">思考中...</div>`}`;
+}
+
+function renderPlayersPanel() {
+  return `
+    <div class="bg-white/95 rounded-xl p-3 shadow-lg">
+      <div class="font-bold mb-2 text-gray-700">👥 玩家信息</div>
+      <div class="space-y-2">
+        ${state.players.map((p, i) => {
+          const stocksCount = Object.values(p.stocks).reduce((a,b) => a+b, 0);
+          const cardCount = p.cards.length;
+          return `
+            <div class="player-card ${i === state.currentPlayer && !p.bankrupt ? 'active' : ''} ${p.bankrupt ? 'opacity-50' : ''}" 
+                 style="border-color:${p.character.color}">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="player-avatar" style="border-color:${p.character.color}">${p.character.emoji}</div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-bold text-sm truncate">${p.character.name}${p.isNPC ? ' 🤖' : ''}${p.bankrupt ? ' 💀' : ''}</div>
+                    <div class="text-xs">💰 <span class="font-bold text-green-600">$${p.money}</span></div>
+                    <div class="text-xs text-gray-500">🏠${p.properties.length} · 📈${stocksCount} · 🎴${cardCount}${p.rentImmunity?' · 🛡️':''}</div>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function renderActions() {
+  const player = state.players[state.currentPlayer];
+  const busy = state.rolling || state.moving || state.modal;
+  return `
+    <div class="bg-white/95 rounded-xl p-3 shadow-lg space-y-2">
+      <div class="font-bold text-gray-700">🎮 操作</div>
+      ${!player.isNPC ? `
+        <button onclick="rollDice()" class="btn btn-primary w-full" ${busy ? 'disabled' : ''}>🎲 掷骰子</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="showCardsModal()" class="btn btn-purple ${player.cards.length > 0 ? 'card-glow' : ''}" ${busy ? 'disabled' : ''}>
+            🎴 卡牌(${player.cards.length})
+          </button>
+          <button onclick="showMyAssets()" class="btn btn-secondary" ${busy ? 'disabled' : ''}>📋 我的资产</button>
+        </div>
+      ` : `<div class="text-center text-gray-500 py-2 italic">${player.character.name} 的回合</div>`}
+      <button onclick="quitGame()" class="btn btn-gray w-full text-sm">🚪 退出游戏</button>
+    </div>`;
+}
+
+function renderLog() {
+  return `
+    <div class="bg-white/95 rounded-xl p-3 shadow-lg">
+      <div class="font-bold mb-2 text-gray-700">📜 游戏日志</div>
+      <div class="space-y-1 max-h-40 overflow-y-auto">
+        ${state.log.slice(0, 20).map(l => `<div class="log-entry">${l.text}</div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderModal() {
+  if (!state.modal) return '';
+  const m = state.modal;
+  return `
+    <div class="modal">
+      <div class="modal-content">
+        <h3 class="text-xl font-bold mb-3 text-center">${m.title}</h3>
+        <div class="mb-4 text-center">${m.content}</div>
+        <div class="flex gap-2 justify-center flex-wrap">
+          ${m.buttons.map((b, i) => `
+            <button onclick="modalAction(${i})" 
+                    class="btn ${b.class || (b.secondary ? 'btn-gray' : 'btn-primary')}" 
+                    ${b.disabled ? 'disabled' : ''}>
+              ${b.text}
+            </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderGameOver() {
+  const w = state.winner;
+  return `
+    <div class="max-w-md mx-auto mt-10">
+      <div class="bg-white rounded-2xl p-8 shadow-2xl text-center">
+        <div class="text-7xl mb-4 animate-bounce">🏆</div>
+        <h1 class="text-3xl font-extrabold mb-2 text-yellow-600">游戏结束！</h1>
+        ${w ? `
+          <div class="text-7xl my-4">${w.character.emoji}</div>
+          <div class="text-2xl font-bold mb-2" style="color:${w.character.color}">🎉 ${w.character.name} 获胜！</div>
+          <div class="text-lg text-gray-700 mb-2">最终资产: <span class="font-bold text-green-600">$${w.money}</span></div>
+          <div class="text-sm text-gray-500 mb-4">持有地产: ${w.properties.length} 个</div>
+        ` : `<div class="my-4">没有胜者</div>`}
+        <button onclick="resetGame()" class="btn btn-primary w-full text-lg py-3">🎮 再玩一次</button>
+      </div>
+    </div>`;
+}
+
+function showModal(modal) { state.modal = modal; render(); }
+function modalAction(i) {
+  if (!state.modal) return;
+  const button = state.modal.buttons[i];
+  if (!button || button.disabled) return;
+  state.modal = null;
+  render();
+  if (button.action) button.action();
+}
+function showAlert(text) {
+  showModal({ title:'⚠️ 提示', content:text, buttons:[{ text:'确定', action:render }] });
+}
+
+function rollDice() {
+  if (state.rolling || state.modal || state.moving) return;
+  const player = state.players[state.currentPlayer];
+  if (player.bankrupt) { endTurn(); return; }
+  state.rolling = true;
+  state.newBuildIdx = -1;
+  render();
+  let count = 0;
+  const interval = setInterval(() => {
+    state.dice = Math.floor(Math.random() * 6) + 1;
+    const diceEl = document.querySelector('.dice');
+    if (diceEl) diceEl.textContent = diceFace(state.dice);
+    count++;
+    if (count >= 10) {
+      clearInterval(interval);
+      state.rolling = false;
+      const steps = state.dice;
+      addLog(`🎲 ${player.character.name} 掷出 <b>${steps}</b>`);
+      render();
+      setTimeout(() => animateMove(steps, handleLanding), 400);
+    }
+  }, 70);
+}
+
+function animateMove(steps, cb) {
+  const player = state.players[state.currentPlayer];
+  state.moving = true;
+  let i = 0;
+  function step() {
+    if (i >= steps) { state.moving = false; render(); cb(); return; }
+    player.position = (player.position + 1) % BOARD_SIZE;
+    if (player.position === 0) {
+      player.money += PASS_START_BONUS;
+      addLog(`💰 ${player.character.name} 经过起点 +$${PASS_START_BONUS}`);
+    }
+    i++;
+    render();
+    setTimeout(step, 200);
+  }
+  step();
+}
+
+function handleLanding() {
+  const player = state.players[state.currentPlayer];
+  const cell = board[player.position];
+  if (cell.type === 'start') {
+    addLog(`${player.character.name} 停在起点`);
+    setTimeout(endTurn, 500);
+  } else if (cell.type === 'jail') {
+    player.skipTurns = 1;
+    addLog(`👮 ${player.character.name} 被关进监狱！`);
+    if (player.isNPC) setTimeout(endTurn, 1000);
+    else showModal({
+      title:'👮 监狱',
+      content:`<div class="text-5xl mb-2">🚓</div>${player.character.name} 被警察抓走了！<br>下回合无法掷骰子。`,
+      buttons:[{ text:'认命...', action:endTurn }],
+    });
+  } else if (cell.type === 'park') {
+    addLog(`🌳 ${player.character.name} 在公园休息`);
+    setTimeout(endTurn, 500);
+  } else if (cell.type === 'property') handleProperty();
+  else if (cell.type === 'chance') handleChance();
+  else if (cell.type === 'lottery') handleLottery();
+  else if (cell.type === 'stock') handleStock();
+  else if (cell.type === 'card') handleCardCell();
+}
+
+function handleProperty() {
+  const player = state.players[state.currentPlayer];
+  const idx = player.position;
+  const cell = board[idx];
+  const owner = state.players.find(p => p.properties.includes(idx));
+  if (!owner) {
+    if (player.money < cell.price) {
+      addLog(`${player.character.name} 资金不足，无法购买 ${cell.name}`);
+      setTimeout(endTurn, 600); return;
+    }
+    if (player.isNPC) {
+      const willBuy = Math.random() < 0.7 || player.money > cell.price * 4;
+      if (willBuy) doBuyProperty();
+      else addLog(`${player.character.name} 路过 ${cell.name}，未购买`);
+      setTimeout(endTurn, 800);
+    } else {
+      const rent0 = Math.floor(cell.price * RENT_MULTIPLIERS[0]);
+      const rent3 = Math.floor(cell.price * RENT_MULTIPLIERS[3]);
+      showModal({
+        title:`🏠 ${cell.name}`,
+        content:`<div class="text-5xl mb-2">${cell.emoji}</div><div class="mb-1">无主地产</div><div class="text-lg">售价: <b class="text-red-500">$${cell.price}</b></div><div class="text-sm text-gray-500 mt-1">基础租金: $${rent0} | 满级租金: $${rent3}</div>`,
+        buttons:[
+          { text:`💰 购买 $${cell.price}`, class:'btn-success', action:() => { doBuyProperty(); endTurn(); }, disabled: player.money < cell.price },
+          { text:'✋ 不买', secondary:true, action:endTurn },
+        ],
+      });
+    }
+  } else if (owner === player) {
+    const level = player.upgrades[idx] || 0;
+    if (level < 3) {
+      const cost = getUpgradeCost(idx);
+      if (player.isNPC) {
+        if (player.money > cost * 3 && Math.random() < 0.65) doUpgradeProperty(cost);
+        else addLog(`${player.character.name} 回到自己的 ${cell.name}`);
+        setTimeout(endTurn, 800);
+      } else {
+        const newRent = Math.floor(cell.price * RENT_MULTIPLIERS[level + 1]);
+        const buildingPreview = BUILDING_EMOJIS[level + 1];
+        showModal({
+          title:`🏠 ${cell.name} (你的地产)`,
+          content:`
+            <div class="text-5xl mb-2">${cell.emoji}</div>
+            <div class="flex items-center justify-center gap-2 mb-2 text-2xl">
+              ${level > 0 ? BUILDING_EMOJIS[level] : '🏗️'} <span class="text-sm">→</span> <span style="font-size:2rem;filter:drop-shadow(0 0 6px gold);">${buildingPreview}</span>
+            </div>
+            <div class="mb-1">当前等级: ${level} 级</div>
+            <div class="mb-1">升级费用: <b class="text-red-500">$${cost}</b></div>
+            <div class="text-sm text-gray-600">升级后租金: <b class="text-green-600">$${newRent}</b></div>`,
+          buttons:[
+            { text:`🔨 升级 $${cost}`, class:'btn-warning', action:() => { doUpgradeProperty(cost); endTurn(); }, disabled: player.money < cost },
+            { text:'✋ 不升级', secondary:true, action:endTurn },
+          ],
+        });
+      }
+    } else {
+      addLog(`${player.character.name} 回到自己的 ${cell.name} (满级 🏰)`);
+      setTimeout(endTurn, 600);
+    }
+  } else {
+    payRent(player, owner, getRent(idx), cell.name);
+  }
+}
+
+function doBuyProperty() {
+  const player = state.players[state.currentPlayer];
+  const idx = player.position;
+  const cell = board[idx];
+  player.money -= cell.price;
+  player.properties.push(idx);
+  player.upgrades[idx] = 0;
+  addLog(`💵 ${player.character.name} 购买 ${cell.name} ($${cell.price})`);
+}
+
+function doUpgradeProperty(cost) {
+  const player = state.players[state.currentPlayer];
+  const idx = player.position;
+  player.money -= cost;
+  player.upgrades[idx] = (player.upgrades[idx] || 0) + 1;
+  state.newBuildIdx = idx;
+  addLog(`🔨 ${player.character.name} 升级 ${board[idx].name} 至 ${player.upgrades[idx]}级 ${BUILDING_EMOJIS[player.upgrades[idx]]}`);
+}
+
+function payRent(payer, owner, rent, cellName) {
+  // 免租卡检查
+  if (payer.rentImmunity) {
+    payer.rentImmunity = false;
+    addLog(`🛡️ ${payer.character.name} 免租卡生效，免除 ${cellName} 租金 $${rent}`);
+    if (payer.isNPC) setTimeout(endTurn, 1000);
+    else showModal({
+      title:'🛡️ 免租卡生效！',
+      content:`<div class="text-5xl mb-2">🛡️</div>免除 <b>${cellName}</b> 的租金 <b class="text-green-600">$${rent}</b>`,
+      buttons:[{ text:'继续', action:endTurn }],
+    });
+    return;
+  }
+  const actualPay = Math.min(payer.money, rent);
+  const isBankrupt = payer.money < rent;
+  payer.money -= actualPay;
+  owner.money += actualPay;
+  addLog(`💸 ${payer.character.name} → ${owner.character.name} ${cellName}租金 $${actualPay}`);
+  if (isBankrupt) {
+    bankruptcy(payer);
+    if (payer.isNPC) setTimeout(endTurn, 1000);
+    else showModal({
+      title:'💀 破产了！',
+      content:`<div class="text-5xl mb-2">😭</div>无力支付租金 $${rent}！<br><b>${payer.character.name}</b> 破产出局！`,
+      buttons:[{ text:'😢 接受命运', action:endTurn }],
+    });
+  } else {
+    if (payer.isNPC) setTimeout(endTurn, 1000);
+    else showModal({
+      title:'💸 支付租金',
+      content:`<div class="text-4xl mb-2">💰</div>路过 <b>${owner.character.name}</b> 的<br><b>${cellName}</b><div class="text-xl text-red-500 font-bold mt-2">支付 $${actualPay}</div>`,
+      buttons:[{ text:'继续', action:endTurn }],
+    });
+  }
+}
+
+function bankruptcy(player) {
+  player.bankrupt = true;
+  player.properties = [];
+  player.upgrades = {};
+  player.stocks = {};
+  player.cards = [];
+  player.money = 0;
+  addLog(`💀 ${player.character.name} 破产出局！`);
+}
+
+function handleChance() {
+  const player = state.players[state.currentPlayer];
+  const card = chanceCards[Math.floor(Math.random() * chanceCards.length)];
+  player.money = Math.max(0, player.money + card.delta);
+  const sign = card.delta >= 0 ? '+' : '';
+  const colorClass = card.delta >= 0 ? 'text-green-600' : 'text-red-600';
+  addLog(`🎴 ${player.character.name}: ${card.text} (${sign}$${card.delta})`);
+  if (player.isNPC) setTimeout(endTurn, 1200);
+  else showModal({
+    title:'🎴 命运卡',
+    content:`<div class="text-5xl mb-2">🎴</div><div class="text-xl mb-2">${card.text}</div><div class="text-2xl font-bold ${colorClass}">${sign}$${card.delta}</div>`,
+    buttons:[{ text:'继续', action:endTurn }],
+  });
+}
+
+function handleLottery() {
+  const player = state.players[state.currentPlayer];
+  const prizes = [
+    { text:'🏆 一等奖！', amount:6000, weight:1 },
+    { text:'🥈 二等奖！', amount:3500, weight:2 },
+    { text:'🥉 三等奖！', amount:2000, weight:3 },
+    { text:'🎁 安慰奖',   amount: 800, weight:5 },
+    { text:'😅 谢谢参与', amount:   0, weight:4 },
+  ];
+  const totalW = prizes.reduce((s, p) => s + p.weight, 0);
+  let r = Math.random() * totalW;
+  let prize = prizes[0];
+  for (const p of prizes) { r -= p.weight; if (r <= 0) { prize = p; break; } }
+  player.money += prize.amount;
+  addLog(`🎁 ${player.character.name} 抽奖: ${prize.text} +$${prize.amount}`);
+  if (player.isNPC) setTimeout(endTurn, 1200);
+  else showModal({
+    title:'🎁 幸运抽奖',
+    content:`<div class="text-6xl mb-2">🎲</div><div class="text-2xl mb-2 font-bold">${prize.text}</div><div class="text-xl font-bold text-green-600">+$${prize.amount}</div>`,
+    buttons:[{ text: prize.amount > 0 ? '太棒了！' : '下次加油', action:endTurn }],
+  });
+}
+
+// ========== 卡牌系统 ==========
+function handleCardCell() {
+  const player = state.players[state.currentPlayer];
+  const cardIds = Object.keys(CARD_TYPES);
+  const drawnId = cardIds[Math.floor(Math.random() * cardIds.length)];
+  const card = CARD_TYPES[drawnId];
+  
+  // 最多持有 6 张
+  if (player.cards.length >= 6) {
+    addLog(`🎴 ${player.character.name} 卡牌已满，无法获得新卡`);
+    if (player.isNPC) setTimeout(endTurn, 1000);
+    else showModal({
+      title:'🎴 卡牌已满',
+      content:`<div class="text-5xl mb-2">📦</div>你的卡牌数量已达上限(6)，无法获得新卡牌`,
+      buttons:[{ text:'继续', action:endTurn }],
+    });
+    return;
+  }
+  
+  player.cards.push(drawnId);
+  addLog(`🃏 ${player.character.name} 获得 ${card.emoji}${card.name}`);
+  
+  if (player.isNPC) setTimeout(endTurn, 1200);
+  else showModal({
+    title:'🃏 抽到卡牌！',
+    content:`
+      <div class="game-card mx-auto" style="border-color:${card.color};max-width:200px;">
+        <div class="text-5xl">${card.emoji}</div>
+        <div class="text-lg font-bold mt-2" style="color:${card.color}">${card.name}</div>
+        <div class="text-sm text-gray-600 mt-2">${card.desc}</div>
+      </div>`,
+    buttons:[{ text:'收下卡牌', action:endTurn }],
+  });
+}
+
+function showCardsModal() {
+  const player = state.players[state.currentPlayer];
+  if (player.cards.length === 0) {
+    showAlert('你目前没有任何卡牌！前往 🃏 卡牌格抽取卡牌吧。');
+    return;
+  }
+  const currentCell = board[player.position];
+  
+  const cardsHtml = player.cards.map((cardId, i) => {
+    const card = CARD_TYPES[cardId];
+    let canUse = true;
+    let disableReason = '';
+    if (cardId === 'buyland') {
+      const owner = state.players.find(p => p.properties.includes(player.position));
+      if (currentCell.type !== 'property' || owner) {
+        canUse = false;
+        disableReason = '需站在无主地产上';
+      } else if (player.money < Math.floor(currentCell.price / 2)) {
+        canUse = false;
+        disableReason = '资金不足';
+      }
+    }
+    if (cardId === 'steal') {
+      const targets = state.players.filter(p => !p.bankrupt && p !== player && p.properties.length > 0);
+      if (targets.length === 0) { canUse = false; disableReason = '无可抢夺对象'; }
+    }
+    if (cardId === 'immunity' && player.rentImmunity) {
+      canUse = false; disableReason = '已激活免租';
+    }
+    return `
+      <div class="game-card" style="border-color:${card.color}">
+        <div class="game-card-emoji">${card.emoji}</div>
+        <div class="game-card-name" style="color:${card.color}">${card.name}</div>
+        <div class="game-card-desc">${card.desc}</div>
+        <button onclick="useCard(${i})" class="btn ${canUse ? '' : 'btn-gray'} mt-2 w-full" 
+                style="${canUse ? `background:linear-gradient(135deg,${card.color},${card.color}cc);` : ''};font-size:0.7rem;padding:5px;" 
+                ${canUse ? '' : 'disabled'}>
+          ${canUse ? '使用' : disableReason}
+        </button>
+      </div>`;
+  }).join('');
+  
+  showModal({
+    title:`🎴 我的卡牌 (${player.cards.length}/6)`,
+    content:`<div class="grid grid-cols-2 gap-2">${cardsHtml}</div>`,
+    buttons:[{ text:'关闭', secondary:true, action:render }],
+  });
+}
+
+function useCard(cardIndex) {
+  const player = state.players[state.currentPlayer];
+  const cardId = player.cards[cardIndex];
+  if (!cardId) return;
+  state.modal = null;
+  
+  if (cardId === 'jackpot') {
+    player.money += 3000;
+    player.cards.splice(cardIndex, 1);
+    addLog(`🎰 ${player.character.name} 使用大奖卡 +$3000`);
+    showModal({
+      title:'🎰 大奖卡！',
+      content:`<div class="text-6xl mb-2">🎰</div><div class="text-2xl font-bold text-green-600">+$3000</div>`,
+      buttons:[{ text:'继续', action:render }],
+    });
+  }
+  else if (cardId === 'immunity') {
+    player.rentImmunity = true;
+    player.cards.splice(cardIndex, 1);
+    addLog(`🛡️ ${player.character.name} 激活免租卡`);
+    showModal({
+      title:'🛡️ 免租卡激活！',
+      content:`<div class="text-6xl mb-2">🛡️</div>下次需要支付租金时将自动免除`,
+      buttons:[{ text:'继续', action:render }],
+    });
+  }
+  else if (cardId === 'wealth') {
+    const alive = state.players.filter(p => !p.bankrupt);
+    const total = alive.reduce((s, p) => s + p.money, 0);
+    const avg = Math.floor(total / alive.length);
+    alive.forEach(p => { p.money = avg; });
+    player.cards.splice(cardIndex, 1);
+    addLog(`💰 ${player.character.name} 使用均富卡，所有玩家金钱平均为 $${avg}`);
+    showModal({
+      title:'💰 均富卡！',
+      content:`<div class="text-6xl mb-2">💰</div>所有玩家金钱平均化<br><div class="text-2xl font-bold text-yellow-600 mt-2">每人 $${avg}</div>`,
+      buttons:[{ text:'继续', action:render }],
+    });
+  }
+  else if (cardId === 'poverty') {
+    const others = state.players.filter(p => !p.bankrupt && p !== player);
+    if (others.length === 0) {
+      showAlert('没有其他玩家！'); return;
+    }
+    const minMoney = Math.min(...others.map(p => p.money));
+    others.forEach(p => { p.money = minMoney; });
+    player.cards.splice(cardIndex, 1);
+    addLog(`💸 ${player.character.name} 使用均贫卡，其他玩家金钱降为 $${minMoney}`);
+    showModal({
+      title:'💸 均贫卡！',
+      content:`<div class="text-6xl mb-2">💸</div>其他玩家金钱降为最低水平<br><div class="text-2xl font-bold text-red-600 mt-2">每人仅剩 $${minMoney}</div>`,
+      buttons:[{ text:'继续', action:render }],
+    });
+  }
+  else if (cardId === 'buyland') {
+    const cell = board[player.position];
+    const cost = Math.floor(cell.price / 2);
+    player.money -= cost;
+    player.properties.push(player.position);
+    player.upgrades[player.position] = 0;
+    player.cards.splice(cardIndex, 1);
+    addLog(`🏞️ ${player.character.name} 使用购地卡，半价购买 ${cell.name} ($${cost})`);
+    showModal({
+      title:'🏞️ 购地卡！',
+      content:`<div class="text-6xl mb-2">🏞️</div>半价获得 <b>${cell.name}</b><br><div class="text-2xl font-bold text-green-600 mt-2">支付 $${cost}</div>`,
+      buttons:[{ text:'太棒了', action:render }],
+    });
+  }
+  else if (cardId === 'steal') {
+    const targets = state.players.filter(p => !p.bankrupt && p !== player && p.properties.length > 0);
+    if (targets.length === 0) { showAlert('没有可抢夺对象'); return; }
+    // 选择最富有的目标
+    const richest = targets.reduce((a, b) => 
+      (a.properties.length + a.money / 1000) > (b.properties.length + b.money / 1000) ? a : b
+    );
+    showStealTargetModal(cardIndex, targets);
+  }
+}
+
+function showStealTargetModal(cardIndex, targets) {
+  const targetsHtml = targets.map((t, i) => `
+    <button onclick="doSteal(${cardIndex}, ${state.players.indexOf(t)})" 
+            class="player-card w-full text-left mb-2" 
+            style="border-color:${t.character.color};cursor:pointer;">
+      <div class="flex items-center gap-2">
+        <div class="player-avatar" style="border-color:${t.character.color}">${t.character.emoji}</div>
+        <div>
+          <div class="font-bold">${t.character.name}</div>
+          <div class="text-xs text-gray-500">🏠 ${t.properties.length} 处地产 · 💰 $${t.money}</div>
+        </div>
+      </div>
+    </button>`).join('');
+  showModal({
+    title:'🦹 抢夺卡 - 选择目标',
+    content:`<div class="text-left">${targetsHtml}</div>`,
+    buttons:[{ text:'取消', secondary:true, action:render }],
+  });
+}
+
+function doSteal(cardIndex, targetPlayerIdx) {
+  const player = state.players[state.currentPlayer];
+  const target = state.players[targetPlayerIdx];
+  if (target.properties.length === 0) { showAlert('该玩家无地产'); return; }
+  state.modal = null;
+  // 随机抢一处
+  const propIdx = Math.floor(Math.random() * target.properties.length);
+  const cellIdx = target.properties[propIdx];
+  const upgrades = target.upgrades[cellIdx] || 0;
+  target.properties.splice(propIdx, 1);
+  delete target.upgrades[cellIdx];
+  player.properties.push(cellIdx);
+  player.upgrades[cellIdx] = upgrades;
+  player.cards.splice(cardIndex, 1);
+  const cell = board[cellIdx];
+  addLog(`🦹 ${player.character.name} 抢夺了 ${target.character.name} 的 ${cell.name}！`);
+  showModal({
+    title:'🦹 抢夺成功！',
+    content:`<div class="text-6xl mb-2">🦹</div>从 <b>${target.character.name}</b> 抢得<br><div class="text-2xl font-bold mt-2">${cell.emoji} ${cell.name}</div>${upgrades > 0 ? `<div class="text-sm mt-1">附带 ${BUILDING_EMOJIS[upgrades]} ${upgrades}级建筑</div>` : ''}`,
+    buttons:[{ text:'哈哈哈', action:render }],
+  });
+}
+
+// NPC 卡牌智能使用
+function npcUseCards() {
+  const player = state.players[state.currentPlayer];
+  if (player.cards.length === 0) return false;
+  const alive = state.players.filter(p => !p.bankrupt);
+  const myMoney = player.money;
+  const avg = alive.reduce((s, p) => s + p.money, 0) / alive.length;
+  
+  // 大奖卡 - 总是使用
+  let idx = player.cards.indexOf('jackpot');
+  if (idx >= 0) { useCardAuto(idx); return true; }
+  
+  // 均富卡 - 自己钱比平均少
+  idx = player.cards.indexOf('wealth');
+  if (idx >= 0 && myMoney < avg * 0.85) { useCardAuto(idx); return true; }
+  
+  // 均贫卡 - 自己是较富的
+  idx = player.cards.indexOf('poverty');
+  if (idx >= 0) {
+    const others = alive.filter(p => p !== player);
+    if (others.length > 0 && myMoney > Math.min(...others.map(p => p.money)) * 1.5) {
+      useCardAuto(idx); return true;
+    }
+  }
+  
+  // 抢夺卡 - 别人地产更多时
+  idx = player.cards.indexOf('steal');
+  if (idx >= 0) {
+    const targets = alive.filter(p => p !== player && p.properties.length > 0);
+    if (targets.length > 0) {
+      const maxProps = Math.max(...targets.map(p => p.properties.length));
+      if (maxProps > player.properties.length) {
+        const target = targets.find(t => t.properties.length === maxProps);
+        npcDoSteal(idx, state.players.indexOf(target));
+        return true;
+      }
+    }
+  }
+  
+  // 免租卡 - 钱较少时激活
+  idx = player.cards.indexOf('immunity');
+  if (idx >= 0 && !player.rentImmunity && myMoney < 3000) {
+    player.rentImmunity = true;
+    player.cards.splice(idx, 1);
+    addLog(`🛡️ ${player.character.name} 激活免租卡`);
+    return true;
+  }
+  
+  // 购地卡 - 站在无主地产上
+  idx = player.cards.indexOf('buyland');
+  if (idx >= 0) {
+    const cell = board[player.position];
+    const owner = state.players.find(p => p.properties.includes(player.position));
+    if (cell.type === 'property' && !owner) {
+      const cost = Math.floor(cell.price / 2);
+      if (player.money >= cost) {
+        player.money -= cost;
+        player.properties.push(player.position);
+        player.upgrades[player.position] = 0;
+        player.cards.splice(idx, 1);
+        addLog(`🏞️ ${player.character.name} 使用购地卡半价购买 ${cell.name}`);
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+function useCardAuto(cardIndex) {
+  const player = state.players[state.currentPlayer];
+  const cardId = player.cards[cardIndex];
+  if (cardId === 'jackpot') {
+    player.money += 3000;
+    player.cards.splice(cardIndex, 1);
+    addLog(`🎰 ${player.character.name} 使用大奖卡 +$3000`);
+  } else if (cardId === 'wealth') {
+    const alive = state.players.filter(p => !p.bankrupt);
+    const total = alive.reduce((s, p) => s + p.money, 0);
+    const avg = Math.floor(total / alive.length);
+    alive.forEach(p => { p.money = avg; });
+    player.cards.splice(cardIndex, 1);
+    addLog(`💰 ${player.character.name} 使用均富卡，每人 $${avg}`);
+  } else if (cardId === 'poverty') {
+    const others = state.players.filter(p => !p.bankrupt && p !== player);
+    const minMoney = Math.min(...others.map(p => p.money));
+    others.forEach(p => { p.money = minMoney; });
+    player.cards.splice(cardIndex, 1);
+    addLog(`💸 ${player.character.name} 使用均贫卡，其他玩家剩 $${minMoney}`);
+  }
+}
+
+function npcDoSteal(cardIndex, targetIdx) {
+  const player = state.players[state.currentPlayer];
+  const target = state.players[targetIdx];
+  if (target.properties.length === 0) return;
+  const propIdx = Math.floor(Math.random() * target.properties.length);
+  const cellIdx = target.properties[propIdx];
+  const upgrades = target.upgrades[cellIdx] || 0;
+  target.properties.splice(propIdx, 1);
+  delete target.upgrades[cellIdx];
+  player.properties.push(cellIdx);
+  player.upgrades[cellIdx] = upgrades;
+  player.cards.splice(cardIndex, 1);
+  addLog(`🦹 ${player.character.name} 抢夺了 ${target.character.name} 的 ${board[cellIdx].name}！`);
+}
+
+function handleStock() {
+  state.stocks.forEach(s => {
+    const change = (Math.random() - 0.45) * 0.3;
+    s.price = Math.max(20, Math.floor(s.price * (1 + change)));
+    if (!s.history) s.history = [];
+    s.history.push(s.price);
+    if (s.history.length > 10) s.history.shift();
+  });
+  const player = state.players[state.currentPlayer];
+  addLog(`📈 ${player.character.name} 进入股市`);
+  if (player.isNPC) { npcStockTrade(player); setTimeout(endTurn, 1500); }
+  else showStockModal();
+}
+
+function npcStockTrade(player) {
+  state.stocks.forEach(s => {
+    const owned = player.stocks[s.name] || 0;
+    const trend = s.history.length >= 2 ? (s.price - s.history[s.history.length - 2]) : 0;
+    if (owned > 0 && trend < 0 && Math.random() < 0.6) {
+      player.money += owned * s.price;
+      player.stocks[s.name] = 0;
+      addLog(`📉 ${player.character.name} 卖出 ${s.name} ${owned}股 (+$${owned * s.price})`);
+    } else if (player.money > s.price * 5 && Math.random() < 0.5) {
+      const buy = Math.min(10, Math.floor(player.money * 0.15 / s.price));
+      if (buy > 0) {
+        player.money -= buy * s.price;
+        player.stocks[s.name] = (player.stocks[s.name] || 0) + buy;
+        addLog(`📈 ${player.character.name} 买入 ${s.name} ${buy}股 (-$${buy * s.price})`);
+      }
+    }
+  });
+}
+
+function showStockModal() {
+  const player = state.players[state.currentPlayer];
+  const totalValue = state.stocks.reduce((sum, s) => sum + (player.stocks[s.name] || 0) * s.price, 0);
+  const content = `
+    <div class="text-sm">
+      <div class="bg-blue-50 rounded p-2 mb-3 flex justify-between flex-wrap gap-2">
+        <span>💰 现金: <b class="text-green-600">$${player.money}</b></span>
+        <span>📊 股票总值: <b class="text-blue-600">$${totalValue}</b></span>
+      </div>
+      ${state.stocks.map(s => {
+        const owned = player.stocks[s.name] || 0;
+        const trend = s.history && s.history.length >= 2
+          ? (s.price > s.history[s.history.length-2] ? '<span class="text-red-500">📈涨</span>' : s.price < s.history[s.history.length-2] ? '<span class="text-green-500">📉跌</span>' : '➖平')
+          : '';
+        return `
+          <div class="border rounded-lg p-2 mb-2" style="background:linear-gradient(135deg,#fff9e6,#e6f4ff)">
+            <div class="flex justify-between items-center mb-1">
+              <div><span class="font-bold text-base">${s.emoji} ${s.name}</span> <span class="ml-1 text-xs">${trend}</span></div>
+              <div class="text-right">
+                <div class="font-bold">$${s.price}</div>
+                <div class="text-xs">持有: ${owned}股</div>
+              </div>
+            </div>
+            <div class="flex gap-1 justify-end mt-1 flex-wrap">
+              <button onclick="buyStock('${s.name}', 1)" class="btn btn-success" style="padding:4px 8px;font-size:0.7rem;" ${player.money < s.price ? 'disabled' : ''}>买1</button>
+              <button onclick="buyStock('${s.name}', 5)" class="btn btn-success" style="padding:4px 8px;font-size:0.7rem;" ${player.money < s.price * 5 ? 'disabled' : ''}>买5</button>
+              <button onclick="sellStock('${s.name}', 1)" class="btn btn-warning" style="padding:4px 8px;font-size:0.7rem;" ${owned < 1 ? 'disabled' : ''}>卖1</button>
+              <button onclick="sellAllStock('${s.name}')" class="btn btn-warning" style="padding:4px 8px;font-size:0.7rem;" ${owned < 1 ? 'disabled' : ''}>全卖</button>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+  showModal({ title:'💹 股市交易中心', content, buttons:[{ text:'✅ 完成交易', action:endTurn }] });
+}
+
+function buyStock(name, qty) {
+  const player = state.players[state.currentPlayer];
+  const stock = state.stocks.find(s => s.name === name);
+  const cost = stock.price * qty;
+  if (player.money >= cost) {
+    player.money -= cost;
+    player.stocks[name] = (player.stocks[name] || 0) + qty;
+    addLog(`📈 ${player.character.name} 买入 ${name} ${qty}股`);
+    showStockModal();
+  }
+}
+function sellStock(name, qty) {
+  const player = state.players[state.currentPlayer];
+  const stock = state.stocks.find(s => s.name === name);
+  const owned = player.stocks[name] || 0;
+  qty = Math.min(qty, owned);
+  if (qty > 0) {
+    player.money += stock.price * qty;
+    player.stocks[name] = owned - qty;
+    addLog(`📉 ${player.character.name} 卖出 ${name} ${qty}股`);
+    showStockModal();
+  }
+}
+function sellAllStock(name) {
+  const player = state.players[state.currentPlayer];
+  const owned = player.stocks[name] || 0;
+  if (owned > 0) sellStock(name, owned);
+}
+
+function showMyAssets() {
+  const player = state.players[state.currentPlayer];
+  if (player.isNPC) return;
+  const propertyHtml = player.properties.length > 0
+    ? player.properties.map(idx => {
+        const cell = board[idx];
+        const lvl = player.upgrades[idx] || 0;
+        return `<div class="flex justify-between text-sm py-1 border-b">
+          <span>${cell.emoji} ${cell.name} ${lvl>0 ? BUILDING_EMOJIS[lvl] : ''}</span>
+          <span class="text-gray-500">租金 $${getRent(idx)}</span>
+        </div>`;
+      }).join('')
+    : '<div class="text-gray-400 text-sm text-center py-2">无地产</div>';
+  const stockKeys = Object.keys(player.stocks).filter(k => player.stocks[k] > 0);
+  const stockHtml = stockKeys.length > 0
+    ? stockKeys.map(k => {
+        const stock = state.stocks.find(s => s.name === k);
+        const qty = player.stocks[k];
+        return `<div class="flex justify-between text-sm py-1 border-b">
+          <span>${stock.emoji} ${stock.name} x${qty}</span>
+          <span class="text-blue-600">$${qty * stock.price}</span>
+        </div>`;
+      }).join('')
+    : '<div class="text-gray-400 text-sm text-center py-2">无股票</div>';
+  showModal({
+    title:`📋 ${player.character.name} 的资产`,
+    content:`
+      <div class="text-left">
+        <div class="bg-green-50 rounded p-2 mb-2 text-center">💰 现金: <b class="text-green-600 text-lg">$${player.money}</b></div>
+        ${player.rentImmunity ? '<div class="bg-blue-50 rounded p-2 mb-2 text-center text-sm">🛡️ 免租卡已激活</div>' : ''}
+        <div class="font-bold mt-3 mb-1">🏠 持有地产</div>
+        ${propertyHtml}
+        <div class="font-bold mt-3 mb-1">📈 持有股票</div>
+        ${stockHtml}
+        <div class="font-bold mt-3 mb-1">🎴 持有卡牌 (${player.cards.length})</div>
+        <div class="text-sm">${player.cards.length > 0 ? player.cards.map(c => CARD_TYPES[c].emoji + CARD_TYPES[c].name).join('、') : '<span class="text-gray-400">无</span>'}</div>
+      </div>`,
+    buttons:[{ text:'关闭', action:render }],
+  });
+}
+
+function endTurn() {
+  const alive = state.players.filter(p => !p.bankrupt);
+  if (alive.length <= 1) {
+    state.screen = 'gameover';
+    state.winner = alive[0] || null;
+    state.modal = null;
+    addLog(`🏆 游戏结束！${state.winner ? state.winner.character.name + ' 获胜！' : ''}`);
+    render();
+    return;
+  }
+  do {
+    state.currentPlayer = (state.currentPlayer + 1) % state.players.length;
+  } while (state.players[state.currentPlayer].bankrupt);
+  state.turnCount++;
+  const next = state.players[state.currentPlayer];
+  if (next.skipTurns > 0) {
+    next.skipTurns--;
+    addLog(`👮 ${next.character.name} 在监狱里，跳过回合`);
+    render();
+    setTimeout(endTurn, 1200);
+    return;
+  }
+  render();
+  setTimeout(maybeNpcTurn, 800);
+}
+
+function maybeNpcTurn() {
+  const player = state.players[state.currentPlayer];
+  if (player && player.isNPC && state.screen === 'game' && !state.modal && !state.rolling && !state.moving) {
+    // NPC 先尝试用卡
+    const usedCard = npcUseCards();
+    if (usedCard) {
+      render();
+      setTimeout(() => {
+        // 用卡后再用一次（多张卡可连续用）或掷骰子
+        if (npcUseCards()) {
+          render();
+          setTimeout(rollDice, 800);
+        } else {
+          rollDice();
+        }
+      }, 1000);
+    } else {
+      rollDice();
+    }
+  }
+}
+
+function quitGame() {
+  showModal({
+    title:'🚪 退出游戏',
+    content:'确定要退出当前游戏吗？',
+    buttons:[
+      { text:'退出', class:'btn-warning', action:() => { state.screen='setup'; state.modal=null; render(); } },
+      { text:'取消', secondary:true, action:render },
+    ],
+  });
+}
+function resetGame() { state.screen='setup'; state.modal=null; render(); }
+
+render();
+</script>
+
+
+</body></html>
