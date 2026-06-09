@@ -1,667 +1,763 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中小学生AI学习力自我评测</title>
+<title>今天吃什么 - 美食转盘</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body {
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-    background:linear-gradient(160deg,#0f0c29 0%,#302b63 50%,#24243e 100%);
-    min-height:100vh; color:#fff; display:flex; justify-content:center;
-    padding:16px; line-height:1.6;
-  }
-  .app {
-    width:100%; max-width:560px; background:rgba(255,255,255,0.04);
-    backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.08);
-    border-radius:24px; padding:28px 22px; box-shadow:0 20px 60px rgba(0,0,0,0.4);
-    align-self:center;
-  }
-  .screen { animation:fade .5s ease; }
-  @keyframes fade { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ff9a9e 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        color: #333;
+    }
+    h1 { font-size: 2.2em; margin-bottom: 10px; color: #d2691e; text-shadow: 2px 2px 4px rgba(255,255,255,0.5); }
+    .subtitle { margin-bottom: 20px; color: #8b4513; font-size: 1em; }
+    .container { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; width: 100%; max-width: 1100px; }
+    .wheel-section { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .wheel-container { position: relative; width: 90vw; max-width: 420px; aspect-ratio: 1; }
+    .pointer {
+        position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+        width: 0; height: 0;
+        border-left: 22px solid transparent; border-right: 22px solid transparent;
+        border-top: 40px solid #e74c3c;
+        z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    }
+    .pointer::after {
+        content: ''; position: absolute; top: -45px; left: -10px;
+        width: 20px; height: 20px; background: #c0392b; border-radius: 50%;
+    }
+    canvas {
+        width: 100%; height: 100%; border-radius: 50%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 0 0 8px #fff, inset 0 0 0 12px #d2691e;
+        background: #fff;
+    }
+    .center-btn {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 80px; height: 80px; border-radius: 50%;
+        background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+        border: 4px solid #fff; color: #fff; font-size: 1.1em; font-weight: bold;
+        cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: transform 0.2s; z-index: 5;
+    }
+    .center-btn:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.1); }
+    .center-btn:active:not(:disabled) { transform: translate(-50%, -50%) scale(0.95); }
+    .center-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+    .result {
+        font-size: 1.5em; font-weight: bold; color: #d2691e; min-height: 40px;
+        text-align: center; padding: 10px 20px;
+        background: rgba(255,255,255,0.7); border-radius: 30px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-width: 200px;
+    }
+    .controls {
+        background: rgba(255,255,255,0.85); padding: 25px; border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 90vw; max-width: 380px;
+    }
+    .controls h2 { color: #d2691e; margin-bottom: 15px; font-size: 1.3em; }
+    .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+    input[type="text"] {
+        flex: 1; padding: 10px 14px; border: 2px solid #ffd1a3;
+        border-radius: 10px; font-size: 1em; outline: none; transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: #ff9a52; }
+    button {
+        padding: 10px 16px; border: none; border-radius: 10px;
+        background: #ff9a52; color: white; font-size: 1em; cursor: pointer;
+        font-weight: bold; transition: background 0.2s, transform 0.1s;
+    }
+    button:hover { background: #ff8533; }
+    button:active { transform: scale(0.95); }
+    .food-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
+    .food-item {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 14px; margin-bottom: 6px;
+        background: #fff5e6; border-radius: 10px; border-left: 4px solid #ff9a52;
+    }
+    .food-name { font-size: 1em; color: #5d4037; }
+    .delete-btn { background: #ff6b6b; padding: 4px 10px; font-size: 0.85em; border-radius: 6px; }
+    .delete-btn:hover { background: #ee5a52; }
+    .preset-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .preset-btn { flex: 1; min-width: 100px; background: #95c4a8; font-size: 0.9em; padding: 8px 12px; }
+    .preset-btn:hover { background: #7fb593; }
+    .clear-btn { background: #c0392b; }
+    .clear-btn:hover { background: #a93226; }
+    .empty-tip { text-align: center; color: #999; padding: 15px; font-style: italic; }
 
-  .cover-head { text-align:center; margin-bottom:22px; position:relative; }
-  .crown { font-size:34px; margin-bottom:6px; filter:drop-shadow(0 4px 12px rgba(127,90,240,0.6)); animation:float 3s ease-in-out infinite; }
-  @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
-  .pre-line { display:flex; align-items:center; justify-content:center; gap:10px; font-size:12px; letter-spacing:3px; color:#9b97bd; margin-bottom:12px; }
-  .pre-line::before,.pre-line::after { content:""; width:30px; height:1px; background:linear-gradient(90deg,transparent,#7f5af0); }
-  .pre-line::after { background:linear-gradient(90deg,#7f5af0,transparent); }
-  .main-title {
-    font-size:34px; font-weight:900; line-height:1.25; letter-spacing:1px;
-    background:linear-gradient(120deg,#f093fb 0%,#7f5af0 40%,#2cb1bc 100%);
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-    text-shadow:0 0 40px rgba(127,90,240,0.3);
-    position:relative; display:inline-block;
-  }
-  .title-line2 { display:block; }
-  .title-deco { font-size:24px; }
-  .title-underline { width:70px; height:4px; margin:14px auto 0; border-radius:4px; background:linear-gradient(90deg,#f5576c,#7f5af0,#2cb1bc); }
-  .glow-orb { position:absolute; border-radius:50%; filter:blur(40px); opacity:0.5; z-index:-1; }
-  .orb1 { width:120px; height:120px; background:#7f5af0; top:-20px; left:-10px; }
-  .orb2 { width:100px; height:100px; background:#2cb1bc; top:0; right:-10px; }
+    /* 弹窗 */
+    .modal-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        justify-content: center; align-items: center; z-index: 100;
+        animation: fadeIn 0.3s;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+        background: linear-gradient(135deg, #fff 0%, #fff5e6 100%);
+        padding: 25px 20px; border-radius: 24px; text-align: center;
+        max-width: 92%; width: 400px;
+        animation: popIn 0.5s; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal h2 { color: #d2691e; font-size: 1.4em; margin-bottom: 6px; }
+    .modal .winner {
+        font-size: 1.8em; font-weight: bold; color: #e74c3c;
+        margin: 6px 0;
+    }
+    .modal button { margin-top: 10px; padding: 10px 30px; }
+    .modal-text { color: #8b4513; margin-top: 6px; font-size: 1em; min-height: 1.4em; }
 
-  .hook { font-size:21px; line-height:1.5; margin:22px 0 14px; font-weight:800; text-align:center; }
-  .hook .hl { background:linear-gradient(90deg,#f093fb,#f5576c); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .sub { font-size:15px; color:#bcb8d8; margin-bottom:8px; text-align:center; }
-  .meta { display:flex; gap:16px; margin:22px 0; font-size:13px; color:#9b97bd; flex-wrap:wrap; justify-content:center; }
-  .meta span { display:flex; align-items:center; gap:6px; }
-  .dot { width:7px; height:7px; border-radius:50%; background:#2cb1bc; }
-  .notice { font-size:13px; color:#9b97bd; background:rgba(255,255,255,0.04); border-left:3px solid #7f5af0; padding:10px 14px; border-radius:0 10px 10px 0; margin:6px 0 4px; }
+    /* 食物展示场景 */
+    .food-stage {
+        position: relative; width: 100%; height: 280px;
+        margin: 12px 0; overflow: hidden;
+        background: radial-gradient(ellipse at center top, #fff8e7 0%, #ffe8c4 60%, #f5d59a 100%);
+        border-radius: 20px;
+        box-shadow: inset 0 -10px 25px rgba(160, 100, 50, 0.2),
+                    inset 0 5px 15px rgba(255, 255, 255, 0.5);
+    }
 
-  .btn {
-    width:100%; border:none; cursor:pointer; font-family:inherit;
-    background:linear-gradient(90deg,#7f5af0,#f5576c); color:#fff;
-    font-size:17px; font-weight:700; padding:16px; border-radius:16px;
-    margin-top:10px; transition:transform .15s, box-shadow .2s;
-    box-shadow:0 8px 24px rgba(127,90,240,0.4);
-  }
-  .btn:active { transform:scale(0.97); }
-  .btn.ghost { background:rgba(255,255,255,0.08); box-shadow:none; font-size:15px; padding:13px; }
+    /* 桌面 */
+    .table-surface {
+        position: absolute; bottom: 0; left: 0; right: 0; height: 50px;
+        background: linear-gradient(180deg, #c98a5e 0%, #8b5a3c 100%);
+        border-top: 4px solid #b07d54;
+    }
+    .table-surface::before {
+        content: ''; position: absolute; top: -3px; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    }
 
-  .progress-wrap { margin-bottom:18px; }
-  .progress-top { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#9b97bd; margin-bottom:8px; }
-  .lvl-tag { font-size:12px; font-weight:700; padding:3px 10px; border-radius:20px; }
-  .bar { height:8px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; }
-  .fill { height:100%; background:linear-gradient(90deg,#7f5af0,#2cb1bc); border-radius:10px; transition:width .4s ease; }
+    /* 桌布/餐垫 */
+    .placemat {
+        position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+        width: 85%; height: 28px;
+        background: repeating-linear-gradient(45deg, #d4546a, #d4546a 8px, #c04458 8px, #c04458 16px);
+        border-radius: 50%;
+        opacity: 0.8;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
 
-  .scenario-tag { font-size:12px; color:#2cb1bc; font-weight:700; letter-spacing:1px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
-  .stars { letter-spacing:2px; color:#f9d423; font-size:13px; }
-  .question { font-size:19px; font-weight:700; margin-bottom:20px; line-height:1.5; }
-  .options { display:flex; flex-direction:column; gap:11px; }
-  .opt {
-    background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.1);
-    border-radius:14px; padding:14px 15px; cursor:pointer; font-size:15px;
-    transition:all .18s; display:flex; align-items:flex-start; gap:11px;
-  }
-  .opt:active { transform:scale(0.98); }
-  .opt:hover { border-color:rgba(127,90,240,0.6); background:rgba(127,90,240,0.12); }
-  .opt.sel { border-color:#7f5af0; background:rgba(127,90,240,0.22); }
-  .opt-key {
-    flex-shrink:0; width:26px; height:26px; border-radius:8px;
-    background:rgba(255,255,255,0.1); display:flex; align-items:center;
-    justify-content:center; font-weight:700; font-size:14px;
-  }
-  .opt.sel .opt-key { background:#7f5af0; }
+    /* 主食物显示 */
+    .main-food {
+        position: absolute; bottom: 50px; left: 50%;
+        transform: translateX(-50%);
+        font-size: 8em;
+        z-index: 5;
+        filter: drop-shadow(0 8px 12px rgba(0,0,0,0.3));
+        animation: foodFloat 2s ease-in-out infinite;
+    }
 
-  .result-emoji { font-size:60px; text-align:center; margin-bottom:6px; }
-  .result-type { text-align:center; font-size:13px; color:#9b97bd; letter-spacing:2px; }
-  .result-title { text-align:center; font-size:26px; font-weight:800; margin:6px 0 16px; }
-  .score-ring { display:flex; justify-content:center; margin:18px 0; }
-  .score-num { font-size:46px; font-weight:800; line-height:1; }
-  .score-num small { font-size:18px; color:#9b97bd; }
-  .level-bar { margin:18px 0; }
-  .level-track { height:14px; border-radius:10px; background:linear-gradient(90deg,#f5576c 0%,#f9d423 50%,#2cb1bc 100%); position:relative; }
-  .level-marker { position:absolute; top:-6px; width:4px; height:26px; background:#fff; border-radius:3px; box-shadow:0 0 8px rgba(255,255,255,0.8); transition:left .6s ease; }
-  .level-labels { display:flex; justify-content:space-between; font-size:11px; color:#9b97bd; margin-top:8px; }
+    /* 装饰小食物（围绕主食物） */
+    .deco-food {
+        position: absolute;
+        font-size: 1.8em;
+        z-index: 4;
+        filter: drop-shadow(0 3px 5px rgba(0,0,0,0.2));
+    }
+    .deco-food.d1 { bottom: 60px; left: 8%; animation: decoBounce 2s ease-in-out infinite 0s; }
+    .deco-food.d2 { bottom: 60px; right: 8%; animation: decoBounce 2s ease-in-out infinite 0.5s; }
+    .deco-food.d3 { bottom: 40px; left: 18%; animation: decoBounce 2.5s ease-in-out infinite 0.3s; }
+    .deco-food.d4 { bottom: 40px; right: 18%; animation: decoBounce 2.5s ease-in-out infinite 1s; }
 
-  .card {
-    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
-    border-radius:16px; padding:18px; margin:14px 0;
-  }
-  .card h3 { font-size:16px; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
-  .card p { font-size:14px; color:#cfcce4; margin-bottom:6px; }
-  .tip-item { font-size:14px; color:#cfcce4; padding:8px 0; border-bottom:1px dashed rgba(255,255,255,0.08); display:flex; gap:10px; }
-  .tip-item:last-child { border:none; }
-  .tip-item .ico { flex-shrink:0; }
-  .section-divider { text-align:center; margin:26px 0 6px; font-size:12px; letter-spacing:4px; color:#9b97bd; }
+    /* 蒸汽 */
+    .steam {
+        position: absolute;
+        width: 16px; height: 30px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        opacity: 0;
+        filter: blur(4px);
+        z-index: 3;
+    }
+    .steam-1 { left: 38%; bottom: 200px; animation: steamRise 2.5s ease-in-out infinite 0s; }
+    .steam-2 { left: 50%; bottom: 210px; animation: steamRise 2.5s ease-in-out infinite 0.6s; }
+    .steam-3 { left: 62%; bottom: 200px; animation: steamRise 2.5s ease-in-out infinite 1.2s; }
+    .steam-4 { left: 45%; bottom: 195px; animation: steamRise 2.5s ease-in-out infinite 1.8s; }
 
-  .radar-wrap { display:flex; flex-direction:column; align-items:center; }
-  .radar-svg { width:100%; max-width:340px; height:auto; display:block; }
-  .radar-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; margin-top:6px; }
-  .radar-legend span { font-size:12px; color:#cfcce4; display:flex; align-items:center; gap:5px; }
-  .lg-dot { width:8px; height:8px; border-radius:50%; }
-  .radar-poly { animation:radarIn 1s ease forwards; transform-origin:center; }
-  @keyframes radarIn { from{opacity:0;transform:scale(0.2);} to{opacity:1;transform:scale(1);} }
+    /* 闪光/星星 */
+    .sparkle {
+        position: absolute;
+        font-size: 1.4em;
+        opacity: 0;
+        z-index: 6;
+        animation: sparkleAnim 2s ease-in-out infinite;
+    }
+    .sp1 { top: 20%; left: 25%; animation-delay: 0s; }
+    .sp2 { top: 30%; right: 20%; animation-delay: 0.7s; }
+    .sp3 { top: 15%; right: 35%; animation-delay: 1.3s; }
+    .sp4 { top: 50%; left: 15%; animation-delay: 1.8s; }
+    .sp5 { top: 55%; right: 12%; animation-delay: 0.4s; }
 
-  .quote { font-size:13px; color:#9b97bd; text-align:center; margin-top:20px; font-style:italic; line-height:1.7; }
-  .hidden { display:none; }
+    /* 爱心 */
+    .heart-float {
+        position: absolute;
+        font-size: 1.6em;
+        opacity: 0;
+        z-index: 6;
+    }
+    .h1 { left: 20%; bottom: 100px; animation: heartUp 3s ease-in-out infinite 0s; }
+    .h2 { right: 20%; bottom: 110px; animation: heartUp 3s ease-in-out infinite 1s; }
+    .h3 { left: 30%; bottom: 90px; animation: heartUp 3s ease-in-out infinite 2s; }
+
+    /* 各种动画模式 */
+
+    /* 默认：浮动 */
+    .stage-default .main-food {
+        animation: foodFloat 2s ease-in-out infinite;
+    }
+
+    /* 旋转 - 披萨/盖饭等圆形食物 */
+    .stage-rotate .main-food {
+        animation: foodRotate 6s linear infinite, foodFloat 2s ease-in-out infinite;
+    }
+
+    /* 弹跳 - 汉堡/炸鸡 */
+    .stage-bounce .main-food {
+        animation: foodBigBounce 1.2s ease-in-out infinite;
+    }
+
+    /* 摇摆 - 面条/拉面 */
+    .stage-sway .main-food {
+        animation: foodSway 2s ease-in-out infinite;
+    }
+
+    /* 融化滴落 - 冰淇淋 */
+    .stage-melt .main-food {
+        animation: foodMelt 2.5s ease-in-out infinite;
+    }
+    .melt-drop {
+        position: absolute;
+        font-size: 0.6em;
+        opacity: 0;
+        z-index: 4;
+    }
+    .stage-melt .melt-drop.md1 {
+        bottom: 60px; left: 45%;
+        animation: dropFall 2.5s ease-in infinite 0.5s;
+    }
+    .stage-melt .melt-drop.md2 {
+        bottom: 60px; left: 53%;
+        animation: dropFall 2.5s ease-in infinite 1.5s;
+    }
+
+    /* 冒泡 - 饮料 */
+    .stage-bubble .main-food {
+        animation: foodFloat 2s ease-in-out infinite;
+    }
+    .bubble {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        z-index: 6;
+        opacity: 0;
+    }
+    .bubble.b1 { width: 12px; height: 12px; bottom: 130px; left: 47%; animation: bubbleRise 2s ease-out infinite 0s; }
+    .bubble.b2 { width: 8px; height: 8px; bottom: 140px; left: 52%; animation: bubbleRise 2s ease-out infinite 0.5s; }
+    .bubble.b3 { width: 10px; height: 10px; bottom: 135px; left: 49%; animation: bubbleRise 2s ease-out infinite 1s; }
+    .bubble.b4 { width: 6px; height: 6px; bottom: 145px; left: 51%; animation: bubbleRise 2s ease-out infinite 1.5s; }
+
+    /* 心跳 - 蛋糕/甜点 */
+    .stage-heartbeat .main-food {
+        animation: foodHeartbeat 1.2s ease-in-out infinite;
+    }
+
+    /* 抖动 - 火锅/咖喱（沸腾） */
+    .stage-boil .main-food {
+        animation: foodBoil 0.4s ease-in-out infinite, foodFloat 2s ease-in-out infinite;
+    }
+    .stage-boil .bubble {
+        background: rgba(255, 200, 100, 0.7);
+        border-color: rgba(255, 220, 150, 0.9);
+    }
+
+    /* 翻转 - 寿司/便当 */
+    .stage-flip .main-food {
+        animation: foodFlip 3s ease-in-out infinite;
+    }
+
+    /* 滚动 - 串串/糖葫芦 */
+    .stage-roll .main-food {
+        animation: foodRoll 2s ease-in-out infinite;
+    }
+
+    /* === 关键帧动画 === */
+
+    @keyframes foodFloat {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(-15px); }
+    }
+    @keyframes foodRotate {
+        from { transform: translateX(-50%) rotate(0deg); }
+        to { transform: translateX(-50%) rotate(360deg); }
+    }
+    @keyframes foodBigBounce {
+        0%, 100% { transform: translateX(-50%) translateY(0) scale(1, 1); }
+        20% { transform: translateX(-50%) translateY(-30px) scale(0.95, 1.05); }
+        40% { transform: translateX(-50%) translateY(0) scale(1.1, 0.9); }
+        60% { transform: translateX(-50%) translateY(-10px) scale(0.98, 1.02); }
+    }
+    @keyframes foodSway {
+        0%, 100% { transform: translateX(-50%) rotate(-8deg) translateY(0); }
+        50% { transform: translateX(-50%) rotate(8deg) translateY(-10px); }
+    }
+    @keyframes foodMelt {
+        0%, 100% { transform: translateX(-50%) translateY(0) scaleY(1); }
+        50% { transform: translateX(-50%) translateY(5px) scaleY(0.95); }
+    }
+    @keyframes foodHeartbeat {
+        0%, 100% { transform: translateX(-50%) scale(1); }
+        15% { transform: translateX(-50%) scale(1.15); }
+        30% { transform: translateX(-50%) scale(1); }
+        45% { transform: translateX(-50%) scale(1.1); }
+        60% { transform: translateX(-50%) scale(1); }
+    }
+    @keyframes foodBoil {
+        0%, 100% { transform: translateX(-50%) translateY(-15px) translateX(-50%); }
+        25% { transform: translateX(-51%) translateY(-13px); }
+        50% { transform: translateX(-49%) translateY(-15px); }
+        75% { transform: translateX(-50.5%) translateY(-14px); }
+    }
+    @keyframes foodFlip {
+        0%, 100% { transform: translateX(-50%) rotateY(0deg) translateY(0); }
+        50% { transform: translateX(-50%) rotateY(180deg) translateY(-20px); }
+    }
+    @keyframes foodRoll {
+        0% { transform: translateX(-80%) rotate(-30deg); }
+        50% { transform: translateX(-50%) rotate(0deg) translateY(-15px); }
+        100% { transform: translateX(-20%) rotate(30deg); }
+    }
+    @keyframes decoBounce {
+        0%, 100% { transform: translateY(0) rotate(-5deg); }
+        50% { transform: translateY(-12px) rotate(5deg); }
+    }
+    @keyframes steamRise {
+        0% { transform: translateY(0) scale(0.5); opacity: 0; }
+        20% { opacity: 0.8; }
+        100% { transform: translateY(-90px) scale(2) translateX(15px); opacity: 0; }
+    }
+    @keyframes sparkleAnim {
+        0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
+    }
+    @keyframes heartUp {
+        0% { transform: translateY(0) scale(0.5); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translateY(-150px) scale(1.4); opacity: 0; }
+    }
+    @keyframes dropFall {
+        0%, 30% { transform: translateY(0); opacity: 0; }
+        40% { opacity: 1; transform: translateY(0); }
+        100% { transform: translateY(50px); opacity: 0; }
+    }
+    @keyframes bubbleRise {
+        0% { transform: translateY(0) scale(0.5); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+        h1 { font-size: 1.6em; }
+        .center-btn { width: 65px; height: 65px; font-size: 0.9em; }
+        .main-food { font-size: 6em; }
+    }
 </style>
 </head>
 <body>
-<div class="app">
+    <h1>🍜 今天吃什么 🍱</h1>
+    <p class="subtitle">让转盘帮你做决定吧～</p>
 
-  <!-- 封面 -->
-  <div class="screen" id="cover">
-    <div class="cover-head">
-      <span class="glow-orb orb1"></span>
-      <span class="glow-orb orb2"></span>
-      <div class="crown">🎓</div>
-      <div class="pre-line">AI 时代 · 学习力测评</div>
-      <h1 class="main-title">
-        中小学生 <span class="title-deco">AI</span><br>
-        <span class="title-line2">学习力自我评测</span>
-      </h1>
-      <div class="title-underline"></div>
+    <div class="container">
+        <div class="wheel-section">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="wheel" width="500" height="500"></canvas>
+                <button class="center-btn" id="spinBtn">开始</button>
+            </div>
+            <div class="result" id="result">点击"开始"旋转转盘</div>
+        </div>
+
+        <div class="controls">
+            <h2>🍳 美食列表</h2>
+            <div class="input-group">
+                <input type="text" id="foodInput" placeholder="输入美食名称..." maxlength="10">
+                <button id="addBtn">添加</button>
+            </div>
+            <div class="food-list" id="foodList"></div>
+            <div class="preset-btns">
+                <button class="preset-btn" id="presetBtn">载入示例</button>
+                <button class="preset-btn clear-btn" id="clearBtn">全部清空</button>
+            </div>
+        </div>
     </div>
 
-    <p class="hook">用 AI 的时候，你是<span class="hl">在思考</span>，还是<span class="hl">让它替你思考</span>？</p>
-    <p class="sub">真正的高手，用 AI 越用脑子越灵；</p>
-    <p class="sub">而有些人，正在不知不觉地把"思考"外包出去。</p>
-    <div class="notice">每次从 <b>300 道题库</b>里随机抽 <b>20 道</b>，难度由浅入深。没有"一眼能看出来"的标准答案——尤其那些"显得努力、全面、聪明"的选项，往往才是陷阱。测完还会附上一份<b>家长报告</b>。</div>
-    <div class="meta">
-      <span><i class="dot"></i>适合 10–18 岁</span>
-      <span><i class="dot"></i>每次随机 20 题</span>
-      <span><i class="dot"></i>约 6 分钟</span>
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h2>🎉 决定了！</h2>
+            <div class="winner" id="winnerName"></div>
+
+            <div class="food-stage" id="foodStage">
+                <div class="sparkle sp1">✨</div>
+                <div class="sparkle sp2">⭐</div>
+                <div class="sparkle sp3">✨</div>
+                <div class="sparkle sp4">⭐</div>
+                <div class="sparkle sp5">✨</div>
+
+                <div class="heart-float h1">❤️</div>
+                <div class="heart-float h2">💕</div>
+                <div class="heart-float h3">💖</div>
+
+                <div class="steam steam-1"></div>
+                <div class="steam steam-2"></div>
+                <div class="steam steam-3"></div>
+                <div class="steam steam-4"></div>
+
+                <div class="bubble b1"></div>
+                <div class="bubble b2"></div>
+                <div class="bubble b3"></div>
+                <div class="bubble b4"></div>
+
+                <div class="melt-drop md1" id="meltDrop1"></div>
+                <div class="melt-drop md2" id="meltDrop2"></div>
+
+                <div class="placemat"></div>
+
+                <div class="deco-food d1" id="deco1"></div>
+                <div class="deco-food d2" id="deco2"></div>
+                <div class="deco-food d3" id="deco3"></div>
+                <div class="deco-food d4" id="deco4"></div>
+
+                <div class="main-food" id="mainFood">🍔</div>
+
+                <div class="table-surface"></div>
+            </div>
+
+            <div class="modal-text" id="modalText">看起来真好吃！😋</div>
+            <button id="closeModal">好的</button>
+        </div>
     </div>
-    <button class="btn" onclick="start('student')">学生开始挑战 →</button>
-    <button class="btn ghost" onclick="start('parent')">我是家长 · 做家长评估 →</button>
-  </div>
-
-  <!-- 答题 -->
-  <div class="screen hidden" id="quiz">
-    <div class="progress-wrap">
-      <div class="progress-top">
-        <span id="qcount">第 1 / 20 题</span>
-        <span class="lvl-tag" id="lvltag">Lv.1 热身</span>
-      </div>
-      <div class="bar"><div class="fill" id="fill" style="width:5%"></div></div>
-    </div>
-    <div class="scenario-tag"><span id="stag">情景</span><span class="stars" id="stars">★☆☆☆☆</span></div>
-    <div class="question" id="qtext"></div>
-    <div class="options" id="opts"></div>
-    <button class="btn ghost hidden" id="backBtn" onclick="goBack()">← 上一题</button>
-  </div>
-
-  <!-- 结果 -->
-  <div class="screen hidden" id="result"></div>
-
-</div>
 
 <script>
-/* ===================== 配置 ===================== */
-const LVL=["","Lv.1 热身","Lv.2 进阶","Lv.3 烧脑","Lv.4 高手","Lv.5 终极"];
-const LVLC=["","#2cb1bc","#2cb1bc","#7f5af0","#f5576c","#f5576c"];
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const spinBtn = document.getElementById('spinBtn');
+    const result = document.getElementById('result');
+    const foodInput = document.getElementById('foodInput');
+    const addBtn = document.getElementById('addBtn');
+    const foodList = document.getElementById('foodList');
+    const presetBtn = document.getElementById('presetBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const modal = document.getElementById('modal');
+    const winnerName = document.getElementById('winnerName');
+    const closeModal = document.getElementById('closeModal');
+    const mainFood = document.getElementById('mainFood');
+    const modalText = document.getElementById('modalText');
+    const foodStage = document.getElementById('foodStage');
 
-const DEFAULT_SUBS = ["数学","语文","英语","物理","化学","生物","历史","地理","科学","道德与法治"];
-const CREATIVE_SUBS = ["作文","英语作文","美术作品","手抄报","科学小报","历史小报","板报设计","演讲稿","主题绘画","班会创意"];
+    const colors = [
+        '#FF6B6B', '#4ECDC4', '#FFD93D', '#6BCB77',
+        '#FF8C42', '#A8E6CF', '#FFAAA5', '#C7B3FF',
+        '#FFB6B9', '#8AC6D1', '#FFE66D', '#95E1D3'
+    ];
 
-/* ===== 30 个情景模板 × 10 学科 = 300 题池 =====
-   d: T独立思考 B批判性思维 X创造力 Q提问力 M元认知
-   每题 4 选项，s 越高=越会用脑；s:3 为最优。出题时选项顺序随机打乱。
-   【选项字数已平衡：最优答案简洁，干扰项往往更长，避免"挑最长"作弊】
-*/
-const TEMPLATES = [
-/* ---------- Lv.1 ---------- */
-{lvl:1,d:"T",tag:"查资料",q:s=>`你要做一份关于「${s}」某主题的小报告，AI 给了一段看起来很完整的解释。接下来你最该做的是？`,o:[
-  {t:"读着挺顺，直接挑重点复制进我的报告里",s:0},
-  {t:"让它换个说法再生成一遍，读起来更像我自己写的口吻",s:1},
-  {t:"先把我讲不清的地方弄懂，能说明白再用",s:3},
-  {t:"再让它多补充一些，内容越丰富报告越厚实",s:1}]},
-{lvl:1,d:"Q",tag:"怎么问",q:s=>`想真正学会「${s}」里一个总也记不住的知识点，下面哪种问法最有用？`,o:[
-  {t:"「这个知识点到底是什么意思呀？」",s:1},
-  {t:"「直接告诉我考试时一般会怎么考它」",s:1},
-  {t:"「我以为它是这样，错在哪？」",s:3},
-  {t:"「用最简短的一句话帮我讲一遍」",s:2}]},
-{lvl:1,d:"B",tag:"它给的对吗",q:s=>`AI 帮你解答了一道「${s}」的题，答得很肯定。你的第一反应应该是？`,o:[
-  {t:"它这么肯定肯定没错，记下来就好",s:0},
-  {t:"随手把关键那一步验证一下对不对",s:3},
-  {t:"让它把答案讲得再详细些，越详细越可信",s:1},
-  {t:"先抄下来，等老师讲评时再慢慢核对",s:1}]},
-{lvl:1,d:"X",tag:"做作品",q:s=>`「${s}」要交一个小作品，你想用 AI 帮忙。哪种做法最能练到你自己的创造力？`,o:[
-  {t:"让它直接做一个最好的，照着抄",s:0},
-  {t:"先自己做个粗版，再让它提改进点",s:3},
-  {t:"让它一口气做很多个，我从里面挑元素拼起来",s:1},
-  {t:"问它怎么做最容易拿高分，照着做",s:1}]},
-{lvl:1,d:"M",tag:"要不要用",q:s=>`关于学「${s}」时用不用 AI，下面哪种判断最聪明？`,o:[
-  {t:"反正能用，那就用呗，能省事就省事",s:0},
-  {t:"先想清楚是想交差还是想真学会",s:3},
-  {t:"看别人，别人都用我就用，不用就不用",s:1},
-  {t:"题难就用，题简单就自己做",s:1}]},
-{lvl:1,d:"T",tag:"抄答案",q:s=>`「${s}」作业里有一道题你不会，AI 一下给出了完整答案。最好的做法是？`,o:[
-  {t:"照抄上去，先把作业交了再说",s:0},
-  {t:"抄下来，顺便把它的步骤背熟",s:1},
-  {t:"盖住答案自己先做，卡住再对照",s:3},
-  {t:"让它再出一道同类题，我抄第二遍练熟",s:1}]},
-/* ---------- Lv.2 ---------- */
-{lvl:2,d:"B",tag:"它很自信",q:s=>`你查一个关于「${s}」的具体数据，AI 答得非常肯定还补了一堆细节，但和你印象里的不太一样。你会？`,o:[
-  {t:"它知道得比我多，应该是我记错了",s:0},
-  {t:"它说得这么细致，细节这么多就肯定靠谱，信它",s:1},
-  {t:"印象不同，去权威资料核对一下",s:3},
-  {t:"让它自己再确认一遍，它说没错就行",s:1}]},
-{lvl:2,d:"Q",tag:"追问",q:s=>`AI 给了你一套学「${s}」的方法，听起来很有道理。一个会动脑的人接下来最该问的是？`,o:[
-  {t:"「好，那我现在就照着开始做」",s:0},
-  {t:"「它对所有人都管用吗？凭什么说最好？」",s:3},
-  {t:"「这是不是网上最流行的那套方法呀？」",s:2},
-  {t:"「能不能再多给我几套不同的，我自己挑一个用？」",s:1}]},
-{lvl:2,d:"T",tag:"两个答案",q:s=>`同一道「${s}」的题，你问了两个 AI，给出两个不一样的答案，过程都写得头头是道。最靠谱的做法是？`,o:[
-  {t:"选那个过程更长、步骤更复杂的，复杂往往说明它更严谨",s:0},
-  {t:"两个答案取个折中值，这样比较保险",s:0},
-  {t:"自己重做一遍，用我的过程判断",s:3},
-  {t:"再开第三个 AI 投票，哪个重复信哪个",s:1}]},
-{lvl:2,d:"X",tag:"灵感",q:s=>`做「${s}」相关的创作时卡住了，AI 甩给你一个特别惊艳的点子，比你想的好太多。最能锻炼你的做法是？`,o:[
-  {t:"这么好的点子不用可惜，直接拿来用",s:0},
-  {t:"被它启发，但合上 AI 自己另想一个",s:3},
-  {t:"把它的点子改几个地方，当我原创的",s:1},
-  {t:"既然我想不到这水平，干脆全交给它做",s:0}]},
-{lvl:2,d:"M",tag:"自检",q:s=>`学完「${s}」一个新内容后，想知道自己是真懂还是假懂，最好的办法是？`,o:[
-  {t:"看 AI 夸不夸我答得好",s:0},
-  {t:"看我用 AI 之后分数有没有提高",s:1},
-  {t:"关掉 AI，试着讲给别人听一遍",s:3},
-  {t:"再让 AI 出几道题，对着答案核对",s:1}]},
-{lvl:2,d:"B",tag:"它在夸我",q:s=>`你写了一段关于「${s}」的看法，让 AI「帮我看看」，它回复「写得很好，几乎没问题」。你该？`,o:[
-  {t:"太好了，那就这么直接交上去",s:0},
-  {t:"AI 都夸我了，说明我水平确实不错",s:1},
-  {t:"它爱顺着夸人，让它专挑我的毛病",s:3},
-  {t:"再换个 AI 问问，看是不是也夸我",s:1}]},
-/* ---------- Lv.3 ---------- */
-{lvl:3,d:"B",tag:"正反两方",q:s=>`就一个关于「${s}」的争议话题，你让 AI 写了正反两方，都引经据典、看起来都有理。接下来最该做的是？`,o:[
-  {t:"两边讲得都有道理，说明这事没标准答案，随便选一边",s:1},
-  {t:"哪方举的例子和数据更多就站哪边",s:1},
-  {t:"查双方引用的数据真不真，再决定",s:3},
-  {t:"把正反两方都原样写进作业，最全面",s:1}]},
-{lvl:3,d:"T",tag:"它跳步了",q:s=>`AI 解一道难的「${s}」题，中间有一步直接跳过去得出结论，你没看懂那一步。最该做的是？`,o:[
-  {t:"结论看着对就行，那一步不重要",s:0},
-  {t:"把没看懂的那步当它的本事，记住结论",s:1},
-  {t:"盯住那步自己补出来，补不出就是没会",s:3},
-  {t:"让它换种方法再做一遍，绕过那一步",s:1}]},
-{lvl:3,d:"X",tag:"模仿",q:s=>`你想形成自己写「${s}」的风格，于是让 AI 生成了一篇范文。怎么用这篇范文最有利于你？`,o:[
-  {t:"照着它的风格一直往下写，慢慢就变成我自己的了",s:1},
-  {t:"拆解它为何这样写，再换个方式表达",s:3},
-  {t:"把它当模板，每次套用换换里面的内容",s:1},
-  {t:"多生成几篇不同风格的，混在一起用",s:1}]},
-{lvl:3,d:"Q",tag:"挖前提",q:s=>`AI 斩钉截铁地说「学好『${s}』最关键的就是多刷题」。一个爱较真的人会先反问哪句？`,o:[
-  {t:"「行，那我现在就开始刷题」",s:0},
-  {t:"「『最关键』凭什么比出来？有没有例外？」",s:3},
-  {t:"「是不是大家都这么说的呀？」",s:2},
-  {t:"「那照这说法，我一天大概该刷多少题才合适？」",s:1}]},
-{lvl:3,d:"M",tag:"该不该求助",q:s=>`做「${s}」时你卡了十分钟，很想问 AI。下面哪种想法最有利于你长本事？`,o:[
-  {t:"卡住了就赶紧问，做题效率才是第一位的",s:0},
-  {t:"先想清卡在哪、试过啥再去问",s:3},
-  {t:"直接让它给答案，省得浪费时间",s:0},
-  {t:"换道简单的先做，难的留着抄",s:1}]},
-{lvl:3,d:"B",tag:"数据陷阱",q:s=>`AI 用一个「九成学生都这样」的数据来支持它关于「${s}」的结论。你该怎么看这个数据？`,o:[
-  {t:"有数据就比空口说可信，那就信了",s:1},
-  {t:"数字越大越能说明问题，信",s:0},
-  {t:"先问这数据哪来的、怎么统计的",s:3},
-  {t:"记下来，以后引用显得有说服力",s:1}]},
-/* ---------- Lv.4 ---------- */
-{lvl:4,d:"X",tag:"高质量诱惑",q:s=>`AI 给的「${s}」成品，质量明显比你自己做的高。长远看，下面哪种选择对你最好？`,o:[
-  {t:"用它的成品，反正结果好看分数高",s:0},
-  {t:"自己做，再拿它的成品对照找差距",s:3},
-  {t:"把它的成品改一改就交上去",s:1},
-  {t:"这次先用它的，水平够了再自己做",s:0}]},
-{lvl:4,d:"Q",tag:"反向提问",q:s=>`关于「${s}」你已经有了一个自己的判断，现在想用 AI 检验它。最高级的问法是？`,o:[
-  {t:"「我这个判断到底对不对呀？」",s:1},
-  {t:"「请全力反驳我，找出最致命的漏洞」",s:3},
-  {t:"「能不能列出支持我这个判断的所有理由？」",s:1},
-  {t:"「大多数人是不是也这么想？」",s:0}]},
-{lvl:4,d:"T",tag:"似是而非",q:s=>`AI 关于「${s}」给出的解释听起来很顺、很有道理，但你说不清哪里怪。最该做的是？`,o:[
-  {t:"说不出毛病那就是对的，接受它",s:0},
-  {t:"读着顺就行了，揪着细节不放是浪费时间",s:0},
-  {t:"拆成几步逐一追问，揪出怪在哪",s:3},
-  {t:"换个 AI 问问，看法一样就信了",s:1}]},
-{lvl:4,d:"B",tag:"权威光环",q:s=>`AI 引用了一位「专家」的话来支持它关于「${s}」的观点，显得很权威。理性的态度是？`,o:[
-  {t:"专家说的，照单全收就好",s:0},
-  {t:"既然有专家背书，可信度大增，信了",s:1},
-  {t:"先查真有这人、这话他真说过吗",s:3},
-  {t:"把专家名字记住，方便以后写东西引用",s:1}]},
-{lvl:4,d:"M",tag:"进步错觉",q:s=>`用 AI 辅助学「${s}」一个月，你感觉自己「懂得多了」。怎么判断这是真进步还是错觉？`,o:[
-  {t:"感觉懂了那就是真懂了",s:0},
-  {t:"看我收藏了多少 AI 的好答案",s:0},
-  {t:"关掉 AI，做一套以前不会的题",s:3},
-  {t:"看我这一个月里用 AI 的次数多不多",s:1}]},
-{lvl:4,d:"X",tag:"同质化",q:s=>`班上很多人都用 AI 做「${s}」，交上来的东西越来越像。你想让自己的不一样，最该怎么做？`,o:[
-  {t:"换更强的 AI，做得更精致就出众",s:0},
-  {t:"先关掉 AI 放进我的想法，再让它润色",s:3},
-  {t:"干脆让 AI 故意生成一个『与众不同』的版本",s:1},
-  {t:"多生成几版，从中挑最特别的一版",s:1}]},
-/* ---------- Lv.5 ---------- */
-{lvl:5,d:"M",tag:"何时关掉",q:s=>`关于学「${s}」，下面哪种情况「故意不用 AI、硬着头皮自己来」，对你长远最划算？`,o:[
-  {t:"赶时间、想快点交差的时候",s:0},
-  {t:"正在练我最想变强的那项能力时",s:3},
-  {t:"题特别简单、一眼就能看穿答案的时候",s:1},
-  {t:"这事不重要、做错也无所谓时",s:1}]},
-{lvl:5,d:"M",tag:"被替代自检",q:s=>`想判断学「${s}」时自己是「在用 AI 帮忙」还是「已经被它替代了思考」，最靠谱的自检是？`,o:[
-  {t:"看用 AI 之后分数有没有变高",s:0},
-  {t:"看我用 AI 的频率，只要用得少就说明没事",s:1},
-  {t:"关掉 AI，看我还能不能独立做出来",s:3},
-  {t:"看我用的是不是最新最强的 AI",s:0}]},
-{lvl:5,d:"B",tag:"完美答案",q:s=>`假如 AI 强到任何「${s}」的问题都能秒给「完美答案」，那人还要自己学，最站得住的理由是？`,o:[
-  {t:"万一哪天断了网，它就完全用不了了",s:1},
-  {t:"因为正式考试的时候是不让带 AI 的",s:0},
-  {t:"脑子里真有货，才分得清真假完美",s:3},
-  {t:"自己死磕出难题那一刻的爽，AI 替不了",s:3}]},
-{lvl:5,d:"T",tag:"全程依赖",q:s=>`一个学期「${s}」的每项任务你都靠 AI 起步。期末你最该警惕的是？`,o:[
-  {t:"没什么好警惕的，任务不都完成了",s:0},
-  {t:"警惕『没它我连第一步都迈不出』",s:3},
-  {t:"警惕自己用的 AI 还不够强大",s:0},
-  {t:"警惕被同学发现我一直在用 AI",s:1}]},
-{lvl:5,d:"X",tag:"原创边界",q:s=>`你用 AI 协助完成了一个很棒的「${s}」作品。怎样判断这里面还有多少「真正属于你」？`,o:[
-  {t:"是我开口让它做的，那当然全算我的",s:0},
-  {t:"抽掉 AI 那部分，看核心想法还在不在",s:3},
-  {t:"我花的时间越多就越算是我的",s:1},
-  {t:"只要最后这一版是我亲手改过的，就算我的",s:1}]},
-{lvl:5,d:"Q",tag:"元提问",q:s=>`关于「${s}」，比起问 AI「答案是什么」，下面哪个问题最能让你越问越聪明？`,o:[
-  {t:"「这道题真正的标准答案到底是什么？」",s:0},
-  {t:"「要搞懂它，我先该问自己啥问题？」",s:3},
-  {t:"「这个知识点考试常考吗？」",s:1},
-  {t:"「有没有更快记住它的口诀？」",s:1}]},
-];
+    // 食物配置：emoji + 动画类型 + 装饰小图 + 蒸汽 + 描述
+    const foodConfig = {
+        // 摇摆类（面条）
+        '面条': { emoji: '🍜', mode: 'sway', deco: ['🥢','🥢','🌶️','🥬'], steam: true, drop: '🍜' },
+        '拉面': { emoji: '🍜', mode: 'sway', deco: ['🥢','🍥','🥚','🌿'], steam: true },
+        '泡面': { emoji: '🍜', mode: 'sway', deco: ['🥢','🥚','🌶️','🥬'], steam: true },
+        '螺蛳粉': { emoji: '🍜', mode: 'sway', deco: ['🌶️','🥜','🥬','🌶️'], steam: true },
+        '酸辣粉': { emoji: '🍜', mode: 'sway', deco: ['🌶️','🥜','🥢','🥬'], steam: true },
+        '凉面': { emoji: '🍜', mode: 'sway', deco: ['🥒','🥕','🥢','🌿'], steam: false },
+        '乌冬面': { emoji: '🍜', mode: 'sway', deco: ['🥢','🍥','🥬','🌿'], steam: true },
+        '热干面': { emoji: '🍜', mode: 'sway', deco: ['🥢','🥜','🌿','🥬'], steam: true },
+        '炸酱面': { emoji: '🍜', mode: 'sway', deco: ['🥢','🥒','🍅','🥬'], steam: true },
+        '米线': { emoji: '🍜', mode: 'sway', deco: ['🌶️','🥬','🥢','🌿'], steam: true },
 
-/* ===== 家长评估 8 题（选项字数同样已平衡） ===== */
-const PARENT = [
-{tag:"对待作业",q:"孩子用 AI 做作业，你通常的态度是？",o:[
-  {t:"只要按时完成就行，过程不太管",s:0},
-  {t:"严禁使用，一发现就批评他",s:1},
-  {t:"陪他一起看，讨论哪可信、哪要核实",s:3},
-  {t:"帮他把 AI 用得更熟练，效率高就行了",s:1}]},
-{tag:"被问到时",q:"孩子拿着 AI 写的答案来问你，你会？",o:[
-  {t:"直接给他个结论：对，或者不对",s:1},
-  {t:"既然 AI 都这么说了，那就按它的来吧",s:0},
-  {t:"反问他：你自己怎么想？一起看看",s:3},
-  {t:"让他再回去问一遍 AI 怎么说",s:0}]},
-{tag:"家庭规则",q:"关于在家用 AI，你家有没有规则？",o:[
-  {t:"也没立啥规则，他想怎么用就随他用",s:0},
-  {t:"完全禁止，家里不许用",s:1},
-  {t:"有约定：何时能用、哪些得先自己做",s:3},
-  {t:"全看我心情管，有时候松有时候紧",s:1}]},
-{tag:"言传身教",q:"你自己用 AI 时孩子在旁边，你会？",o:[
-  {t:"不太在意，自己怎么方便就怎么用",s:1},
-  {t:"把 AI 给的答案当圣旨，照着做就是了",s:0},
-  {t:"边用边念叨：这条不一定对，得查",s:3},
-  {t:"避开孩子用，不让他看见",s:1}]},
-{tag:"看待努力",q:"孩子靠自己（没用 AI）做出一道难题，你最可能说？",o:[
-  {t:"这么慢，要是用 AI 早就做完了",s:0},
-  {t:"嗯，做完了就行了",s:1},
-  {t:"你自己琢磨出来的，这过程最值钱",s:3},
-  {t:"下次还是用 AI 吧，能省不少时间",s:0}]},
-{tag:"最担心的",q:"你最担心孩子用 AI 带来的问题是？",o:[
-  {t:"没什么好担心的",s:0},
-  {t:"就怕被老师发现他用了这个",s:1},
-  {t:"怕他渐渐不愿动脑、丢了独立思考",s:3},
-  {t:"怕他用得不熟练，将来反而落后于别人",s:1}]},
-{tag:"角色定位",q:"你希望 AI 在孩子学习里扮演的角色是？",o:[
-  {t:"一个替孩子把任务完成的省事工具",s:0},
-  {t:"完全不该出现在学习里",s:1},
-  {t:"像教练，逼他想得更深的陪练",s:3},
-  {t:"一个更高级好用的搜索引擎",s:1}]},
-{tag:"观点冲突",q:"当孩子的观点和 AI 不一致时，你倾向于？",o:[
-  {t:"让他相信 AI 吧，毕竟它懂得比我们多",s:0},
-  {t:"让他坚持己见，别管 AI",s:1},
-  {t:"鼓励他说理由，再一起判断谁对",s:3},
-  {t:"让他再去问问 AI 到底是谁对",s:1}]},
-];
+        // 旋转类（圆形）
+        '披萨': { emoji: '🍕', mode: 'rotate', deco: ['🍅','🧀','🌿','🍕'], steam: true },
+        '盖浇饭': { emoji: '🍚', mode: 'rotate', deco: ['🥢','🥬','🍳','🥕'], steam: true },
+        '盖饭': { emoji: '🍚', mode: 'rotate', deco: ['🥢','🥬','🍳','🥕'], steam: true },
+        '炒饭': { emoji: '🍚', mode: 'rotate', deco: ['🍳','🥕','🌽','🥢'], steam: true },
+        '煲仔饭': { emoji: '🍚', mode: 'rotate', deco: ['🥢','🥩','🌿','🥬'], steam: true },
+        '海鲜饭': { emoji: '🥘', mode: 'rotate', deco: ['🦐','🦀','🐟','🥬'], steam: true },
+        '咖喱': { emoji: '🍛', mode: 'rotate', deco: ['🥕','🥔','🥢','🌿'], steam: true },
+        '黄焖鸡': { emoji: '🍗', mode: 'rotate', deco: ['🥕','🥔','🌶️','🥬'], steam: true },
 
-/* ===== 家长报告：四套总体模板（按孩子总分命中） ===== */
-const PARENT_TYPE = {
-  driver: { emoji:"🏆", code:"FOR PARENTS · DRIVER", title:"驾驭者", color:"#2cb1bc",
-    summary:"您的孩子已经能把 AI 当成『磨刀石』——用它把自己的思考磨得更锋利，而不是用它替自己思考。这是 AI 时代最难得的能力。此时家长最该做的，是『别打扰』，并不断给他更难、更开放的真实问题去折腾。",
-    advice:"多带孩子接触没有标准答案的真实问题，让他继续在『人来想、AI 来帮』之间游刃有余；偶尔示弱、向他请教，会进一步激发他。" },
-  collaborator: { emoji:"🤝", code:"FOR PARENTS · COLLABORATOR", title:"协作者", color:"#7f5af0",
-    summary:"您的孩子大体懂得和 AI 配合——先自己想、再让 AI 补，但遇到『看起来很完美』的答案时偶尔会松手。他正站在分水岭上，您再多推一把，就能成为真正的驾驭者。",
-    advice:"重点训练『质疑』：日常多和孩子一起找 AI 的破绽，把『它凭什么这么说、有没有反例』变成你们的口头禅。" },
-  dependent: { emoji:"⚠️", code:"FOR PARENTS · DEPENDENT", title:"依赖者", color:"#f9d423",
-    summary:"您的孩子已经有点习惯让 AI『拿主意』——它在帮孩子交差，却没在帮孩子长脑子。难度一上来，他的判断就容易被 AI 牵着走。好消息是，现在介入，思考的肌肉还能练回来。",
-    advice:"立一条家规：任何任务先自己做一版、再用 AI。当孩子拿 AI 答案来问您时，忍住别给结论，先反问『你自己怎么想』。" },
-  substitute: { emoji:"🆘", code:"FOR PARENTS · SUBSTITUTE", title:"代餐者", color:"#f5576c",
-    summary:"说句实在话：现在的孩子，更多是在用 AI『代替』思考，而不是辅助思考——就像用代餐顶替正餐，看着吃饱了，营养却没跟上。但孩子能认真答完这套题，本身说明苗头您已经抓住了，现在正是扭转的最佳时机。",
-    advice:"从最小一步开始：今晚就陪孩子把一道题先自己想、再问 AI；并和他约定每天一段『无 AI 时间』，重建『我能想明白』的信心。" },
-};
+        // 弹跳类
+        '汉堡': { emoji: '🍔', mode: 'bounce', deco: ['🍟','🥒','🍅','🧀'], steam: false },
+        '热狗': { emoji: '🌭', mode: 'bounce', deco: ['🍟','🥒','🍅','🌶️'], steam: false },
+        '三明治': { emoji: '🥪', mode: 'bounce', deco: ['🥬','🍅','🧀','🥒'], steam: false },
+        '炸鸡': { emoji: '🍗', mode: 'bounce', deco: ['🍟','🌶️','🍋','🌿'], steam: true },
+        '鸡腿': { emoji: '🍗', mode: 'bounce', deco: ['🍟','🌿','🌶️','🍋'], steam: true },
+        '鸡翅': { emoji: '🍗', mode: 'bounce', deco: ['🌶️','🍋','🌿','🍟'], steam: true },
+        '玉米': { emoji: '🌽', mode: 'bounce', deco: ['🌿','🧈','🌶️','🌽'], steam: true },
+        '墨西哥卷': { emoji: '🌯', mode: 'bounce', deco: ['🥬','🌶️','🍅','🌿'], steam: false },
+        '卷饼': { emoji: '🌯', mode: 'bounce', deco: ['🥬','🌶️','🍅','🌿'], steam: false },
+        '面包': { emoji: '🍞', mode: 'bounce', deco: ['🧈','🍯','🥐','🥖'], steam: false },
+        '油条': { emoji: '🥖', mode: 'bounce', deco: ['🥛','🥣','🌿','🥖'], steam: true },
+        '煎饼': { emoji: '🥞', mode: 'bounce', deco: ['🍯','🧈','🍓','🫐'], steam: true },
 
-/* ===== 家长报告：五维度各自的『表现好 / 待加强』两句 ===== */
-const DIM_PARENT = {
-  T:{ name:"独立思考",
-    good:"独立思考——孩子遇到问题会先自己动脑，不急着伸手要答案，这个习惯请务必保护好。",
-    bad:"独立思考——孩子比较依赖 AI 起步，建议要求他每件事先独立做一版，哪怕粗糙也好过直接照抄。" },
-  B:{ name:"批判性思维",
-    good:"批判性思维——孩子不会盲信 AI，懂得核对与质疑，这是信息时代的护身符。",
-    bad:"批判性思维——孩子容易把 AI 说得肯定就当成正确，平时多和他一起追问『它凭什么这么说、有没有反例』。" },
-  X:{ name:"创造力",
-    good:"创造力——孩子能在 AI 的基础上加入自己的想法，没有被同质化淹没，值得鼓励。",
-    bad:"创造力——孩子倾向直接采用 AI 的成品，建议鼓励他先拿出自己的版本，再让 AI 帮忙打磨。" },
-  Q:{ name:"提问力",
-    good:"提问力——孩子会问到点子上，把 AI 当成可以深聊的对象，这种能力越用越值钱。",
-    bad:"提问力——孩子多停留在『直接要答案』，可引导他练习追问，比如『换个角度、举个反例』。" },
-  M:{ name:"元认知",
-    good:"元认知——孩子清楚自己哪里懂、哪里不懂，知道何时该用 AI，这是相当成熟的自我管理。",
-    bad:"元认知——孩子对『自己是真懂还是假懂』分辨不清，建议常让他关掉 AI、把学到的讲给您听一遍。" },
-};
+        // 融化类
+        '冰淇淋': { emoji: '🍦', mode: 'melt', deco: ['🍓','🍫','🌰','🍒'], steam: false, drop: '💧' },
+        '雪糕': { emoji: '🍦', mode: 'melt', deco: ['🍓','🍫','🍒','🌰'], steam: false, drop: '💧' },
+        '甜筒': { emoji: '🍦', mode: 'melt', deco: ['🍓','🍫','🍒','🌰'], steam: false, drop: '💧' },
+        '冰棍': { emoji: '🍡', mode: 'melt', deco: ['🍓','🍫','🍒','🍇'], steam: false, drop: '💧' },
 
-/* ===================== 工具 ===================== */
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+        // 冒泡类（饮料）
+        '奶茶': { emoji: '🧋', mode: 'bubble', deco: ['🥤','🍰','🍪','🥛'], steam: false },
+        '咖啡': { emoji: '☕', mode: 'bubble', deco: ['🍪','🥐','🍰','☕'], steam: true },
+        '茶': { emoji: '🍵', mode: 'bubble', deco: ['🍡','🥮','🌿','🍵'], steam: true },
+        '果汁': { emoji: '🧃', mode: 'bubble', deco: ['🍊','🍓','🍇','🍎'], steam: false },
+        '可乐': { emoji: '🥤', mode: 'bubble', deco: ['🍟','🍔','🍕','🌭'], steam: false },
+        '牛奶': { emoji: '🥛', mode: 'bubble', deco: ['🍪','🥐','🍞','🍰'], steam: false },
+        '豆浆': { emoji: '🥛', mode: 'bubble', deco: ['🥖','🥯','🥐','🍞'], steam: true },
+        '汽水': { emoji: '🥤', mode: 'bubble', deco: ['🍔','🍟','🌭','🍕'], steam: false },
 
-function buildPool(){
-  const pool=[];
-  TEMPLATES.forEach((tpl,ti)=>{
-    const subs = tpl.d==="X" ? CREATIVE_SUBS : DEFAULT_SUBS;
-    subs.forEach(s=>{
-      pool.push({
-        tid: ti, lvl: tpl.lvl, d: tpl.d, tag: tpl.tag,
-        q: tpl.q(s),
-        o: tpl.o.map(op=>({ t: op.t, s: op.s }))
-      });
-    });
-  });
-  return pool;
-}
-const POOL = buildPool();
+        // 心跳类（甜点）
+        '蛋糕': { emoji: '🍰', mode: 'heartbeat', deco: ['🍓','🍒','🧁','🍫'], steam: false },
+        '甜点': { emoji: '🍮', mode: 'heartbeat', deco: ['🍓','🍫','🍪','🧁'], steam: false },
+        '布丁': { emoji: '🍮', mode: 'heartbeat', deco: ['🍓','🍒','🌰','🍫'], steam: false },
+        '月饼': { emoji: '🥮', mode: 'heartbeat', deco: ['🍵','🌸','🌙','⭐'], steam: false },
+        '马卡龙': { emoji: '🍪', mode: 'heartbeat', deco: ['🍓','🌸','🍫','🧁'], steam: false },
+        '巧克力': { emoji: '🍫', mode: 'heartbeat', deco: ['🍓','🌰','🍒','🍫'], steam: false },
+        '甜甜圈': { emoji: '🍩', mode: 'heartbeat', deco: ['🍓','🍫','🧁','🍪'], steam: false },
+        '提拉米苏': { emoji: '🍰', mode: 'heartbeat', deco: ['☕','🍫','🍓','🌰'], steam: false },
+        '芝士蛋糕': { emoji: '🍰', mode: 'heartbeat', deco: ['🍓','🍒','🫐','🍰'], steam: false },
+        '棒棒糖': { emoji: '🍭', mode: 'heartbeat', deco: ['🍬','🍫','🌈','⭐'], steam: false },
+        '糖葫芦': { emoji: '🍡', mode: 'roll', deco: ['🍒','🍓','🍇','🍎'], steam: false },
 
-function cloneQ(q){
-  const opts = q.o.map(o=>({t:o.t, s:o.s}));
-  shuffle(opts);                      // 关键：打乱选项 → 正确答案随机落在 A/B/C/D
-  return { lvl:q.lvl, d:q.d, tag:q.tag, q:q.q, opts };
-}
+        // 沸腾类
+        '火锅': { emoji: '🍲', mode: 'boil', deco: ['🥩','🥬','🌶️','🍤'], steam: true },
+        '麻辣烫': { emoji: '🍲', mode: 'boil', deco: ['🌶️','🥬','🍢','🥩'], steam: true },
+        '麻辣香锅': { emoji: '🥘', mode: 'boil', deco: ['🌶️','🍤','🥬','🥜'], steam: true },
+        '寿喜锅': { emoji: '🍲', mode: 'boil', deco: ['🥩','🥬','🥚','🍄'], steam: true },
+        '粥': { emoji: '🥣', mode: 'boil', deco: ['🥢','🌿','🥚','🍪'], steam: true },
 
-/* 从 300 池抽 20：难度梯度 + 维度均衡 + 不重复模板 */
-function sampleTest(){
-  const levelDist = {1:3,2:4,3:5,4:4,5:4};   // 共 20，难度递增
-  const picked=[], usedTid=new Set();
-  const dimCount={T:0,B:0,X:0,Q:0,M:0};
-  for(let lv=1; lv<=5; lv++){
-    let need=levelDist[lv];
-    const cands=shuffle(POOL.filter(q=>q.lvl===lv));
-    while(need>0 && cands.length){
-      cands.sort((a,b)=> dimCount[a.d]-dimCount[b.d]);   // 优先补维度
-      let idx=cands.findIndex(q=>!usedTid.has(q.tid));
-      if(idx<0) idx=0;
-      const q=cands.splice(idx,1)[0];
-      usedTid.add(q.tid); dimCount[q.d]++;
-      picked.push(cloneQ(q));
-      need--;
+        // 翻转类（日料）
+        '寿司': { emoji: '🍣', mode: 'flip', deco: ['🍙','🍱','🥢','🌿'], steam: false },
+        '日料': { emoji: '🍱', mode: 'flip', deco: ['🍣','🍙','🥢','🍵'], steam: false },
+        '便当': { emoji: '🍱', mode: 'flip', deco: ['🍙','🥚','🌿','🥬'], steam: false },
+        '饺子': { emoji: '🥟', mode: 'flip', deco: ['🥢','🌿','🍶','🥢'], steam: true },
+        '包子': { emoji: '🥟', mode: 'flip', deco: ['🥬','🌿','🥢','🍵'], steam: true },
+        '小笼包': { emoji: '🥟', mode: 'flip', deco: ['🥢','🍶','🌿','🥢'], steam: true },
+        '粽子': { emoji: '🍙', mode: 'flip', deco: ['🌿','🍶','🥢','🌿'], steam: true },
+
+        // 滚动类（串）
+        '烧烤': { emoji: '🍢', mode: 'roll', deco: ['🌶️','🥩','🍖','🌿'], steam: true },
+        '羊肉串': { emoji: '🍖', mode: 'roll', deco: ['🌶️','🥬','🍢','🌿'], steam: true },
+        '串': { emoji: '🍢', mode: 'roll', deco: ['🌶️','🍖','🥩','🌿'], steam: true },
+        '关东煮': { emoji: '🍢', mode: 'roll', deco: ['🥚','🥬','🌿','🍶'], steam: true },
+        '章鱼烧': { emoji: '🐙', mode: 'roll', deco: ['🌿','🥢','🍶','🥚'], steam: true },
+
+        // 默认浮动
+        '牛排': { emoji: '🥩', mode: 'default', deco: ['🥦','🥕','🥔','🌿'], steam: true },
+        '鱼': { emoji: '🐟', mode: 'default', deco: ['🍋','🌿','🥬','🍶'], steam: true },
+        '虾': { emoji: '🦐', mode: 'default', deco: ['🍋','🌿','🥬','🌶️'], steam: true },
+        '螃蟹': { emoji: '🦀', mode: 'default', deco: ['🍋','🌿','🧈','🥒'], steam: true },
+        '海鲜': { emoji: '🦐', mode: 'default', deco: ['🦀','🐟','🍋','🌿'], steam: true },
+        '沙拉': { emoji: '🥗', mode: 'default', deco: ['🍅','🥒','🥕','🌿'], steam: false },
+        '鸡蛋': { emoji: '🥚', mode: 'default', deco: ['🌿','🧂','🥗','🥬'], steam: true },
+        '煎蛋': { emoji: '🍳', mode: 'default', deco: ['🥓','🍞','🌿','🍅'], steam: true },
+        '苹果': { emoji: '🍎', mode: 'default', deco: ['🍏','🍊','🍐','🍇'], steam: false },
+        '香蕉': { emoji: '🍌', mode: 'default', deco: ['🍓','🍇','🍊','🍎'], steam: false },
+        '水果': { emoji: '🍎', mode: 'default', deco: ['🍌','🍇','🍊','🍓'], steam: false },
+        '米饭': { emoji: '🍚', mode: 'default', deco: ['🥢','🥬','🥩','🍳'], steam: true },
+        '炒菜': { emoji: '🥘', mode: 'default', deco: ['🌶️','🥬','🥕','🌿'], steam: true },
+    };
+
+    function getFoodInfo(food) {
+        if (foodConfig[food]) return foodConfig[food];
+        for (const key in foodConfig) {
+            if (food.includes(key) || key.includes(food)) {
+                return foodConfig[key];
+            }
+        }
+        return { emoji: '🍽️', mode: 'default', deco: ['🍴','🥄','🌿','✨'], steam: true };
     }
-  }
-  return picked; // 已按难度从低到高分组
-}
 
-/* ===================== 流程 ===================== */
-let state={ mode:"student", list:[], cur:0, answers:[] };
+    let foods = ['火锅', '拉面', '披萨', '冰淇淋', '寿司', '炸鸡', '奶茶', '蛋糕'];
+    let currentRotation = 0;
+    let isSpinning = false;
 
-function start(mode){
-  state.mode=mode;
-  state.list = mode==="student" ? sampleTest() : PARENT.map(cloneQ);
-  state.cur=0;
-  state.answers=new Array(state.list.length).fill(null);
-  show("quiz"); render();
-}
-function show(id){
-  ["cover","quiz","result"].forEach(s=>document.getElementById(s).classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-}
-function starStr(n){ return "★".repeat(n)+"☆".repeat(5-n); }
+    function drawWheel() {
+        const size = canvas.width;
+        const center = size / 2;
+        const radius = center - 10;
+        ctx.clearRect(0, 0, size, size);
 
-function render(){
-  const q=state.list[state.cur], N=state.list.length;
-  document.getElementById("qtext").textContent=q.q;
-  document.getElementById("qcount").textContent=`第 ${state.cur+1} / ${N} 题`;
-  document.getElementById("fill").style.width=((state.cur+1)/N*100)+"%";
-  document.getElementById("backBtn").classList.toggle("hidden", state.cur===0);
+        if (foods.length === 0) {
+            ctx.beginPath();
+            ctx.arc(center, center, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#f5f5f5'; ctx.fill();
+            ctx.fillStyle = '#999'; ctx.font = '24px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('请添加美食', center, center - 20);
+            ctx.fillText('🍽️', center, center + 20);
+            return;
+        }
 
-  const lt=document.getElementById("lvltag"), st=document.getElementById("stag"), sr=document.getElementById("stars");
-  if(state.mode==="student"){
-    lt.textContent=LVL[q.lvl]; lt.style.background=LVLC[q.lvl]+"33"; lt.style.color=LVLC[q.lvl];
-    st.textContent="情景 · "+q.tag; sr.textContent=starStr(q.lvl);
-  }else{
-    lt.textContent="家长评估"; lt.style.background="#7f5af033"; lt.style.color="#a18bff";
-    st.textContent="家长 · "+q.tag; sr.textContent="";
-  }
+        const sliceAngle = (Math.PI * 2) / foods.length;
+        foods.forEach((food, i) => {
+            const startAngle = i * sliceAngle - Math.PI / 2;
+            const endAngle = startAngle + sliceAngle;
+            ctx.beginPath();
+            ctx.moveTo(center, center);
+            ctx.arc(center, center, radius, startAngle, endAngle);
+            ctx.closePath();
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
 
-  const box=document.getElementById("opts"); box.innerHTML="";
-  const keys=["A","B","C","D"];
-  q.opts.forEach((op,i)=>{
-    const el=document.createElement("div");
-    el.className="opt"+(state.answers[state.cur]===i?" sel":"");
-    el.innerHTML=`<span class="opt-key">${keys[i]}</span><span>${op.t}</span>`;
-    el.onclick=()=>{ state.answers[state.cur]=i; setTimeout(next,220); };
-    box.appendChild(el);
-  });
-}
-function next(){ if(state.cur<state.list.length-1){ state.cur++; render(); } else finish(); }
-function goBack(){ if(state.cur>0){ state.cur--; render(); } }
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.rotate(startAngle + sliceAngle / 2);
+            ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 22px "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4;
+            const textRadius = radius - 25;
+            ctx.fillText(food, textRadius, 0);
+            ctx.restore();
+        });
+        ctx.beginPath();
+        ctx.arc(center, center, 50, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+    }
 
-/* ===== 雷达图（viewBox 留边距，标签不再被裁切） ===== */
-function buildRadar(vals, labels, colors){
-  const cx=150, cy=150, R=100, n=vals.length;
-  const ang=i=> -Math.PI/2 + i*2*Math.PI/n;
-  const pt=(i,r)=>[cx+r*Math.cos(ang(i)), cy+r*Math.sin(ang(i))];
-  let grid="";
-  for(let g=1; g<=4; g++){
-    const r=R*g/4;
-    grid+=`<polygon points="${vals.map((_,i)=>pt(i,r).map(v=>v.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`;
-  }
-  let axes="";
-  for(let i=0;i<n;i++){ const [x,y]=pt(i,R); axes+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`; }
-  const dpts=vals.map((v,i)=>pt(i,R*v/100).map(c=>c.toFixed(1)).join(",")).join(" ");
-  let dots="", labs="";
-  for(let i=0;i<n;i++){
-    const [x,y]=pt(i,R*vals[i]/100);
-    dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${colors[i]}" stroke="#1a1730" stroke-width="1.5"/>`;
-    const [lx,ly]=pt(i,R+22);
-    let anchor="middle"; if(lx>cx+5) anchor="start"; else if(lx<cx-5) anchor="end";
-    labs+=`<text x="${lx.toFixed(1)}" y="${(ly).toFixed(1)}" font-size="12" fill="#cfcce4" text-anchor="${anchor}">${labels[i]}</text>`;
-    labs+=`<text x="${lx.toFixed(1)}" y="${(ly+15).toFixed(1)}" font-size="11" font-weight="700" fill="${colors[i]}" text-anchor="${anchor}">${vals[i]}</text>`;
-  }
-  return `<svg class="radar-svg" viewBox="-40 -25 380 350" xmlns="http://www.w3.org/2000/svg">
-    <defs><radialGradient id="radarFill" cx="50%" cy="50%" r="65%">
-      <stop offset="0%" stop-color="#7f5af0" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#2cb1bc" stop-opacity="0.35"/></radialGradient></defs>
-    ${grid}${axes}
-    <g class="radar-poly"><polygon points="${dpts}" fill="url(#radarFill)" stroke="#a18bff" stroke-width="2" stroke-linejoin="round"/>${dots}</g>
-    ${labs}</svg>`;
-}
+    function renderFoodList() {
+        foodList.innerHTML = '';
+        if (foods.length === 0) {
+            foodList.innerHTML = '<div class="empty-tip">列表是空的，添加一些美食吧～</div>';
+            return;
+        }
+        foods.forEach((food, i) => {
+            const info = getFoodInfo(food);
+            const div = document.createElement('div');
+            div.className = 'food-item';
+            div.innerHTML = `<span class="food-name">${i + 1}. ${info.emoji} ${food}</span>
+                <button class="delete-btn" data-index="${i}">删除</button>`;
+            foodList.appendChild(div);
+        });
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                foods.splice(parseInt(e.target.dataset.index), 1);
+                drawWheel(); renderFoodList();
+            });
+        });
+    }
 
-function finish(){ state.mode==="student" ? finishStudent() : finishParent(); }
+    function addFood() {
+        const value = foodInput.value.trim();
+        if (!value) return;
+        if (foods.length >= 12) { alert('最多只能添加12个哦～'); return; }
+        if (foods.includes(value)) { alert('已经有这个美食啦！'); return; }
+        foods.push(value); foodInput.value = '';
+        drawWheel(); renderFoodList();
+    }
 
-function finishStudent(){
-  let total=0; const max=state.list.length*3;
-  const dims={T:[0,0],B:[0,0],X:[0,0],Q:[0,0],M:[0,0]};
-  state.list.forEach((q,i)=>{
-    const sc=q.opts[state.answers[i]].s;
-    total+=sc; dims[q.d][0]+=sc; dims[q.d][1]+=3;
-  });
-  const pct=Math.round(total/max*100);
+    // 不同模式的台词
+    const yummyTextsByMode = {
+        sway: ['呼噜呼噜～面条好香！🍜', '热气腾腾的面汤！🥢', '吸溜起来超满足！😋'],
+        rotate: ['看！热腾腾的好香啊～🤤', '色香味俱全！😍', '一口下去满足感爆棚！😋'],
+        bounce: ['咔嚓咔嚓，香脆诱人！😆', '黄金酥脆，看着流口水！🤤', '快快端上来吧！😋'],
+        melt: ['冰冰凉凉，超治愈！🍦', '甜蜜入心，融化了～💕', '夏天就要这一口！😍'],
+        bubble: ['咕嘟咕嘟，好解渴！🥤', '冒着小泡泡，超可爱！💕', '清爽一夏！😎'],
+        heartbeat: ['甜甜的，心都化了～💗', '少女心爆棚的甜点！🍰', '幸福感满满！💕'],
+        boil: ['咕嘟咕嘟，沸腾啦！🔥', '热气腾腾，暖到心里！🍲', '香气四溢，馋死人！🤤'],
+        flip: ['精致小巧，每一口都是艺术！🍣', '一口一个，停不下来！😋', '高颜值美食出现！✨'],
+        roll: ['一串一串好过瘾！🍢', '滚啊滚，香气扑鼻！🔥', '咬一口，喷香！😋'],
+        default: ['看起来真好吃！😋', '哇！太诱人啦！🤤', '光看就饱了！😍']
+    };
 
-  let type;
-  if(pct>=80) type={emoji:"🚀",code:"TYPE · AMPLIFIER",title:"AI 增强者",color:"#2cb1bc",
-    desc:"你已经把 AI 当成了「思考的对手」而不是「答案的来源」——它越强，你被逼着想得越深。你懂得质疑、敢于反问、还保得住自己的创造力。这是 AI 时代最稀缺的脑子。",
-    tips:["保持「先自己想透，再让 AI 来挑战我」的习惯，这是你最硬的本事。","下次试着主动找 AI 的漏洞，把它当成可以辩论的对象。","把你想明白的东西讲给别人听——输出会让你强上加强。"]};
-  else if(pct>=60) type={emoji:"🧭",code:"TYPE · NAVIGATOR",title:"清醒使用者",color:"#7f5af0",
-    desc:"你大体知道该怎么和 AI 过招，但碰到「看起来很有道理」的陷阱时，偶尔还会被带着走。你站在岔路口：再多一点警觉就是增强者，松一口气也可能滑向依赖。",
-    tips:["遇到 AI 说得特别肯定、特别完整时，反而要多留个心眼。","养成追问「它凭什么这么说」和「有没有反例」的习惯。","越是『听起来全面/聪明』的选择，越要停下来想想是不是陷阱。"]};
-  else if(pct>=40) type={emoji:"⚠️",code:"TYPE · LEANER",title:"依赖临界者",color:"#f9d423",
-    desc:"你已经有点习惯「让 AI 替你拿主意」了——它在帮你交差，但没在帮你长脑子。难度一上来，你的判断就容易跟着 AI 走。现在练，思考的肌肉还能长回来。",
-    tips:["定一条铁律：先自己拿出一个判断，再去问 AI。","把「给我答案」换成「告诉我你的理由，我来判断」。","每天留 30 分钟「无 AI 时间」，纯靠自己想问题。"]};
-  else type={emoji:"🆘",code:"TYPE · REPLACED",title:"被替代风险者",color:"#f5576c",
-    desc:"说句实在话：现在的你，更多是在用 AI「代替」思考，而不是辅助思考。它给什么你信什么，它写什么你用什么。这样下去，越来越聪明的是 AI，越来越省脑的是你。但你能答到这里，说明你心里其实清楚——这就是转机。",
-    tips:["从今天起：任何事先自己试，哪怕想错也比直接抄强。","刻意练习「质疑」：每次都问一句 AI『你确定吗？凭什么？』","找一件纯靠自己搞定的小事，重新找回「我能想明白」的感觉。"]};
+    function setupFoodStage(food) {
+        const info = getFoodInfo(food);
+        const mode = info.mode;
 
-  const order=["T","B","X","Q","M"];
-  const dimNames={T:"独立思考",B:"批判性思维",X:"创造力",Q:"提问力",M:"元认知"};
-  const dimColors={T:"#a18bff",B:"#f5576c",X:"#f9d423",Q:"#2cb1bc",M:"#ff7eb6"};
-  const vals=order.map(k=> dims[k][1]? Math.round(dims[k][0]/dims[k][1]*100):0 );
-  const radarSvg=buildRadar(vals, order.map(k=>dimNames[k]), order.map(k=>dimColors[k]));
-  const legend=order.map((k,i)=>`<span><i class="lg-dot" style="background:${dimColors[k]}"></i>${dimNames[k]} ${vals[i]}</span>`).join("");
+        // 重置场景类
+        foodStage.className = 'food-stage stage-' + mode;
 
-  /* ===== 家长报告：按总分选模板 + 逐维度挑句子（本地组合） ===== */
-  let pt;
-  if(pct>=80) pt=PARENT_TYPE.driver;
-  else if(pct>=60) pt=PARENT_TYPE.collaborator;
-  else if(pct>=40) pt=PARENT_TYPE.dependent;
-  else pt=PARENT_TYPE.substitute;
+        // 设置主食物
+        mainFood.textContent = info.emoji;
 
-  const parentDimHtml = order.map((k,i)=>{
-    const ok = vals[i] >= 60;
-    const sentence = ok ? DIM_PARENT[k].good : DIM_PARENT[k].bad;
-    return `<div class="tip-item"><span class="ico">${ok?'🟢':'🔧'}</span><span>${sentence}</span></div>`;
-  }).join("");
+        // 设置装饰小食物
+        const decos = info.deco || ['🌿','✨','⭐','🌿'];
+        document.getElementById('deco1').textContent = decos[0] || '';
+        document.getElementById('deco2').textContent = decos[1] || '';
+        document.getElementById('deco3').textContent = decos[2] || '';
+        document.getElementById('deco4').textContent = decos[3] || '';
 
-  const parentReport = `
-    <div class="section-divider">— 家长报告 —</div>
-    <div class="card" style="border-color:${pt.color}66">
-      <div class="result-type" style="margin-bottom:4px">${pt.code}</div>
-      <h3 style="font-size:18px;color:${pt.color}">${pt.emoji} 孩子目前属于「${pt.title}」</h3>
-      <p>${pt.summary}</p>
-    </div>
-    <div class="card"><h3>📊 五维度逐项解读</h3>${parentDimHtml}</div>
-    <div class="card" style="background:rgba(127,90,240,0.1)"><h3>🧭 家长行动建议</h3><p>${pt.advice}</p></div>
-    <div class="notice" style="margin-top:14px">说明：本家长报告由系统依据孩子的得分，从预设文案库中按规则自动组合而成，用于快速参考，不能替代您对孩子的真实了解与陪伴。</div>
-  `;
+        // 蒸汽显隐
+        document.querySelectorAll('.steam').forEach(s => {
+            s.style.display = info.steam ? 'block' : 'none';
+        });
 
-  document.getElementById("result").innerHTML=`
-    <div class="result-emoji">${type.emoji}</div>
-    <div class="result-type">${type.code}</div>
-    <div class="result-title" style="color:${type.color}">${type.title}</div>
-    <div class="score-ring"><div style="text-align:center">
-      <div class="score-num" style="color:${type.color}">${pct}<small>/100</small></div>
-      <div style="font-size:12px;color:#9b97bd;margin-top:4px">AI 思考力指数</div>
-    </div></div>
-    <div class="level-bar">
-      <div class="level-track"><div class="level-marker" style="left:calc(${pct}% - 2px)"></div></div>
-      <div class="level-labels"><span>被替代</span><span>依赖</span><span>清醒</span><span>增强</span></div>
-    </div>
-    <div class="card"><h3>🔍 你的思考画像</h3><p>${type.desc}</p></div>
-    <div class="card"><h3>📡 五维思考力雷达</h3>
-      <div class="radar-wrap">${radarSvg}<div class="radar-legend">${legend}</div></div></div>
-    <div class="card"><h3>🌱 给你的成长处方</h3>
-      ${type.tips.map(t=>`<div class="tip-item"><span class="ico">✅</span><span>${t}</span></div>`).join("")}</div>
-    ${parentReport}
-    <div class="quote">「AI 应该是孩子的脚手架，<br>而不是孩子的轮椅。」</div>
-    <button class="btn" onclick="start('student')">换一批题再测一次</button>
-    <button class="btn ghost" onclick="restart()">返回首页</button>`;
-  show("result");
-  document.querySelector(".app").scrollIntoView({behavior:"smooth"});
-}
+        // 融化滴落
+        const drop = info.drop || '💧';
+        document.getElementById('meltDrop1').textContent = drop;
+        document.getElementById('meltDrop2').textContent = drop;
 
-function finishParent(){
-  let total=0; const max=state.list.length*3;
-  state.list.forEach((q,i)=> total+=q.opts[state.answers[i]].s);
-  const pct=Math.round(total/max*100);
+        // 台词
+        const texts = yummyTextsByMode[mode] || yummyTextsByMode.default;
+        modalText.textContent = texts[Math.floor(Math.random() * texts.length)];
+    }
 
-  let type;
-  if(pct>=80) type={emoji:"🤝",code:"PARENT · COACH",title:"教练型家长",color:"#2cb1bc",
-    desc:"你已经把 AI 变成了帮孩子「长脑子」的工具：你陪孩子一起判断、一起质疑，自己也以身作则。在这样的家庭里，AI 越强，孩子越聪明。",
-    tips:["继续保持「先问孩子怎么想，再一起看 AI」的习惯。","和孩子玩「一起找 AI 的错」，把它当成全家的智力游戏。","偶尔分享你自己被 AI 误导的经历，让孩子知道大人也要保持警惕。"]};
-  else if(pct>=55) type={emoji:"🌤",code:"PARENT · GUIDE",title:"引导成长型",color:"#7f5af0",
-    desc:"你已意识到 AI 不能放任，也在努力引导，但有时还会图省事直接给孩子结论，或规则执行得不够稳。再往前一步，你就是孩子最好的「AI 教练」。",
-    tips:["把「这是对的」换成「你觉得呢？我们一起看看」。","和孩子一起定下清晰、可执行的用 AI 规则，并坚持执行。","多关注孩子用 AI 的『过程』，而不只是作业的『结果』。"]};
-  else if(pct>=35) type={emoji:"🛟",code:"PARENT · ADJUST",title:"待调整型",color:"#f9d423",
-    desc:"目前家里对 AI 要么管得偏松、要么只看结果，孩子容易在不知不觉中把思考交给 AI。好消息是，方向调一调，习惯还来得及重建。",
-    tips:["先和孩子约定：重要任务必须自己先做一版，再用 AI。","孩子拿 AI 答案来问你时，忍住别给结论，先反问他。","每天留一段「无 AI 时间」，全家一起。"]};
-  else type={emoji:"⚠️",code:"PARENT · RESET",title:"需要重启型",color:"#f5576c",
-    desc:"说句实在话，现在的用法更可能让孩子把 AI 当成「替自己思考的人」。但你愿意来做这份评估，本身就是改变的开始。",
-    tips:["从最小的一步开始：今晚就和孩子一起，把一道题先自己想再问 AI。","把「快点做完」的期待，换成「慢一点、想明白」。","你自己用 AI 时也说出判断过程，孩子会照着学。"]};
+    function spin() {
+        if (isSpinning) return;
+        if (foods.length < 2) {
+            result.textContent = '至少需要2个选项哦～';
+            return;
+        }
+        isSpinning = true;
+        spinBtn.disabled = true;
+        result.textContent = '旋转中...';
 
-  document.getElementById("result").innerHTML=`
-    <div class="result-emoji">${type.emoji}</div>
-    <div class="result-type">${type.code}</div>
-    <div class="result-title" style="color:${type.color}">${type.title}</div>
-    <div class="score-ring"><div style="text-align:center">
-      <div class="score-num" style="color:${type.color}">${pct}<small>/100</small></div>
-      <div style="font-size:12px;color:#9b97bd;margin-top:4px">家庭引导力指数</div>
-    </div></div>
-    <div class="level-bar">
-      <div class="level-track"><div class="level-marker" style="left:calc(${pct}% - 2px)"></div></div>
-      <div class="level-labels"><span>需重启</span><span>待调整</span><span>引导</span><span>教练</span></div>
-    </div>
-    <div class="card"><h3>🔍 你的家庭画像</h3><p>${type.desc}</p></div>
-    <div class="card"><h3>🌱 给你的引导处方</h3>
-      ${type.tips.map(t=>`<div class="tip-item"><span class="ico">✅</span><span>${t}</span></div>`).join("")}</div>
-    <div class="quote">「让孩子和 AI 相处的方式，<br>就是他未来和世界相处的方式。」</div>
-    <button class="btn" onclick="start('student')">让孩子也来测一测 →</button>
-    <button class="btn ghost" onclick="restart()">返回首页</button>`;
-  show("result");
-  document.querySelector(".app").scrollIntoView({behavior:"smooth"});
-}
+        const sliceAngle = 360 / foods.length;
+        const winnerIndex = Math.floor(Math.random() * foods.length);
+        const targetAngle = -(winnerIndex * sliceAngle + sliceAngle / 2) + (Math.random() * sliceAngle * 0.6 - sliceAngle * 0.3);
+        const fullSpins = 5 + Math.floor(Math.random() * 3);
+        const finalRotation = currentRotation + fullSpins * 360 + (targetAngle - (currentRotation % 360));
 
-function restart(){ show("cover"); }
+        canvas.style.transition = 'transform 4.5s cubic-bezier(0.17, 0.67, 0.16, 0.99)';
+        canvas.style.transform = `rotate(${finalRotation}deg)`;
+        currentRotation = finalRotation;
+
+        setTimeout(() => {
+            isSpinning = false;
+            spinBtn.disabled = false;
+            const winner = foods[winnerIndex];
+            const info = getFoodInfo(winner);
+            result.textContent = `🎯 ${info.emoji} ${winner}`;
+            winnerName.textContent = `${info.emoji} ${winner}`;
+            setupFoodStage(winner);
+            modal.classList.add('show');
+        }, 4600);
+    }
+
+    addBtn.addEventListener('click', addFood);
+    foodInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addFood(); });
+    spinBtn.addEventListener('click', spin);
+    presetBtn.addEventListener('click', () => {
+        foods = ['火锅', '拉面', '披萨', '冰淇淋', '寿司', '炸鸡', '奶茶', '蛋糕'];
+        drawWheel(); renderFoodList();
+    });
+    clearBtn.addEventListener('click', () => {
+        foods = []; drawWheel(); renderFoodList();
+    });
+    closeModal.addEventListener('click', () => modal.classList.remove('show'));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('show');
+    });
+
+    drawWheel();
+    renderFoodList();
 </script>
 
 
