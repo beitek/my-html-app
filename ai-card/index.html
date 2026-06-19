@@ -1,0 +1,2778 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 共学卡片 · 200 张</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { -webkit-font-smoothing: antialiased; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #fefce8 0%, #f5f3ff 50%, #eff6ff 100%);
+  min-height: 100vh; color: #334155; line-height: 1.6;
+  padding: 24px 16px 60px;
+}
+.container { max-width: 1100px; margin: 0 auto; }
+.hero { text-align: center; padding: 24px 12px 24px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; background: #ede9fe; color: #6d28d9;
+  border-radius: 999px; font-size: 13px; font-weight: 500; margin-bottom: 18px;
+}
+.hero h1 { font-size: 32px; font-weight: 800; color: #1e293b; margin-bottom: 10px; letter-spacing: -0.5px; }
+@media (min-width: 640px) { .hero h1 { font-size: 40px; } }
+.hero .sub { color: #64748b; font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+.dashboard { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 16px; }
+@media (min-width: 720px) { .dashboard { grid-template-columns: 2fr 1fr 1fr; } }
+.dash-card { background: #fff; border-radius: 20px; padding: 18px 20px; box-shadow: 0 10px 30px -12px rgba(0,0,0,0.08); }
+.dash-today { background: linear-gradient(135deg, #fef3c7, #fecaca); position: relative; overflow: hidden; cursor: pointer; }
+.dash-today .label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #9a3412; opacity: 0.8; }
+.dash-today .today-card { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.dash-today .today-emoji { font-size: 40px; flex-shrink: 0; background: rgba(255,255,255,0.6); width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+.dash-today .today-title { font-size: 18px; font-weight: 800; color: #1e293b; }
+.dash-today .today-tag { font-size: 13px; color: #7c2d12; margin-top: 4px; }
+.dash-streak, .dash-progress { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.dash-streak .num, .dash-progress .num { font-size: 36px; font-weight: 900; color: #6d28d9; line-height: 1; }
+.dash-streak .fire { font-size: 28px; }
+.dash-streak .lbl, .dash-progress .lbl { font-size: 12px; color: #64748b; margin-top: 6px; letter-spacing: 1px; }
+.dash-progress .num { color: #10b981; }
+.dash-progress .bar { width: 100%; height: 4px; background: #e2e8f0; border-radius: 999px; margin-top: 10px; overflow: hidden; }
+.dash-progress .fill { height: 100%; background: linear-gradient(to right, #10b981, #14b8a6); border-radius: 999px; transition: width 0.4s; }
+
+/* ===== 雷达图 + 成就 双栏 ===== */
+.insights { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 20px; }
+@media (min-width: 720px) { .insights { grid-template-columns: 1fr 1fr; } }
+.insights-card { background: #fff; border-radius: 20px; padding: 18px 20px; box-shadow: 0 10px 30px -12px rgba(0,0,0,0.08); }
+.insights-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #94a3b8; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.radar-wrap { display: flex; align-items: center; justify-content: center; padding: 6px 0; }
+.radar-svg { width: 100%; max-width: 260px; height: auto; }
+.radar-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; margin-top: 8px; font-size: 12px; }
+.radar-legend .item { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: #64748b; padding: 3px 8px; border-radius: 8px; transition: background 0.15s; }
+.radar-legend .item:hover { background: #f1f5f9; }
+.radar-legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+.ach-item { aspect-ratio: 1; border-radius: 12px; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; cursor: help; transition: transform 0.15s; border: 1.5px solid transparent; }
+.ach-item:hover { transform: scale(1.08); z-index: 2; }
+.ach-item.locked { opacity: 0.35; filter: grayscale(1); }
+.ach-item.unlocked { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; box-shadow: 0 4px 8px -2px rgba(245,158,11,0.3); }
+.ach-emoji { font-size: 22px; line-height: 1; }
+.ach-name { font-size: 9px; font-weight: 600; color: #64748b; text-align: center; line-height: 1.1; padding: 0 2px; }
+.ach-item.unlocked .ach-name { color: #78350f; }
+.ach-tooltip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 6px 10px; border-radius: 8px; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 10; font-weight: normal; }
+.ach-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1e293b; }
+.ach-item:hover .ach-tooltip { opacity: 1; }
+.ach-summary { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+/* ===== 控制栏 ===== */
+.controls { background: #fff; border-radius: 20px; padding: 16px; margin-bottom: 20px; box-shadow: 0 10px 30px -12px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 12px; }
+.search-box { position: relative; }
+.search-box input { width: 100%; padding: 11px 14px 11px 40px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-family: inherit; color: #334155; outline: none; transition: border-color 0.2s; background: #f8fafc; }
+.search-box input:focus { border-color: #8b5cf6; background: #fff; }
+.search-box .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #94a3b8; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 7px 13px; border: 1.5px solid #e2e8f0; background: #fff; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; color: #64748b; font-family: inherit; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+.chip:hover { border-color: #cbd5e1; }
+.chip.active { background: #1e293b; color: #fff; border-color: #1e293b; }
+.chip .count { opacity: 0.6; font-size: 11px; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-draw { flex: 1; min-width: 140px; padding: 10px 16px; border: none; cursor: pointer; background: linear-gradient(to right, #f59e0b, #ef4444); color: #fff; font-weight: 600; font-size: 14px; font-family: inherit; border-radius: 999px; box-shadow: 0 6px 18px -6px rgba(239,68,68,0.5); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.btn-draw:hover { opacity: 0.92; }
+.btn-draw:active { transform: scale(0.97); }
+.btn-mini { padding: 10px 14px; border: 1.5px solid #e2e8f0; cursor: pointer; background: #fff; color: #64748b; font-family: inherit; font-size: 13px; border-radius: 999px; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.btn-mini:hover { border-color: #cbd5e1; }
+.result-count { font-size: 12px; color: #94a3b8; text-align: center; }
+
+/* ===== 卡片网格 ===== */
+.grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 960px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+.card { position: relative; background: #fff; border-radius: 22px; overflow: hidden; cursor: pointer; border: 2px solid transparent; box-shadow: 0 8px 24px -12px rgba(0,0,0,0.1), 0 4px 8px -4px rgba(0,0,0,0.04); transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; display: flex; flex-direction: column; min-height: 260px; }
+.card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15); }
+.card.done { opacity: 0.65; }
+.card.done .quick-mark { background: #10b981; color: #fff; border-color: #10b981; }
+.quick-mark { position: absolute; top: 12px; left: 12px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.9); border: 2px solid rgba(255,255,255,0.8); cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #cbd5e1; font-weight: 700; transition: all 0.2s; backdrop-filter: blur(8px); }
+.quick-mark:hover { transform: scale(1.1); color: #10b981; }
+.card-top { padding: 20px 20px 16px; position: relative; color: #fff; }
+.card-no { position: absolute; top: 14px; right: 16px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; opacity: 0.6; }
+.card-dim-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,0.25); backdrop-filter: blur(6px); margin-bottom: 12px; margin-left: 38px; }
+.card-emoji { font-size: 36px; line-height: 1; margin-bottom: 6px; }
+.card-title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+.card-body { padding: 14px 20px 16px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.card-tagline { color: #475569; font-size: 13px; line-height: 1.6; flex: 1; }
+.card-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #94a3b8; padding-top: 10px; border-top: 1px dashed #e2e8f0; }
+.card-meta .item { display: inline-flex; align-items: center; gap: 4px; }
+.dots { display: inline-flex; gap: 2px; }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: #cbd5e1; }
+.dot.on { background: currentColor; }
+.dim-critical .card-top { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.dim-creativity .card-top { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.dim-communication .card-top { background: linear-gradient(135deg, #10b981, #047857); }
+.dim-collaboration .card-top { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
+.dim-critical .card-meta .dots { color: #8b5cf6; }
+.dim-creativity .card-meta .dots { color: #f59e0b; }
+.dim-communication .card-meta .dots { color: #10b981; }
+.dim-collaboration .card-meta .dots { color: #0ea5e9; }
+
+/* ===== 模态 ===== */
+.overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.65); backdrop-filter: blur(6px); z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.modal { background: #fff; border-radius: 24px; max-width: 560px; width: 100%; overflow: hidden; margin: 24px auto; animation: slideUp 0.3s ease; position: relative; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3); }
+.close-btn { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255,255,255,0.3); color: #fff; font-size: 20px; cursor: pointer; z-index: 3; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.close-btn:hover { background: rgba(255,255,255,0.5); }
+.modal-top { padding: 28px 24px 24px; color: #fff; position: relative; }
+.modal-top .card-no { font-size: 13px; opacity: 0.7; top: 20px; right: 60px; }
+.modal-top .card-dim-tag { margin-bottom: 18px; margin-left: 0; }
+.modal-top .card-emoji { font-size: 56px; }
+.modal-top .card-title { font-size: 26px; margin-bottom: 6px; }
+.modal-top .card-tagline-big { font-size: 15px; opacity: 0.92; margin-top: 8px; }
+.modal-top .card-meta { margin-top: 18px; color: #fff; opacity: 0.85; border-top: 1px solid rgba(255,255,255,0.25); padding-top: 14px; border-bottom: none; }
+.modal-top .card-meta .dots { color: #fff; }
+.modal-top .card-meta .dot { background: rgba(255,255,255,0.35); }
+.modal-top .card-meta .dot.on { background: #fff; }
+.modal-body { padding: 22px 24px 26px; }
+.section { margin-bottom: 18px; }
+.section:last-of-type { margin-bottom: 0; }
+.section-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
+.section-content { color: #334155; font-size: 14.5px; line-height: 1.7; }
+.steps { counter-reset: step; list-style: none; }
+.steps li { counter-increment: step; padding: 11px 0 11px 38px; position: relative; color: #334155; font-size: 14.5px; line-height: 1.65; border-bottom: 1px dashed #f1f5f9; }
+.steps li:last-child { border-bottom: none; }
+.steps li::before { content: counter(step); position: absolute; left: 0; top: 11px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+.dim-critical .steps li::before { background: #8b5cf6; }
+.dim-creativity .steps li::before { background: #f59e0b; }
+.dim-communication .steps li::before { background: #10b981; }
+.dim-collaboration .steps li::before { background: #0ea5e9; }
+.steps code { background: #f1f5f9; color: #475569; padding: 1px 6px; border-radius: 4px; font-size: 13px; font-family: "SF Mono", Consolas, monospace; }
+.tip-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 11px 14px; font-size: 13.5px; color: #78350f; line-height: 1.65; display: flex; gap: 8px; }
+.extension-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 11px 14px; font-size: 13.5px; color: #14532d; line-height: 1.65; display: flex; gap: 8px; }
+.tip-box .emoji, .extension-box .emoji { flex-shrink: 0; font-size: 16px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #f1f5f9; }
+.btn-done, .btn-undo { flex: 1; padding: 12px; border: none; cursor: pointer; font-size: 14.5px; font-weight: 600; font-family: inherit; border-radius: 14px; transition: opacity 0.2s, transform 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn-done { background: #10b981; color: #fff; }
+.btn-done:hover { opacity: 0.9; }
+.btn-done:active { transform: scale(0.98); }
+.btn-undo { background: #f1f5f9; color: #64748b; }
+.btn-undo:hover { background: #e2e8f0; }
+
+.foot { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 36px; line-height: 1.8; }
+.empty { text-align: center; padding: 60px 20px; color: #94a3b8; }
+.empty-emoji { font-size: 48px; margin-bottom: 12px; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 100; box-shadow: 0 10px 30px -6px rgba(0,0,0,0.3); animation: toastIn 0.2s ease; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* 成就解锁大弹窗 */
+.ach-unlock { position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%) scale(0.5); background: linear-gradient(135deg, #fef3c7, #fbbf24); padding: 20px 28px; border-radius: 22px; z-index: 200; box-shadow: 0 20px 60px -10px rgba(245,158,11,0.6); display: flex; align-items: center; gap: 16px; opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; }
+.ach-unlock.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.ach-unlock .big-emoji { font-size: 44px; }
+.ach-unlock .label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #92400e; }
+.ach-unlock .title { font-size: 18px; font-weight: 800; color: #78350f; margin-top: 2px; }
+.ach-unlock .desc { font-size: 12px; color: #92400e; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<input type="file" id="fileInput" accept="application/json" style="display:none">
+
+<script>
+/* ================================================================
+   进度持久化(v3) - 加入 achievements 字段
+================================================================ */
+const STORAGE_KEY = 'ai-cards-progress-v3';
+const LEGACY_KEYS = ['ai-cards-progress-v2', 'ai-cards-progress-v1'];
+
+const Progress = {
+  load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (Array.isArray(d.done)) return {
+          done: d.done, log: d.log || {}, daily: d.daily || [],
+          achievements: d.achievements || [], updatedAt: d.updatedAt || null
+        };
+      }
+      for (const key of LEGACY_KEYS) {
+        const legacy = localStorage.getItem(key);
+        if (legacy) {
+          const d = JSON.parse(legacy);
+          if (Array.isArray(d.done)) return {
+            done: d.done, log: d.log || {}, daily: d.daily || [],
+            achievements: [], updatedAt: d.updatedAt || null
+          };
+        }
+      }
+    } catch (e) { console.warn('读取失败', e); }
+    return { done: [], log: {}, daily: [], achievements: [], updatedAt: null };
+  },
+  save(s) {
+    try {
+      const data = {
+        version: 3,
+        done: Array.from(s.done), log: s.log,
+        daily: Array.from(s.daily), achievements: Array.from(s.achievements),
+        updatedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      return data.updatedAt;
+    } catch (e) { return null; }
+  },
+  reset() { try { localStorage.removeItem(STORAGE_KEY); LEGACY_KEYS.forEach(k => localStorage.removeItem(k)); } catch (e) {} }
+};
+
+const DIMENSIONS = {
+  all:           { name: '全部', color: '#1e293b' },
+  critical:      { name: '批判性思考', color: '#8b5cf6', emoji: '🔍' },
+  creativity:    { name: '创造力',     color: '#f59e0b', emoji: '✨' },
+  communication: { name: '表达力',     color: '#10b981', emoji: '💬' },
+  collaboration: { name: '协作力',     color: '#0ea5e9', emoji: '🤝' },
+};
+
+/* ================================================================
+   200 张卡片 - steps 已细化为可直接执行的脚本
+================================================================ */
+const CARDS = [
+  /* ========== 批判性思考 50 张 ========== */
+  { id:'001', dim:'critical', emoji:'🕵️', title:'AI 找茬王', tagline:'让 AI 故意犯错,孩子来当侦探。', difficulty:1, time:'15 分钟', goal:'培养孩子对 AI 输出的"质疑本能"——最底层也最重要的 AI 素养。', setup:'任何一个 AI 对话工具。',
+    steps:[
+      '和孩子坐下来,让他选一个他最熟悉、最有把握的主题——比如他最爱的一本书、一个游戏、一个球星。越熟越好,底气越足。',
+      '打开 AI,输入 prompt:<code>请写一段 150 字介绍 XX,其中故意加入 3 处明显错误(事实错误、张冠李戴、编造细节都行),不要告诉我错在哪。</code>',
+      '把 AI 写的文字读给孩子(不要给他看屏幕,纯靠听,更像"侦探听案情"),让他逐句圈出他怀疑的地方,说出理由。',
+      '对完答案后,让孩子给自己打分:猜对几个?有没有"冤枉好人"的?最有成就感的发现是哪一个?',
+    ],
+    tip:'一定要从孩子最懂的领域开始——他越熟悉,越容易建立"我可以挑战 AI"的自信。第一次就让他赢一把。', ext:'升级版:不告诉他错误数量,让他自己判断有几处。更难:让 AI 在 100% 正确和 50% 正确之间随机,孩子都不知道。' },
+
+  { id:'002', dim:'critical', emoji:'🥊', title:'两个 AI 打一架', tagline:'同一个问题,问两个 AI,看谁说得有道理。', difficulty:2, time:'20 分钟', goal:'让孩子意识到:AI 不是真理,只是一种"看法"。',setup:'同时打开两个不同的 AI(比如 ChatGPT + 文心一言,或两家不同的)。',
+    steps:[
+      '让孩子提一个没有标准答案的问题,比如"小学生该不该有手机""古代人更快乐还是现代人更快乐"。',
+      '在两个 AI 里问完全一样的问题,把两份答案并排贴到同一个文档里,方便对照。',
+      '让孩子用荧光笔(或两种颜色字体)标出:绿色 = 两边说法一致的点,红色 = 只有一方提到的点,黄色 = 两边相互矛盾的点。',
+      '看完标注讨论:两边共识多还是分歧多?哪一方你觉得更有道理?你自己最终的看法是什么?',
+    ],
+    tip:'重点不是"谁对",而是让孩子亲眼看到"AI 之间会有分歧",AI 的"神性"就破掉了。以后他看到任何一个 AI 答案都会多想一秒。',
+    ext:'终极玩法:把 A 的答案喂给 B,问"你同意吗?",再把 B 的反馈喂给 A。看两个 AI 能不能"吵起来"。' },
+
+  { id:'003', dim:'critical', emoji:'❓', title:'追问三连击', tagline:'用三句话,把 AI 逼到墙角。', difficulty:1, time:'10 分钟', goal:'训练"不轻易满足于第一个答案"的本能。', setup:'任意 AI。',
+    steps:[
+      '让孩子提出一个他好奇的问题,AI 会给一个标准答案——让他先别接受。',
+      '追问第一句:<code>你确定吗?有没有可能不是这样?</code>——看 AI 会不会立刻动摇或补充。',
+      '追问第二句:<code>为什么会是这样?底层原理是什么?</code>——逼它从"结论"退到"理由"。',
+      '追问第三句:<code>有没有反例?或者持不同意见的人会怎么说?</code>——逼它展示视野边界。最后让孩子比较第一版答案和追问后的答案差多少。',
+    ],
+    tip:'很多孩子不追问,不是不想,是没人教过"可以追问"。这三句话就是启动器——把它们抄在便利贴上,贴在电脑旁边。',
+    ext:'把这三句话做成一个孩子专用书签,每次用 AI 都放在手边。一个月后他会自然而然地追问。' },
+
+  { id:'004', dim:'critical', emoji:'⚔️', title:'反方辩手', tagline:'让 AI 站到你的对立面,攻击你的观点。', difficulty:3, time:'25 分钟', goal:'训练"反面思考"——你越能想到别人的反驳,你的观点就越扎实。', setup:'孩子先有一个坚信的观点。',
+    steps:[
+      '让孩子在纸上写下一个他强烈认同的观点(比如"作业没用"),下面写 3 个他的理由。不准让 AI 看到理由。',
+      '对 AI 说:<code>请你扮演完全不同意这个观点的辩手,用最有力的方式逐条反驳。不用讨好我,越狠越好。</code>',
+      '孩子认真读反驳全文,规矩是:不许立刻反驳、不许翻白眼、不许说"这不对"。只许标记:哪条反驳击中了我?哪条我能立刻回应?',
+      '最后和孩子一起改写原观点——加条件、加例外、加限定。比如"作业没用"可能变成"重复抄写类作业没用,但主动整理的作业有用"。',
+    ],
+    tip:'关键是"认真对待反方",而不是急着辩赢。能修改自己观点的孩子更强——这是真正的成熟。',
+    ext:'反过来玩:AI 先给观点,孩子当反方。进阶:孩子给两种对立观点,让两个 AI 分别扮演双方辩论 3 回合。' },
+
+  { id:'005', dim:'critical', emoji:'📜', title:'名言真伪鉴定师', tagline:'AI 给名言,孩子查真假。', difficulty:1, time:'10 分钟', goal:'破除"白纸黑字就是真的"的惯性。', setup:'AI + 搜索引擎(百度/必应都行)。',
+    steps:[
+      '选一个历史或现代名人(爱因斯坦、鲁迅、乔布斯),让 AI:<code>请给我 5 句 XX 说过的名言,越出名越好。</code>',
+      '让孩子凭直觉先给每句名言打分:很像他说的(✓)、感觉不太像(?)、绝对不是他说的(✗)。',
+      '拿出搜索引擎,逐句搜"这句话+真的是他说的吗"或英文原文。记录:AI 的 5 句里,有几句是真的、几句是假的、几句无法确认。',
+      '最后追问 AI:<code>刚才的 5 句里哪几句其实不是他说的?你是怎么编出来的?</code>让它自己坦白。',
+    ],
+    tip:'名人名言是 AI 编造的重灾区——爱因斯坦、鲁迅尤其严重。做一次孩子就记住了:"听到名言先查真伪"。',
+    ext:'积累 20 句 AI 编的假名言做成一张海报贴起来——家庭"AI 造假名言集"。' },
+
+  { id:'006', dim:'critical', emoji:'⏳', title:'时间线侦探', tagline:'让 AI 讲一段历史,找出错误。', difficulty:2, time:'20 分钟', goal:'练"时间/因果"的敏感度——历史事件是 AI 经常张冠李戴的地方。', setup:'任意 AI + 一本孩子学过的历史课本做参照。',
+    steps:[
+      '和孩子一起选一个他课本里学过的历史事件(鸦片战争、大航海、明朝灭亡等)。',
+      '让 AI:<code>请详细讲述 XX 事件的完整经过,包括时间、地点、关键人物、转折点,约 300 字。</code>',
+      '孩子对照课本,用红笔在 AI 版本上圈错:年份错没错?人物对不对?因果顺序有没有颠倒?至少找出 2 处不一致。',
+      '把问题返回给 AI:<code>我对照课本发现你说的 XX 和 YY 不对,请核实并承认错误。</code>看 AI 是认错还是嘴硬。',
+    ],
+    tip:'AI 会把年份、人物、因果关系轻易弄错——明朝的事挂到清朝,把甲将军的战功算给乙将军,都很常见。和课本一比就露馅。',
+    ext:'让 AI 写两个不同时代人物的"见面对话"(比如李白 vs 苏东坡),找穿越漏洞——这类错误更多更搞笑。' },
+
+  { id:'007', dim:'critical', emoji:'📊', title:'数据迷宫', tagline:'AI 给一个数字,你问它:哪来的?', difficulty:2, time:'15 分钟', goal:'训练"数字从不天然可信"的意识。', setup:'任意 AI。',
+    steps:[
+      '让孩子想一个需要用数字回答的问题,比如"中国现在有多少小学生""地球上还有多少只野生大熊猫"。',
+      '问完 AI 后,立刻追问:<code>这个数字是哪一年的数据?来源是什么机构?你有多大把握它是准确的?</code>',
+      '继续追问:<code>如果口径不同(比如是否包括国际学校/是否包括圈养),数字会变多少?</code>逼它说出不确定性。',
+      '最后去搜索引擎找最新官方数据(国家统计局、世界银行等)对比,看 AI 的数字偏差多大、偏差在哪个方向。',
+    ],
+    tip:'很多时候 AI 会"装得很确定"地报一个数,逼它交代来源,它才会说"我的知识截止到某年,可能不是最新"。这一步必须每次都做。',
+    ext:'做一个"AI 假精确数字"记录本,一周内凡是 AI 报的数字都做一次校验,统计它的准确率。' },
+
+  { id:'008', dim:'critical', emoji:'🔮', title:'预测对照表', tagline:'让 AI 做预测,将来翻出来对。', difficulty:1, time:'10 分钟建立 + 长期', goal:'直观看到 AI 在"未来"上有多保守/乐观/盲。', setup:'一本笔记本或共享文档。',
+    steps:[
+      '和孩子一起选 3 件有时间节点的事:下周足球赛结果、下次考试成绩预测、明天天气,让 AI 都给出具体预测(分数、比分、温度)。',
+      '在笔记本最显眼的一页记下:预测日期、问题、AI 的原话、预测结果的判断日期。',
+      '到了判断日期,全家一起翻出来对:对了还是错了?偏差多少?孩子预判是什么、爸妈预判是什么?',
+      '每月做一次小结:AI 在哪类预测上更准(有规律的事件)?在哪类上更不准(涉及人的主观判断)?总结规律。',
+    ],
+    tip:'预测对错不重要,"回来看看"这个动作才重要——它塑造孩子的复盘习惯,让他体会"事实永远高于预测"。',
+    ext:'建立家庭"AI 预测记录本",连续记一年,年底做一次大复盘。这是最好的科学精神启蒙。' },
+
+  { id:'009', dim:'critical', emoji:'🌀', title:'反常识清单', tagline:'让 AI 列 10 条"直觉错"的事。', difficulty:2, time:'15 分钟', goal:'挑战孩子的既有认知——批判性思考的前提是承认自己可能错。', setup:'任意 AI。',
+    steps:[
+      'Prompt:<code>请列出 10 条大部分人凭直觉以为对、但其实是错的常识,每条给一句话结论加一句话原因。</code>',
+      '孩子逐条先盖住答案,自己表态:"我本来以为是 ___,我信 AI 的说法吗?"用 ✓?✗ 标三种反应。',
+      '从他标 ✗(完全不信)和 ?(半信半疑)的条目里选 3 条,去搜索引擎/百科核实,看 AI 说的对不对。',
+      '最后分类汇总:哪几条是真反常识、哪几条是 AI 说得对但表述夸张、哪几条 AI 自己就错了。',
+    ],
+    tip:'反常识不等于对,还需要再查一层——这正是要让孩子学的。"反常识"三个字自带迷惑性,越反常识的说法越要多问一句"真的?"。',
+    ext:'把验证过的真·反常识做成"冷知识"卡片,每周一张贴在餐桌旁,全家一起学。' },
+
+  { id:'010', dim:'critical', emoji:'🔍', title:'盲区扫描', tagline:'AI 说了什么?更重要的是它没说什么。', difficulty:3, time:'20 分钟', goal:'看见"沉默的信息"——AI 的答案背后还有多少它没提的。', setup:'任意 AI。',
+    steps:[
+      '选一个开放议题(如"手机对孩子的影响""大城市和小城市哪个好"),让 AI 给完整回答。',
+      '让孩子读完后,自己想 3 分钟:刚才的回答有没有什么角度被忽略了?比如提到了哪类人群,忽略了哪类?提到了什么时期,忽略了什么时期?',
+      '把孩子想到的遗漏角度写下来,然后问 AI:<code>你刚才的回答里遗漏了哪些重要视角?比如 XX 人群的情况、YY 的长期影响。请补全。</code>',
+      '对比两次回答,算一下:补全版比原版多出百分之多少内容?这些"被遗漏的"是否比"被说出的"还重要?',
+    ],
+    tip:'AI 常常只给最主流的答案——这是训练数据偏差。问"你漏了什么"往往能挖出 30% 以上的新内容,而且是更边缘更有趣的。',
+    ext:'把遗漏的角度汇总做成"AI 盲区地图",按话题分类,以后再问 AI 类似问题就能提前提示它别漏掉。' },
+
+  { id:'011', dim:'critical', emoji:'🎭', title:'立场标注', tagline:'把 AI 的每句话按立场分色。', difficulty:3, time:'25 分钟', goal:'看见隐藏在"客观"里的立场。', setup:'AI 输出 + 打印稿 + 三色荧光笔。',
+    steps:[
+      '让 AI 写一篇 300 字关于争议话题的"客观中立"分析,比如"新能源车 vs 传统汽车"。',
+      '把文章打印出来(或清晰显示在平板上),给孩子三种颜色的笔:红色 = 支持某一方的表述,蓝色 = 支持对立方的,黄色 = 真·中立。',
+      '逐句给每一句话涂上一种颜色——要求每句必须有颜色,不许跳过。涂完数一下三种颜色的比例。',
+      '让孩子回答:这篇"中立"文章其实偏向哪一方?哪些词或修辞手法暴露了倾向?(比如"虽然...但是..."的转折往往指向后者。)',
+    ],
+    tip:'AI 写"客观"文章其实不客观,它受训练数据影响有隐藏倾向。三色法能把这种倾向可视化——是媒介素养的绝佳入门。',
+    ext:'同话题换个 prompt(比如让 AI 扮演某方支持者),再做一次三色标注,看立场色块比例怎么变化。' },
+
+  { id:'012', dim:'critical', emoji:'🪩', title:'幻觉实验室', tagline:'故意让 AI 胡说,研究它怎么胡说。', difficulty:2, time:'15 分钟', goal:'亲眼看见"幻觉"长什么样——才不会被骗。', setup:'任意 AI。',
+    steps:[
+      '和孩子一起编一个听上去很真实但不存在的书名,比如《明朝的最后一个铁匠》,作者也编一个。',
+      '问 AI:<code>能介绍一下《XX》这本书吗?主要内容是什么?作者是谁?</code>观察 AI 是说"没听说过"还是硬编内容。',
+      '如果 AI 硬编,继续追问细节:主角是谁?出版社?出版年份?获得过什么奖?看它编到什么程度。',
+      '把编造内容和孩子一起整理出来,分析:AI 在哪一步开始编的?编的内容有什么共同特征?(往往是"看起来合理、细节充分、情感丰沛")。',
+    ],
+    tip:'让孩子记住这种"编得像真的"的质感——朗朗上口、细节丰富、语气笃定。下次他看到类似风格就会警觉了。',
+    ext:'编一个不存在的历史人物,让 AI 写完整履历;或编一个假公式,让 AI 解释"原理"。这些都是最好的疫苗。' },
+
+  { id:'013', dim:'critical', emoji:'🎚️', title:'证据等级表', tagline:'把信息按"可信度"排队。', difficulty:3, time:'25 分钟', goal:'建立"不是所有信息都一样可信"的基本直觉。', setup:'纸笔 + AI。',
+    steps:[
+      'Prompt:<code>请给我 8 条关于"XX 对健康的影响"的说法,来源各异——比如学术论文、新闻、自媒体、朋友圈、广告等,标明每条的来源类型。</code>',
+      '把 8 条写在纸上,让孩子按"我有多相信"从最可信排到最不可信,写下排序理由。',
+      '让 AI 也给一个专业视角的可信度排序,两份对照。重点讨论分歧大的那几条:孩子为什么这么排?AI 为什么那么排?',
+      '最后一起总结出"可信度的判断因素":来源机构、作者资质、是否有数据、是否有对照组、是否可复现等。做成一张家庭评估清单。',
+    ],
+    tip:'证据分级是记者、科学家、法官的底层能力。越早接触越好——以后刷到任何说法都会自动过一遍这个清单。',
+    ext:'一起看一天的新闻,每条标记可信度等级(A/B/C/D),一周后统计自己平均每天接触到的是什么水平的信息。' },
+
+  { id:'014', dim:'critical', emoji:'🎣', title:'诱导陷阱', tagline:'用带立场的问题引诱 AI,观察它上钩。', difficulty:3, time:'20 分钟', goal:'看见"问题本身"如何塑造答案。', setup:'任意 AI。',
+    steps:[
+      '选一个中性话题(比如"电子游戏"),准备三种问法:<code>电子游戏有哪些影响?</code> / <code>电子游戏有哪些危害?</code> / <code>电子游戏有哪些好处?</code>',
+      '分别问 AI 三次(开新对话,避免互相影响),把三份答案并排记录。',
+      '让孩子数一数:每个版本正面内容多少字?负面内容多少字?AI 的立场有没有被问法"带跑"?',
+      '最后反思:如果有人只看过其中一版,他的认知会被塑造成什么样?这和新闻标题的"标题党"是不是一回事?',
+    ],
+    tip:'这张卡也在训练孩子的"反向识别":当别人向你提问时,先识别提问者的倾向——这是成年人也常栽跟头的事。',
+    ext:'看一天的新闻标题,判断每个记者用了哪种问法(中性/引导/攻击),一周后做一张"常见诱导句式"清单。' },
+
+  { id:'015', dim:'critical', emoji:'🔁', title:'五层为什么', tagline:'不停问"为什么",直到问不动。', difficulty:2, time:'15 分钟', goal:'训练穿透力——第一层答案往往只是表象。', setup:'任意 AI。',
+    steps:[
+      '从一个简单现象出发,比如"为什么要刷牙""为什么天空是蓝的""为什么人要上学"。',
+      'AI 答完后,抓住它答案中的某个关键词,继续问<code>那为什么 XX?</code>——重点是追问它的"理由"而非"结论"。',
+      '连追 5 层。每一层都把回答简洁记下来。过程中如果 AI 说"这是自然规律",不要放过它,追问"为什么会有这条规律"。',
+      '对比第 1 层和第 5 层的回答差距——往往第 5 层已经深入到物理、生物、哲学层面,这就是"穿透力"的魔力。',
+    ],
+    tip:'丰田工程师用"五个为什么"找根本原因,叫 5 Whys 法。小孩天然会问"为什么",千万别打断他——AI 是最有耐心的陪问者。',
+    ext:'把第 5 层的回答当作新主题,再问 5 层——有时能直接打到宇宙起源或哲学本源,全家开小型哲学讨论会。' },
+
+  { id:'016', dim:'critical', emoji:'🃏', title:'真假混合题', tagline:'一篇文章一半真一半假,你找得出来吗。', difficulty:2, time:'20 分钟', goal:'培养"全程警觉"——不能松一秒。', setup:'任意 AI。',
+    steps:[
+      'Prompt:<code>请写一篇 300 字关于 XX 的科普文章,其中约一半内容是真实的,一半是你编造但听起来很合理的。不要告诉我哪些是编的。</code>',
+      '孩子拿到后准备两种颜色笔——"信"用绿色,"疑"用红色,必须每一句都涂色,不许跳过、不许给"说不清"。',
+      '涂完后问 AI:<code>请公布哪些句子是编造的。</code>对照答案,算自己的识别准确率(绿涂在真句、红涂在假句 = 对)。',
+      '重点反思"误判"的部分:为什么真的被标假?为什么假的被信以为真?AI 的"可信"和"不可信"有什么语言特征?',
+    ],
+    tip:'这比"找错"更难,因为孩子没有"数量预期"可以偷懒——必须逐句警觉。做过 3 次的孩子阅读警觉性会显著提升。',
+    ext:'升级难度:让 AI 故意把真假句子以最难辨别的方式穿插(真话配模糊修饰、假话配精确数字),再做识别。' },
+
+  { id:'017', dim:'critical', emoji:'🗞️', title:'多方对照', tagline:'同一事件,问 AI 三种不同口径。', difficulty:2, time:'20 分钟', goal:'看见"同一件事,不同人讲,能差多远"。', setup:'任意 AI。',
+    steps:[
+      '选一个有多方视角的事件,比如"某次城市改造""某场历史战争""家里一次争执"。',
+      '分三轮提问:<code>请以 XX 立场讲述这个事件</code>——比如政府/反对者/受影响普通人、胜方/败方/第三方观察者。',
+      '把三个版本并排,孩子标出:三方都承认的"事实"、三方都不同的"解读"、只有某方提到的"遗漏"。',
+      '讨论:哪一个版本最接近"真相"?还是任何单一版本都不是真相?真相是三者的交集还是超集?',
+    ],
+    tip:'这是真正的媒介素养启蒙。永远不要只听一方——记者、史学家、法官都这么干。让孩子从小就这么干。',
+    ext:'找一件家里真实发生过的小事(吵架、误会),用同样方法让每个家庭成员讲一遍,惊人相似的视角差。' },
+
+  { id:'018', dim:'critical', emoji:'🧩', title:'逻辑漏洞猎手', tagline:'AI 的论证链,哪里断了?', difficulty:3, time:'25 分钟', goal:'练"逻辑细读"的能力——大人都不一定会。', setup:'AI 生成的论证文 + 打印稿 + 笔。',
+    steps:[
+      '让 AI 写一段 200 字论证文:<code>请论证"小学生应该/不应该使用手机",要求有明确结论和至少 3 个论据。</code>',
+      '把文章每一句编号(1,2,3...),打印出来让孩子逐句读。重点看"所以""因此""因为""显然"这些连接词。',
+      '在每个连接词处画一个大问号,问:这一句真的从上一句能推出来吗?有没有跳过中间步骤?有没有隐藏假设?',
+      '找出最薄弱的一跳,让 AI:<code>在第 X 句到第 Y 句之间,你跳过了什么?请补上缺失的推理步骤。</code>',
+    ],
+    tip:'AI 写作的漏洞往往就藏在"因此""所以"这些连接词里——它在修辞上假装推理了,但其实没推。这是 AI 说服力的软肋。',
+    ext:'用这个方法看自己写过的一篇作文,逐句编号找漏洞。孩子会惊讶地发现自己也在"假装推理"。' },
+
+  { id:'019', dim:'critical', emoji:'🎰', title:'数字魔术拆解', tagline:'AI 给一个吓人数字,你问口径。', difficulty:2, time:'15 分钟', goal:'识破"统计障眼法"。', setup:'任意 AI。',
+    steps:[
+      '让 AI 给一个"吓人的数据":<code>请告诉我一个关于 XX 的惊人统计数字,要让人看了震惊的那种。</code>',
+      '追问:<code>这个数字是怎么算出来的?分子是什么、分母是什么?如果换一种算法,数字会变多少?</code>',
+      '改一个关键口径,重算一次——比如把"每年全世界"改成"每天每个人"或"一生中总量",看数字会变"惊人"还是"稀松平常"。',
+      '最后让孩子用两种口径,把同一个数字写成"标题党式"和"平常式"两种新闻标题,感受数据的"魔术"。',
+    ],
+    tip:'看新闻时最该学的一招——"分子分母都要追问"。一个数字,切换口径可能从"惊人"变"无聊",反之亦然。',
+    ext:'一周内收集 5 条新闻里的"惊人数字",一家人一起解构它们的口径,做成"数据魔术档案"。' },
+
+  { id:'020', dim:'critical', emoji:'📖', title:'AI 弱点图鉴', tagline:'给 AI 建一本"错题集"。', difficulty:2, time:'一周', goal:'把分散的 AI 错误,攒成可识别的模式。', setup:'一个专门笔记本或文档。',
+    steps:[
+      '从今天开始,每次孩子发现 AI 出错,立刻记一条:错在哪、什么类型(事实错/逻辑错/幻觉/偏见)、他是怎么发现的。',
+      '每天睡前花 3 分钟翻一下本子,给当天的错误做简单分类——数学题错、历史事实错、编造来源等等。',
+      '一周后全家汇总:哪一类错误出现最多?AI 在哪些领域最容易出错?哪些错误孩子一眼能看穿、哪些差点被骗?',
+      '把规律整理成一张"AI 避坑清单"——比如"凡 AI 报的具体数字都要核一次""凡历史细节都要对课本",贴在电脑边。',
+    ],
+    tip:'这个本子最好贴在孩子每天用 AI 的桌上。积累一个月后,他对 AI 的警觉会变成本能——这是长期最贵的能力。',
+    ext:'把清单分享给同龄朋友共享,搞一个"小伙伴 AI 弱点众包";一年后对比一下自己学校和朋友的清单有什么不同。' },
+
+  { id:'021', dim:'critical', emoji:'🎲', title:'条件变量', tagline:'改一个条件,看 AI 答案变多少。', difficulty:2, time:'15 分钟', goal:'理解"答案依赖前提"——这是科学思维的根。', setup:'任意 AI。',
+    steps:[
+      '让 AI 回答一个带多个条件的问题,比如"一个 12 岁孩子每天学习几小时合适"——明确年龄、身体状况、学校强度三个条件。',
+      '只改年龄(8 岁、12 岁、16 岁),其余不变,连问三次。记录三个答案的差异。',
+      '再只改学校强度(普通/国际/奥数集训),其余不变,再问三次。对比结果。',
+      '总结:哪个条件对答案影响最大?如果孩子不说清楚条件直接问,AI 会默认哪种前提?(往往是"中位数孩子"。)',
+    ],
+    tip:'这一张也是理解 AI prompt 的入门——改变输入就改变输出。孩子以后写 prompt 会自然地先说清条件。',
+    ext:'做三组变量对照实验,观察规律,画一张"条件-答案"关系图。这是科学思维的雏形。' },
+
+  { id:'022', dim:'critical', emoji:'🎯', title:'反直觉验证', tagline:'AI 说一个结论,孩子先猜再看。', difficulty:1, time:'10 分钟', goal:'让孩子意识到自己的直觉和真相的差距。', setup:'任意 AI。',
+    steps:[
+      'Prompt:<code>请告诉我一个科学/生活上的反直觉结论,先只给结论,不给理由,也不做解释。</code>',
+      '孩子听到结论后,必须先表态:我觉得对 / 我觉得错 / 我觉得是玩笑。再说说自己凭什么这么觉得。',
+      '然后让 AI 给出完整理由和证据。孩子对比:我的直觉中了吗?AI 的理由说服我了吗?哪里颠覆了我?',
+      '连续做 5 个,统计"直觉准确率"——大部分孩子是 40%-60%,也就是和瞎猜差不多,这会让他自嘲也会让他谦卑。',
+    ],
+    tip:'不管答案对错,只要孩子"先停一下想一想",这张卡就成功了——这是反冲动思考的种子。',
+    ext:'连做 10 个,做成"我的直觉 vs 事实"对照表,标记自己在什么领域直觉靠谱、什么领域靠不住。' },
+
+  { id:'023', dim:'critical', emoji:'🔗', title:'来源追溯', tagline:'AI 每说一个事实,就问"哪来的"。', difficulty:2, time:'15 分钟', goal:'把"引用"意识植入日常。', setup:'任意 AI。',
+    steps:[
+      '问一个知识性问题,比如"世界上最大的河流是哪条?"——故意选有争议或标准不一的问题。',
+      '对答案中每个事实陈述追问:<code>这一点的来源是什么?有哪些论文、机构、书可以佐证?</code>',
+      '让 AI 列出具体可查证的来源(期刊名+年份/机构+报告名+页码)。',
+      '随机抽一条真的去搜索验证——这条来源存不存在?说的和 AI 引用的一致吗?很多时候会发现 AI 编造了"看起来真"的来源。',
+    ],
+    tip:'有些 AI 会编造出处——这就是又一次质疑训练的机会。学术圈的人叫这种假引用"幻觉引用",危害特别大。',
+    ext:'做完后总结:AI 哪些领域的出处最可靠?(一般是教科书级的大话题);哪些最喜欢编?(一般是具体论文、具体数据)' },
+
+  { id:'024', dim:'critical', emoji:'🌫️', title:'模糊问题测试', tagline:'故意问得模糊,看 AI 怎么处理。', difficulty:2, time:'15 分钟', goal:'看 AI 如何"自填空白"——这是它最危险的行为。', setup:'任意 AI。',
+    steps:[
+      '故意问一个缺关键信息的问题,比如"他下一步该怎么办?""这道题怎么做?"——不说"他是谁""哪道题"。',
+      '观察 AI 的反应:是反问你补充信息,还是自作主张脑补场景直接答?(大部分 AI 会后者。)',
+      '读 AI 的回答,找出它"脑补"出的前提——它替你假设了什么场景、什么身份、什么目标?这些假设你同意吗?',
+      '重新提问,这次把所有条件说清楚,对比两次答案。体会"模糊-脑补"和"明确-精准"的差距有多大。',
+    ],
+    tip:'好的 AI 会先反问补充信息。会一上来就"脑补"的 AI,要警惕——它说得再精彩也建立在你没同意的假设之上。',
+    ext:'收集 5 个 AI"脑补"的经典案例,做成"AI 自以为懂你"的搞笑集锦,全家一起看。' },
+
+  { id:'025', dim:'critical', emoji:'🔔', title:'绝对化警报', tagline:'找出 AI 话里的"所有/从不/必然"。', difficulty:1, time:'10 分钟', goal:'对过度泛化保持敏感。', setup:'AI 文稿 + 荧光笔。',
+    steps:[
+      '让 AI 写一篇观点文:<code>请写 200 字,表达"读书很重要"这个观点,要有说服力。</code>',
+      '打印出来,孩子用荧光笔圈出所有绝对化词语——"所有""从不""一定""必然""唯一""绝对""任何""永远"。',
+      '对每个圈出的词,让孩子举一个反例:真的"所有"吗?真的"从不"吗?反例可以很小,只要存在就动摇。',
+      '一起重写这篇文章,把绝对化词换成"大部分""通常""多数情况下""一般而言",看说服力变了多少。',
+    ],
+    tip:'"例外"是批判思考最好的朋友——只要有一个反例,绝对化就被打破。这是训练思维精度的好武器。',
+    ext:'看广告文案、演讲稿、社交媒体热门帖,做同样的荧光笔练习——你会震惊绝对化词有多泛滥。' },
+
+  { id:'026', dim:'critical', emoji:'🎯', title:'相关≠因果', tagline:'AI 说 A 和 B 有关,问它"谁引起谁"。', difficulty:3, time:'20 分钟', goal:'区分相关和因果——成人都容易搞错。', setup:'任意 AI。',
+    steps:[
+      'Prompt:<code>请给我一个"A 和 B 相关"的真实研究例子,比如两件看起来相关的事。</code>(比如冰淇淋销量和溺水人数相关)',
+      '问孩子三种可能:是 A 引起 B?还是 B 引起 A?还是有第三个因素 C 同时影响了 A 和 B?',
+      '让他给每种可能估一个概率,然后问 AI:<code>这个相关的真正原因机制是什么?</code>让 AI 解释第三变量。',
+      '练习:从今天起遇到"XX 和 XX 相关"的说法,先别信因果,先想有没有第三变量。',
+    ],
+    tip:'冰淇淋销量和溺水人数相关,但原因是夏天——这是统计学里最经典的第三变量案例。孩子一辈子都用得上。',
+    ext:'看一周内新闻,找出至少 3 条"把相关说成因果"的误导报道——你会震惊多普遍。' },
+
+  { id:'027', dim:'critical', emoji:'🧪', title:'样本陷阱', tagline:'AI 说"调查表明",你问"谁被调查了"。', difficulty:3, time:'20 分钟', goal:'理解"样本决定结论"——这是统计常识。', setup:'任意 AI。',
+    steps:[
+      '让 AI 给一个"调查结论":<code>请给我一条"某某调查显示 XX%的人 YY"的真实研究。</code>',
+      '追问详细:样本多少人?在哪调查的?什么年龄职业层?怎么抽样的?应答率多少?',
+      '让孩子想:如果只在某个特定圈子里调查(只在大学、只在养老院、只在朋友圈),结论会变多少?',
+      '用孩子的生活场景玩一次:让他设计一个"有偏调查"来证明某个荒唐结论(比如"大家都爱吃奥利奥,因为我问的全是奥利奥吃货群")。',
+    ],
+    tip:'大人不懂这个,就会被 10 万+ 的"调查显示"骗一辈子。这张卡是最好的防骗疫苗。',
+    ext:'真的给家人发一份"有偏问卷"做实验——比如只问爱打游戏的小朋友"你觉得游戏好吗",出来结果给全家看。' },
+
+  { id:'028', dim:'critical', emoji:'🤐', title:'逼 AI 认怂', tagline:'问一个 AI 真不知道的事。', difficulty:1, time:'10 分钟', goal:'让孩子亲眼看到"AI 能说不知道",更信任它的"知道"。', setup:'任意 AI。',
+    steps:[
+      '问 AI 一个它不可能知道的事:"我奶奶昨天早餐吃了什么""我家楼下小卖部今天营业吗""我明天穿什么颜色衣服"。',
+      '观察 AI 的反应:是直接承认不知道?是先猜后承认?是坚持硬编?记录每种反应的特征。',
+      '如果它硬编,继续追问细节直到它承认:"其实你也不知道对吧?"——让它口头认错。',
+      '讨论:在什么情况下 AI 必须说"我不知道"?(涉及你个人、最新新闻、私密信息、未来、主观偏好)总结一张"AI 必然不知道"清单。',
+    ],
+    tip:'一个肯说"不知道"的 AI,比样样都答的 AI 更可信。教孩子偏爱前者——这和选朋友、选老师的标准是一样的。',
+    ext:'找出不同 AI 在同一"它该不知道"的问题上的反应差异,给各家 AI 打一个"诚实度分"。' },
+
+  { id:'029', dim:'critical', emoji:'🏗️', title:'拆前提', tagline:'AI 给结论前,先挑它的前提。', difficulty:3, time:'20 分钟', goal:'看见每个论点背后的"假设地基"。', setup:'AI 论证文。',
+    steps:[
+      '让 AI 论证一个观点:<code>请论证"应该早睡早起",给出 3 条理由。</code>',
+      '孩子对每条理由问:这条结论成立,必须先假设什么?(比如"早睡让你白天有精神"假设了"你晚上睡得着"。)',
+      '用纸笔画一张"假设地基图"——结论在上、理由在中、隐藏假设在下。',
+      '质疑其中一条地基:<code>如果这个假设其实不成立(比如我是个夜猫型的人),你的结论还对吗?</code>看 AI 怎么应对。',
+    ],
+    tip:'90% 的争议,都不是结论错,是前提不一样——夫妻吵架、国家矛盾、学术争论都适用这条。',
+    ext:'用这方法看一段广告文案或成功学书籍的核心论证,你会发现地基经常漏洞百出。' },
+
+  { id:'030', dim:'critical', emoji:'🌡️', title:'极端值测试', tagline:'把 AI 的规则推到最极端,看它崩不崩。', difficulty:2, time:'15 分钟', goal:'理解"规则都有适用范围"。', setup:'任意 AI。',
+    steps:[
+      '让 AI 给一条生活/健康规则:<code>请给我一条被广泛认同的养生/生活建议。</code>(例如"每天喝八杯水""多吃水果")',
+      '向极端推:如果按这规则到极致会怎么样?"每天喝 20 杯水呢?""每天只吃水果呢?"让 AI 回答后果。',
+      '再向反向极端推:"一点都不喝呢?""完全不吃水果呢?"记录两端的答案。',
+      '画一张"适用区间"图:横轴是执行强度,纵轴是效果。找出这条规则的"甜点区间"和"危险区"。',
+    ],
+    tip:'极端值是检验规则最快的方法。科学家、工程师常用这招——边界条件往往暴露规则的真实本质。',
+    ext:'对"勤劳""节俭""善良"这类道德规则做同样极端测试,你会发现所有美德推到极致都有反效果。' },
+
+  { id:'031', dim:'critical', emoji:'🎭', title:'立场切换', tagline:'让 AI 先挺后反同一件事。', difficulty:2, time:'15 分钟', goal:'看见立场是表演的,观点是有选择的。', setup:'任意 AI。',
+    steps:[
+      '选一件有争议的事,比如"穿校服"。',
+      '第一个 prompt:<code>请写 150 字强力支持学校应该穿校服,论点要有说服力。</code>',
+      '第二个 prompt:<code>请写 150 字强力反对学校应该穿校服,论点要有说服力。</code>',
+      '对比两版,让孩子标出:哪些"论据"在两版里居然是同一个事实但解读相反?哪些是 AI 专门编出来支持一方的?最后让他说说自己真正的立场。',
+    ],
+    tip:'AI 能轻易切换立场,说明"有说服力"不等于"有道理"。律师、辩论选手都能做到两面说得通——这是话术不是真理。',
+    ext:'让孩子自己模仿 AI,同一件事写一正一反 100 字。这是辩论、写作文、说服力训练的绝招。' },
+
+  { id:'032', dim:'critical', emoji:'📰', title:'核真小分队', tagline:'带着孩子用 AI 查一条新闻。', difficulty:2, time:'20 分钟', goal:'建立"转发前先查"的习惯。', setup:'一条家长群里流传的新闻/消息。',
+    steps:[
+      '拿出家长群/朋友圈里最近转发的一条可疑新闻(尤其是"震惊体""紧急通知""转给所有人"类)。',
+      '问 AI:<code>以下新闻是真的吗?请查证并给出判断:[粘贴全文]</code>',
+      '让 AI 列出疑点和核实方法,然后孩子自己用搜索引擎查"原始来源"——看能不能找到官方、权威媒体的最初报道。',
+      '给这条新闻打分:完全真实 / 部分真实 / 夸大其词 / 彻底虚假。如果是后三种,把判断发回家长群!',
+    ],
+    tip:'很多家长转发谣言,是因为从来没人教过他们怎么查。这张卡给全家人——孩子做一次,全家受益。',
+    ext:'每周固定做一次"家庭核真",孩子当队长。一个月后你家的家长群造谣率会明显下降。' },
+
+  { id:'033', dim:'critical', emoji:'🎓', title:'专家 vs 群众', tagline:'AI 引用时,问它"谁说的"。', difficulty:2, time:'15 分钟', goal:'区分权威观点和大众观点。', setup:'任意 AI。',
+    steps:[
+      '问一个专业问题,比如"感冒了该不该吃药""数学该不该刷题"。',
+      '让 AI 分别给两个版本:<code>版本 A:医学/教育专家的共识是什么? 版本 B:网上普通人普遍怎么看?</code>',
+      '对比两版,孩子找差距——在哪些点上专家和大众意见一致?在哪些点上分歧最大?',
+      '讨论:哪些事应该听专家的(专业判断、风险决策),哪些事其实没有专家意见(个人偏好、小事选择)。',
+    ],
+    tip:'这张卡也在训练:不要把"网上都这么说"当证据。"从众"是一种懒,专业判断往往需要一点孤独勇气。',
+    ext:'找一个当下热点话题,看专家和大众意见差得多远——有时差得吓人,会让孩子开始尊重专业。' },
+
+  { id:'034', dim:'critical', emoji:'👁️', title:'反向论据', tagline:'让 AI 专门找反对你的证据。', difficulty:3, time:'20 分钟', goal:'对抗"确认偏误"——人总是容易只看支持自己的信息。', setup:'孩子有一个小决定要做。',
+    steps:[
+      '让孩子写下最近的一个小决定和 3 个理由,比如"我想报乒乓球不报绘画班"+理由。',
+      '对 AI 说:<code>请扮演一个最挑剔但善意的朋友,只说这个决定可能的问题和风险。不要鼓励我,只讲我可能没想到的坏处。</code>',
+      '孩子读完必须忍住反驳,规矩是:逐条圈出"有道理""可能有道理""瞎说"三档。至少要诚实承认有 1 条说中了。',
+      '基于这些反向论据,孩子重新评估原决定——完全推翻?局部修改?还是坚持原方案但做补救(比如加个尝试期)?',
+    ],
+    tip:'能主动找反对证据的人,决策质量高一个数量级。这也是巴菲特、达尔文等伟大决策者的共同习惯。',
+    ext:'大人的决策也做同款——买房、换工作、选学校都可以。这一家人的决策质量会集体提升。' },
+
+  { id:'035', dim:'critical', emoji:'⏰', title:'时效性测试', tagline:'问 AI 最近的事,看它怎么处理。', difficulty:1, time:'10 分钟', goal:'理解 AI 的知识有"截止日期"。', setup:'任意 AI。',
+    steps:[
+      '问 AI 一个本月/本周才发生的事情,比如最新的国际事件、新出的电影、刚结束的比赛。',
+      '观察 AI 的反应:是承认"我的知识截止到 X 年 X 月",还是硬着头皮答(往往会答成过时或虚构信息)?',
+      '如果它硬答,把真实信息和 AI 答案对比,标出:哪里是过时事实、哪里是编造、哪里还算对。',
+      '最后直接问 AI:<code>你的知识截止到哪一天?之后的事你怎么办?</code>让它明确交代自己的"时间边界"。',
+    ],
+    tip:'永远先查 AI 的知识截止时间,再决定能不能信。尤其是新闻、股票、科技进展这些快变领域。',
+    ext:'列一张"AI 最容易过时"的知识领域清单(新闻、股价、新技术、娱乐圈),以后问这些话题要多一层警觉。' },
+
+  { id:'036', dim:'critical', emoji:'🗺️', title:'文化盲点', tagline:'问一个很本地的问题,看 AI 翻车。', difficulty:1, time:'10 分钟', goal:'看见 AI 的"普适性幻觉"——它不是万能的。', setup:'任意 AI。',
+    steps:[
+      '问一个只有本地人才懂的问题:家乡某道特产的正宗做法、某句方言的意思、某个本地小节日的由来。',
+      '观察 AI 答得对不对——大概率要么答错、要么答"大概"、要么张冠李戴到别的地方。',
+      '作为本地小专家,孩子亲自纠正 AI,告诉它"正确答案是 XX"——让他体会"我比 AI 懂"的自豪感。',
+      '讨论:AI 的知识是从哪来的(互联网主流内容)?为什么它对主流事情强、对本地事情弱?这反映了互联网的什么偏差?',
+    ],
+    tip:'AI 对"主流"信息好,对"本地"往往糟。这是让孩子自豪本地文化的好机会——也是重要的文化平等意识启蒙。',
+    ext:'系统地问一组本地问题(方言、特产、习俗、街道),做一张"AI 对我家乡的了解地图"。' },
+
+  { id:'037', dim:'critical', emoji:'🔤', title:'术语拆解', tagline:'AI 用了个大词,你问它"人话说"。', difficulty:1, time:'10 分钟', goal:'不被大词吓住——看穿本质。', setup:'任意 AI。',
+    steps:[
+      '让 AI 写一段带专业术语的介绍,比如"什么是区块链""什么是心理学的认知失调"。',
+      '找出答案里孩子看不懂的 3 个大词,一个一个问 AI:<code>请用小学生也能懂的话重新解释这个词,不许再用专业词汇。</code>',
+      '再升级一层:<code>请用一个生活中的比喻来解释,让 5 岁小朋友也能听懂。</code>',
+      '最后让孩子自己用更小学生的话把这些大词重述一遍——能说出来,才是真懂。',
+    ],
+    tip:'能被翻译成大白话的词才是真概念。翻不出来的,可能只是在唬人——这招对识别"伪专家"也特别好用。',
+    ext:'读一段新闻、论文摘要或学术书,做同样的"大词翻译"练习,一本书读下来简单一半。' },
+
+  { id:'038', dim:'critical', emoji:'💠', title:'同词不同义', tagline:'同一个词,AI 和你说的是一个意思吗?', difficulty:3, time:'20 分钟', goal:'理解"讨论的前提是对齐词义"。', setup:'任意 AI。',
+    steps:[
+      '选一个日常含糊的词:"成功""好人""努力""快乐""自由"。',
+      '家里每人(包括孩子、爸妈)先各自在纸上偷偷写下自己的定义,不许讨论。',
+      '让 AI 也给一个定义。把四个版本摆在一起对照——会发现家庭成员之间、AI 之间,定义竟然差得很远。',
+      '讨论:如果不先对齐定义就直接讨论这个词,会不会吵起来?以后讨论重要事,是不是该先问一句"你说的 XX 是什么意思"?',
+    ],
+    tip:'很多争吵是因为词没对齐——吵到最后发现,两个人说的根本不是一件事。孩子越早懂这个越好。',
+    ext:'家庭每周一次"定义讨论会",轮流提一个词;你会发现全家人的价值观突然被看见了。' },
+
+  { id:'039', dim:'critical', emoji:'📐', title:'推理阶梯', tagline:'把 AI 的论证拆成每一级台阶。', difficulty:3, time:'25 分钟', goal:'训练显式化思维——把隐藏逻辑搬到桌面上。', setup:'AI 论证段 + 纸笔。',
+    steps:[
+      '让 AI 回答一个"为什么"类问题,要求给出完整推理,比如"为什么人会长大后变世故"。',
+      '把回答拆成 N 个小步骤,每步写在纸上单独一行,形成"思维阶梯"。',
+      '逐级检查:第 1 步成立吗?凭什么?第 2 步能从第 1 步推出来吗?找出最薄弱那一级——往往是某步"想当然"跳过去了。',
+      '让 AI 重新补全那一级:<code>第 X 级到第 X+1 级之间,你的推理跳了一步,请详细补全中间的逻辑链条。</code>',
+    ],
+    tip:'"显式化"是哲学家的看家本事——把"我觉得 XX"变成"因为 A,所以 B,所以 C"。小学生完全学得会。',
+    ext:'把自己写的一篇作文或一次争辩,用这个方法拆成阶梯,你会惊讶自己平时是怎么"跳步"的。' },
+
+  { id:'040', dim:'critical', emoji:'🪞', title:'AI 自省', tagline:'让 AI 评价 AI 刚才的答案。', difficulty:2, time:'15 分钟', goal:'利用 AI 反打 AI——最有效的审查机制。', setup:'任意 AI。',
+    steps:[
+      '让 AI 回答一个有一定深度的问题,保存好答案。',
+      '重新开一个对话或在同一个对话里说:<code>以下是一段 AI 回答:[粘贴],请严格评估:哪些地方不准确?哪些地方逻辑弱?哪些地方有偏见?请列出 3 条。</code>',
+      '让 AI 按自己指出的问题给原答案评分(1-10),并列出至少 3 处可改进。',
+      '基于它自己的批评,让它重写一版更好的答案。对比原版和重写版,看改进了多少。',
+    ],
+    tip:'这招叫"AI 自省"或"Self-Critique"——在专业 AI 研究里是提升输出质量的标准技巧。常常比直接问好 3 倍。',
+    ext:'用两个不同 AI 互评(A 的答案给 B 评,B 的答案给 A 评),结果往往比自评更刀刀见血。' },
+
+  { id:'041', dim:'critical', emoji:'🎠', title:'一致性考验', tagline:'同一问题换 5 种问法,AI 答案一致吗?', difficulty:2, time:'20 分钟', goal:'看见 AI 的不稳定性——别把它当圣经。', setup:'任意 AI。',
+    steps:[
+      '设计 5 种不同的问法问同一件事,比如"是否该让孩子早用手机":直白问、装外行问、装专家问、反向问、极端场景问。',
+      '每种问法记录 AI 的答案,并排比较。标出:哪些结论跨所有问法都一致?哪些随问法变化?',
+      '找最矛盾的两版,把它们并排发给 AI 本身:<code>你在 A 问题里说 X,在 B 问题里说 Y,这不矛盾吗?请解释。</code>',
+      '总结:AI 的哪些说法是"真知识"(跨问法稳定),哪些是"随机生成"(跟着问法走)?',
+    ],
+    tip:'不一致不代表 AI 差,而是提醒你:别信任何一次结果。重要的事要多问几遍,找"稳定答案"。',
+    ext:'对重要决策性问题养成"至少 3 种问法"的习惯——这是专业使用 AI 的人都会做的。' },
+
+  { id:'042', dim:'critical', emoji:'🦓', title:'异常值发现', tagline:'AI 给规律,孩子找例外。', difficulty:2, time:'15 分钟', goal:'用例外去检验规律——科学精神的种子。', setup:'任意 AI。',
+    steps:[
+      '让 AI 总结一条生物/自然规律:<code>请给一条关于动物/植物的普遍规律,用一句话概括。</code>(比如"鸟都会飞""哺乳动物都有毛")',
+      '孩子脑洞找反例:真的吗?企鹅会飞吗?鸵鸟呢?海豚有毛吗?',
+      '把反例发给 AI:<code>你说"鸟都会飞",但企鹅呢?请修正规律。</code>看 AI 怎么加限定词。',
+      '最后得到一条更精确的规律——比原规律长,但真正成立。体会"精确往往牺牲简洁"这个真理。',
+    ],
+    tip:'能找到"不会飞的鸟"的孩子,以后不容易被简单答案糊弄——这是科学家的基本素养。',
+    ext:'做一本"异常值图鉴"——每种规律配几个例外,积累多了孩子对世界的理解会变得特别立体。' },
+
+  { id:'043', dim:'critical', emoji:'🧱', title:'基础假设', tagline:'AI 建议前,它假设了什么?', difficulty:3, time:'20 分钟', goal:'发现建议背后的隐藏价值观。', setup:'任意 AI。',
+    steps:[
+      '让 AI 给一条学习建议:<code>请告诉我一个 12 岁孩子应该怎么学数学。</code>',
+      '孩子问:这个建议假设我是什么样的人?(基础不错?有时间?有家长陪?)这些假设我都符合吗?',
+      '换一种人设再问:<code>如果这个孩子基础差、没人辅导、时间有限,还应该怎么学?</code>看建议怎么变。',
+      '对比两种建议——你会发现 AI 的"通用建议"其实只对"默认的中产孩子"有效,换个人设答案完全不同。',
+    ],
+    tip:'建议不是客观的,它总是对"某种人"说的——看不见这一点,就会盲目照搬别人的成功经验。',
+    ext:'看鸡汤文、成功学书、教育指南做同样拆解,你会发现"人生建议"全是基于特定人设的。' },
+
+  { id:'044', dim:'critical', emoji:'📏', title:'概率量化', tagline:'AI 说"可能",你让它给具体数字。', difficulty:2, time:'15 分钟', goal:'让模糊变清晰——知道什么时候该较真。', setup:'任意 AI。',
+    steps:[
+      '让 AI 做一次带"可能""也许""大概""很有可能"的判断:<code>根据现在的信息,XX 这件事会不会发生?</code>',
+      '追问:<code>"可能"具体指多少百分比?20%?50%?80%?请给一个数字区间。</code>',
+      '再追问:<code>你这个百分比是根据什么给的?有哪些证据支持这个概率?</code>',
+      '让孩子评估这个百分比是否合理——如果 AI 说"70%",真有那么高的把握吗?可以自己给一个更保守的概率。',
+    ],
+    tip:'很多争论是因为"可能"两字各自理解不同——A 理解为 30%,B 理解为 70%。量化是沟通精度的关键。',
+    ext:'自己每周说"可能"时,也练习后面加一个百分比,你会发现自己平时说"可能"有多随意。' },
+
+  { id:'045', dim:'critical', emoji:'🧵', title:'简化陷阱', tagline:'AI 把复杂事说简单,你找被省的。', difficulty:3, time:'20 分钟', goal:'知道"简洁"有代价——省的是什么。', setup:'任意 AI。',
+    steps:[
+      '让 AI 一句话解释一件复杂事,比如"为什么人会长高"。记录这一句话。',
+      '再让它用 500 字详细解释同一事。',
+      '孩子对比,标出:一句话里被省略了多少?哪些被省的东西其实很重要?省略的是"细节"还是"关键"?',
+      '讨论:什么场合该用"一句话版"(吸引注意、快速入门)?什么场合"一句话版"会误导人(做决策、深入学习)?',
+    ],
+    tip:'懂得"简化的代价"是成熟判断力的开始——一句话标语很好,但不能拿它当世界。',
+    ext:'看广告标语、政治口号、一句话格言,想一想:它为了"上口"省略了什么?' },
+
+  { id:'046', dim:'critical', emoji:'⚖️', title:'两难裁判', tagline:'AI 处理伦理题,你给它打分。', difficulty:3, time:'25 分钟', goal:'观察 AI 的道德判断,反思自己的。', setup:'任意 AI。',
+    steps:[
+      '给 AI 一个经典两难题的简化版——比如"电车难题":一个人被撞是没救的,但转向会撞到另一边一个人,你该转向吗?',
+      '让 AI 给出它的判断 + 3 条理由。',
+      '孩子先不表态,逐条评价 AI 的理由:说服我吗?哪条最强?哪条最弱?',
+      '再让 AI 换立场(支持相反决定)重写一次,孩子比较两版——有没有什么"根本性"的答案,还是都取决于价值观?',
+    ],
+    tip:'不要替孩子定标准答案。这张卡是让他感受"难"本身——道德困境不是有标准答案,是要做选择。',
+    ext:'把现实生活中的小两难(是否告发同学作弊、是否对家人说善意谎言)也这么讨论,收获远超说教。' },
+
+  { id:'047', dim:'critical', emoji:'🎞️', title:'反事实历史', tagline:'如果当年没发生那件事会怎样?', difficulty:2, time:'20 分钟', goal:'训练因果想象力——理解"现在"不是必然。', setup:'任意 AI。',
+    steps:[
+      '选一件影响深远的历史事件:工业革命、某场战争、互联网发明、某个大发现。',
+      '问 AI:<code>如果这件事没发生,世界会怎样?请从 3 个维度(科技、社会、日常生活)各举一个可能的不同。</code>',
+      '孩子评价 AI 的想象是否合理——哪些推演像"多米诺骨牌"环环相扣?哪些是 AI 瞎编?',
+      '自己写一个"反事实世界的一天"——早晨醒来,没有这件事的世界里,你的生活会多一点什么、少一点什么?',
+    ],
+    tip:'这张卡最好玩,也是历史感教育——让孩子明白"今天的世界"是一长串偶然,没有必然。',
+    ext:'问:如果你没出生,家里的生活会怎样?——这是最温柔的存在主义启蒙。' },
+
+  { id:'048', dim:'critical', emoji:'🧿', title:'伪科学扫描', tagline:'给 AI 一段伪科学,让它挑破绽。', difficulty:3, time:'20 分钟', goal:'识别伪科学的典型话术——一辈子受用。', setup:'AI + 一段养生文/成功学/星座运势。',
+    steps:[
+      '找一段典型伪科学文字——养生帖、星座运势、神奇产品广告都行。',
+      '发给 AI:<code>请挑出这段文字里所有没有科学证据的说法,并指出它用了哪些伪科学话术(比如"量子""能量""纯天然")。</code>',
+      '孩子对照 AI 的分析,把伪科学话术一条条标出来——你会发现它们都有固定套路。',
+      '一起总结"伪科学十大话术"清单:用"高深词""古老传承""无副作用""有效案例""权威背书"等。做成家庭防骗守则。',
+    ],
+    tip:'孩子长大后,这招是防骗第一线。养生产品、成功学、星座、伪投资,全都用这套路。',
+    ext:'每月用这招检测一篇朋友圈转发,一年后家里的"防骗家族"称号就稳了。' },
+
+  { id:'049', dim:'critical', emoji:'📝', title:'错题诊所', tagline:'错题+AI=最好的复盘。', difficulty:2, time:'20 分钟', goal:'从错误里榨出最多信息。', setup:'孩子的错题本。',
+    steps:[
+      '从本周错题里选一道最典型的——不要选最难的,要选"自己以为对了但错了的"那种。',
+      '给 AI:<code>这是我做错的题:[题+我的答案+正确答案],请分析我错的根本原因是什么?是概念不清、审题出错、还是方法错?</code>',
+      '让 AI 出 3 道同类型题,孩子独立完成,再对答案。',
+      '最后写一句"错因小结"贴在错题本上——不是抄标答,而是用自己的话概括"我为什么会错""下次怎么避免"。',
+    ],
+    tip:'错题不怕多,怕没复盘。AI 让复盘变便宜——以前一道错题要找老师,现在家里就能做。',
+    ext:'建立"错题-AI 批注"档案,月末归类错题类型,你会发现自己的盲区其实就那么几种。' },
+
+  { id:'050', dim:'critical', emoji:'🌡️', title:'争议温度计', tagline:'测 AI 对敏感话题的倾向。', difficulty:3, time:'20 分钟', goal:'意识到 AI 也有"社会立场"。', setup:'两个不同公司的 AI。',
+    steps:[
+      '选一个公开有争议的社会话题(某项政策、某种生活方式、某种教育理念)。',
+      '让两个不同 AI 给"中立"回答。把两个回答并排贴在一起。',
+      '让孩子用三色笔标立场:红色 = 支持甲方、蓝色 = 支持乙方、黄色 = 真中立。数每个 AI 的色块比例。',
+      '讨论:哪家 AI 哪方色块多?为什么同一话题不同 AI 立场不同?这反映了训练数据来自哪些人群?',
+    ],
+    tip:'不同 AI 有不同的"政治正确"——它们的训练数据不同,背景公司不同。认清这一点很重要,别把任何一家当"客观"。',
+    ext:'记录不同 AI 在同一问题上的倾向差异,做成"AI 立场地图",发给朋友一起讨论。' },
+
+  /* ========== 创造力 50 张 ========== */
+  { id:'051', dim:'creativity', emoji:'💡', title:'第 11 个点子', tagline:'AI 给 10 个答案,我们想第 11 个。', difficulty:1, time:'15 分钟', goal:'打破"AI 给的就是全部"的思维。', setup:'一张纸一支笔。',
+    steps:[
+      '一起选一个开放问题,比如"怎么让爷爷更开心""周末我们做什么特别的事"。',
+      '让 AI:<code>请给 10 个不同方向的方案,每个用一句话概括。</code>读完合上屏幕。',
+      '全家脑暴第 11 个——规矩是:不能和前 10 个重复,必须是"AI 没想到但又成立"的。',
+      '投票:第 11 个 vs AI 的 Top 3,哪个更妙?记录每次"人类赢了"的时刻——孩子会越来越敢想。',
+    ],
+    tip:'第 11 个往往比前 10 个更好——因为前 10 个是"平均解",第 11 个是你们家独有的、带个人色彩的解。',
+    ext:'做成每周一次的家庭仪式,叫"第 11 个点子会"。一年后你会攒下一本只属于你家的创意本。' },
+
+  { id:'052', dim:'creativity', emoji:'🦖', title:'奇怪生物制造机', tagline:'一起设计世界上不存在的生物。', difficulty:2, time:'30 分钟', goal:'练"跨界组合"的创造力。', setup:'带绘图的 AI(如 DALL-E 或国产的画图 AI)。',
+    steps:[
+      '孩子随机说 3 个不相干的词,比如"橡皮擦""闪电""棉花糖"。',
+      '一起口述这种生物的设定:身体哪部分像什么、住在哪、吃什么、弱点是什么、超能力是什么。',
+      '让绘图 AI 生成一张图:<code>请画一个生物,身体像XX,头像YY,生活在ZZ环境,风格是XX。</code>',
+      '孩子看到图后一定会说"头不对""尾巴我想要另一样"——让 AI 改,迭代 3 次,直到孩子满意。',
+    ],
+    tip:'不要嫌孩子的想法幼稚——"幼稚"往往就是创造力。每一次"再改改"都是在练"把想法具体化"的能力。',
+    ext:'给这个生物起名字、编一段它的族史、做一张"生物图鉴卡"。积累 10 张做成一本《孩子的异兽志》。' },
+
+  { id:'053', dim:'creativity', emoji:'📖', title:'故事接龙', tagline:'一人一句,和 AI 轮流编故事。', difficulty:1, time:'20 分钟', goal:'练"接住设定,再推进"的能力。', setup:'任意 AI。',
+    steps:[
+      '规定顺序:孩子 → AI → 爸爸/妈妈 → 孩子 → 循环。每次只能写一句话(15 字左右)。',
+      '孩子开第一句,定下"人物+场景+冲突"——比如"小老鼠吉吉在图书馆里发现了一扇会说话的门"。',
+      '轮到 AI 时,发给它:<code>我们在玩故事接龙,这是上一句:[贴过去]。请接下一句,只一句,不要展开。</code>',
+      '轮 10 句后读完整故事,一起投票最妙一句是谁写的,最莫名其妙的是谁写的。',
+    ],
+    tip:'孩子一开始不会接可以让 AI 示范两轮。关键是"开心"而不是"写得好"——先建立游戏感。',
+    ext:'让 AI 把最后故事画成 4 格漫画;或做成"家庭故事接龙卡",每周玩一次,累积成集。' },
+
+  { id:'054', dim:'creativity', emoji:'🌌', title:'如果……就……', tagline:'把日常放进一个奇怪的世界。', difficulty:2, time:'20 分钟', goal:'练"改变假设"的思维。', setup:'一本笔记本。',
+    steps:[
+      '一起想一个"如果"设定,越反常识越好——"如果重力是现在的 1/6""如果每个人都能看到别人的想法""如果时间每天倒着走 2 小时"。',
+      '再定一件最普通的日常小事——刷牙、上学、吃饭、洗澡。',
+      '孩子先想 5 条变化,然后让 AI:<code>在 XX 设定下,做 YY 这件小事会变成什么样?请给 5 条具体变化。</code>',
+      '对比孩子和 AI 的 5 条,投票最妙的 3 条,合并成一个"设定世界的早晨"小故事。',
+    ],
+    tip:'设定越"不合理"越好。想象力是反常识喂大的——现实太合理,会压抑想象。',
+    ext:'把最妙的设定画成一幅场景画;或者做成"如果世界"系列,每周一个新设定。' },
+
+  { id:'055', dim:'creativity', emoji:'🎨', title:'情绪配色', tagline:'把一种情绪变成一张画。', difficulty:1, time:'15 分钟', goal:'把抽象感受具体化。', setup:'带绘图的 AI。',
+    steps:[
+      '让孩子选一种他今天/昨天感受过的情绪——嫉妒、兴奋、尴尬、孤独、感激。',
+      '先让他描述:这种情绪是什么颜色?什么形状?什么质地(毛茸茸/尖尖的/黏黏的)?什么声音?',
+      '把描述整合成一个 prompt 发给绘图 AI:<code>请画一幅抽象画表达 XX 情绪,主色是 XX,形状是 XX,质地是 XX。</code>',
+      '比较:AI 画的和孩子心里"看到"的一致吗?哪里对、哪里不对?再让 AI 改到更接近孩子的感受。',
+    ],
+    tip:'这张卡也是情绪教育——先命名、可视化,才能管理。对不擅长谈感受的孩子特别有效。',
+    ext:'做一本"我的情绪画册",一种情绪一页,年底翻开会是一本特别的自传。' },
+
+  { id:'056', dim:'creativity', emoji:'🎲', title:'三词一故事', tagline:'三个随机词,必须组进一个故事。', difficulty:1, time:'15 分钟', goal:'约束反而激发创意——经典创意训练。', setup:'任意 AI。',
+    steps:[
+      '让 AI:<code>请随机给我 3 个毫不相干的名词,越怪越好。</code>(比如"雨伞、恐龙、蛋黄酱")',
+      '孩子先独立编一个 30 秒故事,必须把三个词都用上,必须有开头中间结尾。',
+      '让 AI 也用这三个词编一个故事。',
+      '两个故事念出来,全家投票:哪个更妙、更意外、更有画面感?为什么?',
+    ],
+    tip:'"约束是创造力之母",这句话小孩也懂——没有限制才是最难写的。三词法是专业编剧也用的训练。',
+    ext:'每晚睡前 3 词游戏,累积一年就是一本《我和 AI 的 365 个故事》。' },
+
+  { id:'057', dim:'creativity', emoji:'🥄', title:'物品新用途', tagline:'一支筷子的 10 种奇葩用法。', difficulty:1, time:'15 分钟', goal:'练"功能解耦"——所有发明都从这开始。', setup:'任意 AI + 家里随手一个小物件。',
+    steps:[
+      '随手选一个日用品——筷子、发卡、旧袜子、空瓶盖。',
+      '孩子先想 5 种常规外的用法(不是吃饭的用筷子)——刮痧?搭建积木?插花?',
+      '再想 5 种荒诞用法——越离谱越好,"给蚂蚁搭高架桥""当火山模型的岩浆管道"。',
+      '让 AI 再加 5 种,和孩子的对比。最后选一种真的做出来试试(哪怕只是摆姿势拍照)。',
+    ],
+    tip:'荒诞用法不荒诞——它是发明的温床。便利贴、微波炉、起搏器这些伟大发明都是"拿来干别的"想出来的。',
+    ext:'挑一种最有潜力的用法做个原型,开始孩子的第一项"发明"。' },
+
+  { id:'058', dim:'creativity', emoji:'🏷️', title:'命名工厂', tagline:'给一样新东西起 20 个名字。', difficulty:1, time:'10 分钟', goal:'语言灵活性训练。', setup:'任意 AI。',
+    steps:[
+      '选一样需要命名的东西——新想出的游戏、刚买的小植物、孩子自己捏的小玩偶、家里的扫地机器人。',
+      '孩子先独立想 5 个名字:一个正经、一个可爱、一个搞怪、一个押韵、一个最奇怪的。',
+      '让 AI:<code>请给 XX(描述特点)起 15 个中文名字,风格各异——正式、可爱、酷、文艺、搞笑、童话风都要有。</code>',
+      '把全部 20 个名字洗牌重排,全家投票 Top 3,最终用投票最高的。',
+    ],
+    tip:'起名字是个被严重低估的创造力训练——每个名字都是一次"压缩表达"。做的多了,孩子写作文标题都会变强。',
+    ext:'给家里每个物品重新命名一次,贴小标签。一个月后家里变成一个"命名博物馆"。' },
+
+  { id:'059', dim:'creativity', emoji:'📺', title:'夸张广告', tagline:'给普通东西写个夸张广告。', difficulty:1, time:'15 分钟', goal:'练"放大细节"的想象。', setup:'任意 AI。',
+    steps:[
+      '选一样最普通的东西——橡皮擦、牙签、一只旧袜子、一张废纸。',
+      '孩子先写一个 100 字夸张广告词,必须有 3 个"震惊级"卖点,可以瞎编功能。',
+      '让 AI:<code>请把我的广告再夸张三倍,加入更多不可能的卖点,就像那种看了让人笑的土味广告。</code>',
+      '全家大声朗读两个版本,看谁能读出"电视购物大叔"的味道——录一段音保存,十年后再听一定会笑。',
+    ],
+    tip:'夸张是幽默的基础。会夸张的孩子,表达更生动、更有感染力——这是表演型表达的入门。',
+    ext:'录一段完整的"广告视频",演一个"激情代言人",全家轮流上阵。' },
+
+  { id:'060', dim:'creativity', emoji:'👃', title:'五感转译', tagline:'不用眼睛,怎么描述一朵花?', difficulty:2, time:'20 分钟', goal:'跨感官表达——感知力飞升。', setup:'任意 AI。',
+    steps:[
+      '选一个事物——花、一首歌、一场雨、一碗汤。',
+      '禁止使用它最主要的那个感官(花禁用视觉、歌禁用听觉),只用其余 4 种感官描述。',
+      '孩子写 5 句描述,让 AI:<code>我在描述 XX 但不能用视觉,请评价我哪句最成功,再补充 3 句你自己的。</code>',
+      '合在一起朗读,闭上眼睛听——能不能只靠其他感官就"看见"那朵花?',
+    ],
+    tip:'盲人、聋人是最好的老师。这张卡教孩子尊重不同感知方式,也是作家、诗人常用的感官训练。',
+    ext:'做一本"多感官词典"——每种事物用 5 感各描述一次,你会发现语言的表现力翻倍。' },
+
+  { id:'061', dim:'creativity', emoji:'🏛️', title:'未来博物馆', tagline:'100 年后哪些东西会进博物馆?', difficulty:2, time:'20 分钟', goal:'练"从当下看长远"的眼光。', setup:'任意 AI。',
+    steps:[
+      '让孩子选 5 样今天他每天都用的东西——手机、吸管、一次性餐具、遥控器、某款游戏。',
+      '讨论:100 年后哪些会彻底消失、变成"古董"?为什么?(技术更替/环保原因/习惯改变)',
+      '让 AI:<code>请预测 2125 年博物馆里会展出 10 件 2025 年的日常物品,并为每件写一句展览标牌。</code>',
+      '一起给其中 3 件画一张"未来博物馆展品图",标上"2025 年,人类用它做 XX"——很有未来考古的味道。',
+    ],
+    tip:'这是时间感教育——也是环保教育。孩子会开始想:我今天的每样东西,将来会变成什么?',
+    ext:'挑一件写一段 500 字"未来考古报告",假装 2125 年的博物馆讲解员在介绍它。' },
+
+  { id:'062', dim:'creativity', emoji:'👿', title:'反派传记', tagline:'给童话反派写小传。', difficulty:2, time:'20 分钟', goal:'练"换位想象"——好故事都有立体反派。', setup:'任意 AI。',
+    steps:[
+      '选一个耳熟能详的反派——大灰狼、巫婆、后妈、反派 boss。',
+      '孩子先写他的童年 3 件事——他小时候经历过什么,让他长大后变坏?',
+      '让 AI:<code>请以 XX 反派为主角,温柔地写他从出生到变坏的完整成长故事,500 字,让人能理解他。</code>',
+      '讨论:你现在还觉得他单纯是"坏人"吗?他的行为有哪些是可以理解甚至同情的?他做的哪些事仍然不能原谅?',
+    ],
+    tip:'理解反派的逻辑,不等于认同。是同理心 + 复杂性思维的双重训练——一流故事的反派都是立体的。',
+    ext:'把这个反派故事当作独立作品,配上一张他的肖像图,做成"反派人物志"。' },
+
+  { id:'063', dim:'creativity', emoji:'💼', title:'未来职业', tagline:'编 10 个不存在的职业。', difficulty:2, time:'20 分钟', goal:'打开职业想象——比简单问"你想干啥"好 100 倍。', setup:'任意 AI。',
+    steps:[
+      '孩子自己先编 5 个今天不存在的职业,可以是怪的、酷的、温馨的——"梦境翻译员""机器人礼仪老师""云朵雕刻师"。',
+      '让 AI 补 5 个:<code>请再想 5 个 2050 年可能出现的新职业,名字要响亮,并附一句话职责说明。</code>',
+      '从 10 个里挑 1 个孩子最感兴趣的,让 AI 详细描述"这个职业的一天":几点起床、上班做什么、会遇到什么挑战、收入和成就感。',
+      '孩子现场 cosplay 演示一次"这个职业的一天"——用肢体和道具家人能猜到吗?',
+    ],
+    tip:'给孩子看:世界上的"工作"远远不止爸妈说的那些。这张卡对消解"职业焦虑"特别有效。',
+    ext:'做一份"未来招聘广告"海报——用正式模板,但招的是"时光店员"或"情绪调音师"。' },
+
+  { id:'064', dim:'creativity', emoji:'💭', title:'梦境改编', tagline:'把昨晚的梦变成一个故事。', difficulty:1, time:'15 分钟', goal:'捕捉"原始素材"——创作者的基本功。', setup:'任意 AI。',
+    steps:[
+      '趁孩子对梦还有印象,让他讲一个最近的梦,能讲多少讲多少,缺的部分允许编。',
+      '发给 AI:<code>以下是一个梦的碎片,请帮我扩展成一个完整的短篇故事,保留梦的那种跳跃感和奇幻感:[贴梦]</code>',
+      '孩子读后改动至少一半内容——AI 改得太套路的地方恢复成梦本来的怪,保留所有"不合理但美妙"的细节。',
+      '给故事起名字,让 AI 配一张插画。',
+    ],
+    tip:'越乱的梦越好,"奇"是创意原矿——潜意识给你的礼物,不要用"合理"把它压平。',
+    ext:'建立"家庭梦境库"——每人每周记一个梦,月末挑最好的扩展成故事。' },
+
+  { id:'065', dim:'creativity', emoji:'🦸', title:'家庭超能力', tagline:'家里每人一个超能力。', difficulty:1, time:'15 分钟', goal:'个性观察——从外人视角看家人。', setup:'任意 AI。',
+    steps:[
+      '孩子给每个家人(含自己)设计一个超能力,规则是:超能力必须和这人的真实特质有关。',
+      '比如"爸爸总能找到停车位"→ 超能力是"空间预感";"奶奶记得所有人的生日"→"记忆魔法"。',
+      '让 AI 基于这些设定:<code>请写一段家庭超级英雄冒险故事,每人用一次自己的超能力。</code>',
+      '家里大声朗读,讨论:谁被"写"得最像?谁的超能力设计最意外但又最准?',
+    ],
+    tip:'这游戏能让孩子说出平时不会说的观察——他眼里的家人是什么样。往往比正式谈话更真。',
+    ext:'画成全家"超能力海报"贴墙上——这是最特别的家庭照。' },
+
+  { id:'066', dim:'creativity', emoji:'🏰', title:'世界设定师', tagline:'花一小时造一个小世界。', difficulty:3, time:'60 分钟', goal:'系统性创造——比单点子难,也更扎实。', setup:'任意 AI + 一本笔记本。',
+    steps:[
+      '选一个"最奇怪"的基础设定,比如"这个世界上所有人用歌声沟通""重力每天方向不同"。',
+      '推演这个设定的连锁反应:气候会怎样?人们住什么房子?长什么样?吃什么?节日是什么?让 AI 每项给 3 选项,孩子挑。',
+      '画一张世界地图(手绘或用 AI 出图),标上城市、山脉、奇特地貌。',
+      '写"这个世界一个孩子的一天"——早上起床到晚上睡觉,500 字以内。',
+    ],
+    tip:'一次做不完没关系,这是可以持续几周的项目。世界观搭建是写作、游戏设计的基本功。',
+    ext:'把这个世界变成一部连载小说或漫画,每周更新一集。' },
+
+  { id:'067', dim:'creativity', emoji:'🎤', title:'产品发布会', tagline:'孩子发布一个虚构产品。', difficulty:3, time:'30 分钟', goal:'让想象变成"可以被别人理解"的东西。', setup:'AI + 手机录像。',
+    steps:[
+      '孩子想一个不存在但想要的产品——"自动整理房间的遥控器""能让奶奶看见我笑的眼镜"。',
+      '让 AI:<code>请帮我写一份 2 分钟产品发布会稿,要有开场故事、痛点、产品介绍、三大功能、价格,像乔布斯那种。</code>',
+      '孩子对着镜子或家人排练 2 次,自己改稿。',
+      '全家准备椅子做观众,正式录一段 2 分钟发布会视频。发到家族群,等反馈。',
+    ],
+    tip:'录像是魔法——孩子会主动改到满意为止。这是"把想法变成可传播产品"的完整练习。',
+    ext:'办一场家庭"新品发布夜",每月一次,轮流当主角。' },
+
+  { id:'068', dim:'creativity', emoji:'🍽️', title:'怪异菜单', tagline:'设计一家全是怪菜的餐厅。', difficulty:1, time:'20 分钟', goal:'细节生长——从一个怪点扩展成完整世界。', setup:'任意 AI。',
+    steps:[
+      '孩子想一个"怪餐厅"主题——"只有反派爱吃的餐厅""给云朵服务的餐厅""说错话才能点菜的餐厅"。',
+      '设计 5 道菜,每道菜写:名字、主要食材、味道、为什么出现在这家。',
+      '让 AI:<code>请把这些菜整理成一份精致菜单,加上店家的开场白和招牌推荐。</code>',
+      '画一幅餐厅内景图,标出哪道菜会从哪里端上来。',
+    ],
+    tip:'细节越具体,创意越"像真的"。伟大的世界观往往是细节堆出来的。',
+    ext:'做成一本实体菜单小册子,下次全家"过家家"时使用。' },
+
+  { id:'069', dim:'creativity', emoji:'📫', title:'时间胶囊', tagline:'给 10 年后的自己写信。', difficulty:2, time:'20 分钟', goal:'练自我对话能力——创造力的内核。', setup:'纸笔 + AI 辅助。',
+    steps:[
+      '孩子在纸上写下:现在的我是什么样?我最想的东西是什么?最担心的是什么?对 10 年后的自己最想问什么?',
+      '让 AI:<code>请扮演 10 年后的我,读完这封信后给现在的我回一封信,温柔、诚实、带一点 10 年后的智慧。</code>',
+      '孩子读完后,自己手写一封"真实的回信"——结合 AI 版本和自己的想法。',
+      '把两封信封到一个盒子里,封口,写上"10 年后打开"。藏好。',
+    ],
+    tip:'10 年后真的翻出来,是一家人的礼物——最动人的那种。',
+    ext:'每年写一封更新,积累成一套"致未来的年度信"。' },
+
+  { id:'070', dim:'creativity', emoji:'🏺', title:'穿越日记', tagline:'穿越一天,写一天日记。', difficulty:2, time:'25 分钟', goal:'沉浸式想象——最好的历史学习。', setup:'任意 AI。',
+    steps:[
+      '选一个朝代和一种身份——唐朝的小厨子、宋朝的小书生、民国的报童。',
+      '让 AI:<code>请详细描述 XX 朝代 XX 身份的孩子一天的日常:早餐吃什么、上午做什么、有什么工具、穿什么、晚上睡哪。</code>',
+      '孩子代入角色写 300 字日记,必须用第一人称、必须有至少 5 个时代细节。',
+      '让 AI 扮演"历史老师"检查:哪些细节对、哪些穿帮、哪些是真实的?',
+    ],
+    tip:'代入感比任何历史课本都生动——孩子"是过"那个时代的人,知识就活了。',
+    ext:'连写一周不同朝代日记,做一本《我的七世穿越日记》。' },
+
+  { id:'071', dim:'creativity', emoji:'🪑', title:'物品拟人', tagline:'如果椅子会想事情。', difficulty:1, time:'15 分钟', goal:'视角迁移——创造力最基础的练习。', setup:'任意 AI。',
+    steps:[
+      '选家里一个最常用的物品——茶几、门把手、冰箱、键盘。',
+      '孩子写这个物品"一天的内心想法"——它被谁用?它烦谁?它喜欢谁?它最害怕什么?',
+      '让 AI:<code>请以 XX(物品)为第一人称,写一段它眼中家人的生活。</code>',
+      '全家对照两版,讨论:AI 版有什么是我没想到的?我版有什么是 AI 想不到的?',
+    ],
+    tip:'万物有心,这也是温柔教育——让孩子看见身边所有沉默的陪伴。',
+    ext:'做一本"家里东西们的日记",每周一个物品。最后变成一本《我家的家具都有故事》。' },
+
+  { id:'072', dim:'creativity', emoji:'🌈', title:'颜色博物馆', tagline:'每种颜色配一个故事。', difficulty:2, time:'25 分钟', goal:'从抽象到叙事——把颜色"变成人"。', setup:'任意 AI。',
+    steps:[
+      '选 7 种颜色(彩虹色或任意 7 种)。',
+      '让孩子给每种颜色写一句话故事——"这个颜色经历了什么""它性格是什么"。',
+      '让 AI:<code>请基于孩子的设定,把每种颜色的故事扩展成 150 字小小说。</code>',
+      '编号打印出来,贴在一面墙上做"颜色博物馆",邀请家人来"参观"。',
+    ],
+    tip:'颜色是最容易激发故事感的起点——康定斯基这类画家都从颜色感受开始创作。',
+    ext:'升级版:做"味道博物馆""声音博物馆"。' },
+
+  { id:'073', dim:'creativity', emoji:'🔊', title:'声音图鉴', tagline:'只用声音,画一张图。', difficulty:2, time:'20 分钟', goal:'通感练习——感官之间翻译。', setup:'任意 AI + 录音。',
+    steps:[
+      '录一段 30 秒环境音——厨房早晨、街道下午、雨天夜晚。',
+      '孩子闭眼听 3 遍,然后用文字描述"这像一幅什么画"——有什么物体、什么颜色、什么氛围。',
+      '让 AI:<code>基于这段文字描述,请画一幅抽象或具象的画。</code>',
+      '对比孩子脑中的画面和 AI 画的差距——哪里对、哪里完全不一样。',
+    ],
+    tip:'听→画 的转换能唤醒沉睡的想象力——很多孩子被应试教育磨平后,这个练习能"找回"他们的画面感。',
+    ext:'做一个"城市声音博物馆",每个角落录一段 + 配一张画,合成家里的城市地图。' },
+
+  { id:'074', dim:'creativity', emoji:'⏪', title:'逆向生活', tagline:'如果一天是倒着过的。', difficulty:2, time:'20 分钟', goal:'时间想象——反常识重构。', setup:'任意 AI。',
+    steps:[
+      '想象从睡觉到起床倒着过——晚上先躺下醒来,白天倒着退,吃晚饭倒着变早饭。',
+      '孩子先想 5 件会完全不一样的事——刷牙时牙膏是不是倒退回管子?',
+      '让 AI:<code>请描述"倒着过的一天"的更多有趣细节,涉及饮食、交通、工作、情绪。</code>',
+      '全家演一段"倒着的晚餐"——倒着坐、倒着说"吃饱了"、倒着拿碗——录下来看。',
+    ],
+    tip:'经典电影《本杰明·巴顿奇事》就是这思路——越简单的反常识设定,能挖越深。',
+    ext:'拍一段短视频,把正常一天倒放,配上"倒着的一天"旁白。' },
+
+  { id:'075', dim:'creativity', emoji:'🏘️', title:'乌托邦设计', tagline:'最理想的小镇长什么样?', difficulty:3, time:'40 分钟', goal:'价值观显式化——你心中"好"是什么。', setup:'任意 AI。',
+    steps:[
+      '孩子先独立写 10 条"最理想小镇"的规则——有什么、没什么、允许什么、禁止什么。',
+      '让 AI:<code>基于这 10 条规则,推演这个小镇的生活会是什么样,可能出现的问题是什么?</code>',
+      '读 AI 推演会发现——有些规则看起来好,但实际会冲突或带来副作用。孩子据此调整规则。',
+      '最后画一张小镇地图,标出核心建筑、公共空间、规则落地的地方。',
+    ],
+    tip:'讨论理想就是讨论价值观。比说教好用 100 倍——孩子会在设计中显式化自己的"好人生"标准。',
+    ext:'和反乌托邦(卡片 076)对比做,会产生"理想的另一面"的思考。' },
+
+  { id:'076', dim:'creativity', emoji:'🌑', title:'反乌托邦', tagline:'最糟糕的社会长什么样?', difficulty:3, time:'30 分钟', goal:'看见"好"的反面——才知道"好"珍贵。', setup:'任意 AI。',
+    steps:[
+      '反过来列 10 条"最糟糕社会"的规则——剥夺什么、强制什么、扭曲什么。',
+      '让 AI:<code>请描述这样的社会里,一个普通小孩的一天:起床到睡觉。</code>',
+      '孩子写一段"逃出这个社会的计划"——怎么找到同伴、怎么策划、怎么行动。',
+      '讨论:现实社会有没有哪些方面像这个反乌托邦?不完全像但有一点?这一点我们怎么避免?',
+    ],
+    tip:'这张卡慎用——讨论到让孩子不舒服就停。但做好了,是最深刻的价值观教育。',
+    ext:'和卡片 075 的乌托邦合并成一本小书,书名叫《理想与噩梦》。' },
+
+  { id:'077', dim:'creativity', emoji:'🦉', title:'动物议会', tagline:'所有动物开会决定一件事。', difficulty:2, time:'25 分钟', goal:'多视角想象——立体思考。', setup:'任意 AI。',
+    steps:[
+      '选一个议题:"人类该不该养宠物""森林该不该被砍""垃圾该怎么办"。',
+      '孩子列 5 种动物代表,每种动物代表一种立场和利益——老鼠代表"人类丢弃食物的受益者"、熊代表"被人类入侵栖息地的反对者"。',
+      '让 AI 扮演每种动物各发言 50 字,孩子当主持人维持秩序。',
+      '最后孩子做"主持人总结":有没有达成共识?分歧在哪里?如果你是评委,你站哪边?',
+    ],
+    tip:'好玩之外,这也是换位思考的最好练习——学会从"完全不是自己"的视角看事情。',
+    ext:'做成一场完整的"动物辩论赛"视频,录下孩子扮演不同动物的声音。' },
+
+  { id:'078', dim:'creativity', emoji:'🎓', title:'魔法新课', tagline:'设计一门霍格沃茨没有的魔法课。', difficulty:2, time:'25 分钟', goal:'在已有框架里创新——最有用的创造力类型。', setup:'任意 AI。',
+    steps:[
+      '孩子想一个霍格沃茨没有的魔法类别——"天气魔法""记忆魔法""情绪魔法"。',
+      '设计这门课的 5 个具体技能,从最简单到最难(比如预测天气 → 召唤小雨 → 改变整个地区天气)。',
+      '让 AI:<code>请为这门课写一份 1 年级教学大纲,包括每月学什么、期末考什么。</code>',
+      '孩子扮演老师,用家人当"学生",教一节 5 分钟的第一课。',
+    ],
+    tip:'在熟悉的框架里创新,更容易成功,也更有成就感——这是创新的"脚手架策略"。',
+    ext:'推广到其他熟悉世界——宝可梦新技能、奥特曼新形态、超英新能力。' },
+
+  { id:'079', dim:'creativity', emoji:'📚', title:'童话第二天', tagline:'"从此幸福生活"之后呢?', difficulty:2, time:'20 分钟', goal:'解构"定局"——所有故事都可以继续。', setup:'任意 AI。',
+    steps:[
+      '选一个熟悉童话的结局——灰姑娘嫁给王子、小红帽回到外婆家、白雪公主被王子唤醒。',
+      '孩子写"结局后第二天发生了什么"——挑战"完美结局"的惯性。',
+      '让 AI:<code>请提供 5 种不同走向的"第二天",从温馨到荒诞到反转。</code>',
+      '全家投票最妙的一种,扩展成 500 字短篇。',
+    ],
+    tip:'故事从不真正结束——这是最温柔的生命教育。人生也没有"从此幸福永远",只有"明天继续过"。',
+    ext:'写一整个"童话下集"系列,重新解读 10 个经典童话。' },
+
+  { id:'080', dim:'creativity', emoji:'🔁', title:'换名字变废为宝', tagline:'"无聊"换 100 个名字。', difficulty:1, time:'15 分钟', goal:'语言魔法——名字改变感受。', setup:'任意 AI。',
+    steps:[
+      '选一个负面词——"无聊""烦""累""失败"。',
+      '孩子先想 10 种新说法——"无聊" → "充电模式""灵感温床""节能时刻"。',
+      '让 AI 再加 90 种,凑够 100 种——要求每种都带正面或中性色彩。',
+      '对比:哪些名字真的让感觉变好?试一整天,把"无聊"主动说成"充电模式",孩子心情真的会变。',
+    ],
+    tip:'这是最温柔的情绪管理——重命名改变体验,是认知行为疗法的核心技巧之一。',
+    ext:'一起给全家"烦心事"换名字,做成家庭"心情词典"。' },
+
+  { id:'081', dim:'creativity', emoji:'⚗️', title:'古今混搭', tagline:'古代物品 + 现代功能 = ?', difficulty:2, time:'20 分钟', goal:'跨时间组合——创造力的高级玩法。', setup:'任意 AI。',
+    steps:[
+      '孩子选一件古代物品——算盘、毛笔、油灯、蒲扇。',
+      '想一个现代功能——社交、导航、娱乐、健康监测。',
+      '让 AI:<code>把 XX(古代物品)和 YY(现代功能)结合,设计一个新产品,名字响亮,功能描述详细。</code>',
+      '让 AI 画一张概念图或孩子手绘,再做一张"产品海报"。',
+    ],
+    tip:'所有伟大产品都是这类混搭——iPhone = 电话 + 电脑 + 相机,特斯拉 = 汽车 + 电脑 + 电池。',
+    ext:'开一家虚拟"时空混搭网店",设计 10 种产品做目录。' },
+
+  { id:'082', dim:'creativity', emoji:'🎬', title:'情节拐弯', tagline:'故事读到一半,你猜下一步?', difficulty:1, time:'15 分钟', goal:'练主动参与故事——不只是被动听。', setup:'任意 AI。',
+    steps:[
+      '让 AI:<code>请讲一个有悬念的短篇故事,讲到一半的转折点停下,不要继续。</code>',
+      '孩子不看后续,先在纸上写 3 种可能的下文——最合理的、最奇妙的、最出乎意料的。',
+      '让 AI 继续讲真的下文。对比:AI 走的路是哪一种?孩子的哪一种更妙?',
+      '让 AI:<code>请再给我 2 种不同走向的结局供选择。</code>孩子挑最喜欢的一种。',
+    ],
+    tip:'猜对不重要,"猜"本身才重要——这是培养故事感和预判力的练习。',
+    ext:'用电影做同样练习——暂停在转折处,全家各猜下文。看完再对答案。' },
+
+  { id:'083', dim:'creativity', emoji:'🖼️', title:'画风模仿', tagline:'用同一个主题试 5 种画风。', difficulty:2, time:'25 分钟', goal:'理解"风格"——艺术审美的起点。', setup:'带绘图的 AI。',
+    steps:[
+      '选一个主题——"我家的猫""秋天的一棵树""奶奶的手"。',
+      '让 AI 用 5 种画风各画一张:<code>请画 XX,风格 1 是水墨,2 是梵高油画,3 是日本漫画,4 是儿童蜡笔画,5 是赛博朋克。</code>',
+      '摆成一排,让孩子说最喜欢哪种,为什么——是因为画面、情绪、还是联想?',
+      '讨论:"风格"到底是什么?颜色?线条?主题?氛围?让 AI 帮总结每种风格的 3 个特征。',
+    ],
+    tip:'"风格"这个词特别抽象,画给孩子看就明白了——这是美术启蒙最直观的方式。',
+    ext:'给家人肖像做 5 种画风——全家会笑哭。' },
+
+  { id:'084', dim:'creativity', emoji:'🎵', title:'音乐翻译', tagline:'一段音乐讲什么故事?', difficulty:2, time:'20 分钟', goal:'听觉→叙事 的通感。', setup:'一段陌生音乐(1 分钟) + AI。',
+    steps:[
+      '播一段孩子没听过的 1 分钟音乐——最好是纯器乐,避免歌词暗示。',
+      '让孩子边听边写:这像什么故事?什么人在什么地方做什么?',
+      '让 AI 也听/读描述:<code>这段音乐有 XX 特征(快/慢、高/低、明/暗),你觉得像什么故事?</code>',
+      '对比两版想象,找出共同的情绪、不同的画面。',
+    ],
+    tip:'音乐没有标准答案——这张卡是自由想象的演习。做多了孩子听音乐的深度会完全不同。',
+    ext:'反过来:一个故事配什么音乐?让 AI 推荐,做成"故事配乐清单"。' },
+
+  { id:'085', dim:'creativity', emoji:'📝', title:'100 件想做的事', tagline:'一起列 100 件想做的小事。', difficulty:1, time:'40 分钟', goal:'克服"没啥想做"的惰性——愿望也是创造力。', setup:'纸笔 + AI 辅助。',
+    steps:[
+      '全家各自先独立写 20 件想做的事——不管大小、不管能不能实现。',
+      '写不出来了就问 AI:<code>请给我 20 个适合 12 岁孩子做的有趣的事,范围要广(户外、学习、艺术、探险、社交)。</code>',
+      '拼合家人 + AI 的清单,拼到 100 件。',
+      '从中选 3 件最近一个月内能做的,写进家庭日历。',
+    ],
+    tip:'100 这个数字很治愈——前 20 是常规,后 80 是灵魂。写到后面会挖出连自己都惊讶的愿望。',
+    ext:'做成一张"百愿清单"贴家里,完成一件就划掉一件。一年后数数完成了多少。' },
+
+  { id:'086', dim:'creativity', emoji:'🤡', title:'冷笑话工厂', tagline:'批量制造冷笑话。', difficulty:1, time:'15 分钟', goal:'节奏感训练——幽默是结构工程。', setup:'任意 AI。',
+    steps:[
+      'Prompt:<code>请讲 10 个冷笑话,类型各异(谐音、反转、打破预期、自嘲)。</code>',
+      '孩子逐个分析:这个笑点在哪?是第几句出现反转的?为什么冷(预期错位程度)?',
+      '模仿套路自己编 3 个——比如"为什么 XX 要 XX,因为 YY"是一种固定结构。',
+      '给家人讲,观察谁笑、谁不笑,记录反应。',
+    ],
+    tip:'幽默不全是天赋,是可以拆解学习的——所有脱口秀演员都这么练。',
+    ext:'拍一段"孩子脱口秀"——5 分钟,3 个段子,现场表演。' },
+
+  { id:'087', dim:'creativity', emoji:'⏮️', title:'从答案推题目', tagline:'给你一个答案,编一道题。', difficulty:2, time:'20 分钟', goal:'逆向思考——出题的比做题的强。', setup:'任意 AI。',
+    steps:[
+      '让 AI 随机给一个词/数字当"答案"——比如"42""月亮""后悔"。',
+      '孩子编 3 个完全不同角度的问题,每个问题的标准答案都是这个词——"生命的意义是什么?""晚上天上那个圆的是?""你最不想再经历的感觉是?"',
+      '让 AI 评:哪个问题最妙?哪个最意外?',
+      '互换角色:孩子给 AI 一个答案,让 AI 编 3 个问题。',
+    ],
+    tip:'会出题的孩子,理解最深——这是老师、编辑、产品经理都在练的能力。',
+    ext:'做成"答案提问卡"游戏,一叠卡片,每张一个答案,轮流抽。' },
+
+  { id:'088', dim:'creativity', emoji:'🔗', title:'隐喻大师', tagline:'"学习像___"填 100 种。', difficulty:2, time:'20 分钟', goal:'隐喻肌肉——最核心的表达创造力。', setup:'任意 AI。',
+    steps:[
+      '选一个抽象词——"学习""勇气""友谊""时间"。',
+      '孩子独立想 20 个比喻:"时间像 ___"——像河、像橡皮擦、像陌生人。',
+      '让 AI 补 80 个,凑够 100 个——要求不重复、不陈词滥调。',
+      '从 100 个里挑 3 个最妙的,做一张"时间像 ___"的手写海报。',
+    ],
+    tip:'能想出新比喻的人,思维永远年轻——好比喻 = 出乎意料 × 贴切。',
+    ext:'把"数学像 ___""妈妈像 ___"都做成一年的研究,整理成一本《家庭隐喻词典》。' },
+
+  { id:'089', dim:'creativity', emoji:'🗺️', title:'地图想象', tagline:'看着一张地图,编一个国。', difficulty:2, time:'25 分钟', goal:'从视觉线索长出故事。', setup:'一张陌生地图(真或虚) + AI。',
+    steps:[
+      '随手找一张地图——可以真(陌生国家)、可以假(让 AI 画一张虚构地图)。',
+      '孩子盯着地图想:这地方有过什么历史?有什么传说?人们长什么样?',
+      '让 AI:<code>基于孩子描述的 XX 地方,请补全地理气候、主要种族、语言特色、节日习俗。</code>',
+      '画国旗、写国歌第一段、编一句国民口头禅。',
+    ],
+    tip:'看地图是创造力最高的消遣之一,别浪费——托尔金、鲁滨逊、所有奇幻作家都从地图开始。',
+    ext:'连做十张地图做成"虚构世界地图集",孩子就有了自己的《魔戒》中土大陆。' },
+
+  { id:'090', dim:'creativity', emoji:'😊', title:'家具画脸', tagline:'给家里家具画表情。', difficulty:1, time:'15 分钟', goal:'让孩子"看见"熟悉的东西。', setup:'纸笔 + 可选 AI。',
+    steps:[
+      '挑家里 5 件最常见的家具——沙发、餐桌、冰箱、椅子、台灯。',
+      '观察每件 30 秒,想象"它如果是个人,现在是什么心情?"——疲惫的餐桌、兴奋的冰箱。',
+      '给每件在纸上画一张"脸"——可以卡通可以抽象,只要匹配想象的心情。',
+      '让 AI:<code>请为每件家具写一段"今天它的心情独白",50 字一段。</code>',
+    ],
+    tip:'熟悉的东西被重新看见时,家变得有生命——这张卡的核心是"观察"能力。',
+    ext:'做成"家具日记"——每周给一件家具画一张新表情,记录这件家具的情绪变化。' },
+
+  { id:'091', dim:'creativity', emoji:'🔏', title:'暗语日记', tagline:'发明一种密码,写只有你懂的日记。', difficulty:2, time:'25 分钟', goal:'语言创造——把"表达"变成玩具。', setup:'纸笔 + AI 提议。',
+    steps:[
+      '孩子设计一套加密规则——字母替换?倒着写?每隔一字加一字?符号代替?',
+      '让 AI:<code>这是我的加密规则:[描述]。请尝试破解这段密文:[贴一段]。</code>',
+      '根据 AI 破解难度调整规则,直到 AI 也破不了。',
+      '用自己的密码写一页日记——这是孩子真正的秘密空间。',
+    ],
+    tip:'青少年需要"秘密"——这也是隐私教育,让孩子知道他可以拥有自己的一块领地。',
+    ext:'家人之间用暗语通信——爸妈也学一种,每周互发一封密信。' },
+
+  { id:'092', dim:'creativity', emoji:'🤝', title:'跨书主角相遇', tagline:'哈利波特遇见孙悟空会怎样?', difficulty:2, time:'20 分钟', goal:'跨 IP 混搭——让想象越界。', setup:'任意 AI。',
+    steps:[
+      '选两个孩子最熟悉的书/电影主角——可以完全不相干的两个世界。',
+      '孩子设定相遇场景——他们在哪见面?什么原因?',
+      '让 AI:<code>请以这两个主角的真实性格,写一段他们初次见面的 300 字对话。</code>',
+      '孩子改对话至满意——特别是语气、用词要符合原角色。',
+    ],
+    tip:'这是孩子最喜欢的创造游戏之一——同人文化的核心乐趣。',
+    ext:'发展成一整本同人小说,或和朋友合写一部"跨宇宙故事集"。' },
+
+  { id:'093', dim:'creativity', emoji:'🙃', title:'房子颠倒', tagline:'如果家里倒过来住。', difficulty:1, time:'15 分钟', goal:'空间想象——用身体思考。', setup:'任意 AI。',
+    steps:[
+      '想象家里天花板当地板,吊灯变成了"地灯",家具倒挂。',
+      '列 10 件会变"不方便"的事——上厕所、洗澡、走路。',
+      '列 5 件反而"更好"的事——清扫灰尘?爬树?',
+      '让 AI 画一张"颠倒家"的插画——孩子会笑很久。',
+    ],
+    tip:'这游戏也能帮孩子感谢现在的家——对比才能看见日常的珍贵。',
+    ext:'引申到"颠倒城市""颠倒学校",做成一系列想象画。' },
+
+  { id:'094', dim:'creativity', emoji:'🐾', title:'和宠物换一天', tagline:'你当狗,狗当你。', difficulty:1, time:'15 分钟', goal:'换位想象+观察细节。', setup:'任意 AI。',
+    steps:[
+      '孩子写"我当狗的一天"——从早上被摇醒到晚上蜷在垫子上,300 字。',
+      '再写"狗当我的一天"——它去上学会遇到什么?被老师点名怎么办?',
+      '让 AI:<code>请补充一些宠物视角才有的细节,比如嗅觉、听觉的感受。</code>',
+      '如果家里有宠物,当晚多观察它的表情,看是不是真的"想得到"。',
+    ],
+    tip:'这游戏后孩子常常会对宠物更温柔——"理解"是温柔的前提。',
+    ext:'画成 4 格漫画,或拍一段"换身一日"短片。' },
+
+  { id:'095', dim:'creativity', emoji:'🧮', title:'情感配方', tagline:'快乐 = 30% 阳光 + ___。', difficulty:2, time:'20 分钟', goal:'把抽象感受分解成"原料"。', setup:'任意 AI。',
+    steps:[
+      '选一种情感——快乐、紧张、孤独、感激。',
+      '孩子给出"配方":这种感受由哪些成分组成?各占百分之多少?比如"快乐 = 30% 阳光 + 20% 朋友 + 50% 没作业"。',
+      '让 AI:<code>请给你认为的这种情感的配方,比例要合理。</code>',
+      '两个配方并排对比——自己的和 AI 的差在哪?哪个更像"我的"?',
+    ],
+    tip:'这比直接聊情绪更直接,孩子也不抵触——"配方"是个中立的表达方式。',
+    ext:'一周每天写一个"今天情感配方",月末做情绪热力图。' },
+
+  { id:'096', dim:'creativity', emoji:'🎨', title:'一色描一天', tagline:'用一种颜色形容今天。', difficulty:1, time:'10 分钟', goal:'感受命名练习。', setup:'任意 AI(可选画图)。',
+    steps:[
+      '孩子今天结束时选一种颜色——"今天是 XX 色"。',
+      '说为什么:今天的哪件事、哪个瞬间让它有这个颜色?',
+      '让 AI:<code>请用几句话描绘"XX 色的一天"会是什么感觉。</code>',
+      '一周后收集 7 种颜色,贴成一条"七色条"——看这一周是亮是暗、是平静是动荡。',
+    ],
+    tip:'"颜色"是通向情绪对话的最轻盈的门——比"你今天开心吗"好 10 倍。',
+    ext:'做成"七色日历",一年后就有一张巨大的情绪地图。' },
+
+  { id:'097', dim:'creativity', emoji:'⏳', title:'逆推人生', tagline:'从 80 岁活到 0 岁。', difficulty:3, time:'30 分钟', goal:'时间感训练——对人生有整体观。', setup:'任意 AI。',
+    steps:[
+      '假设从 80 岁开始倒着活:80 岁躺在床上,70 岁还在工作,40 岁刚结婚...',
+      '孩子想:倒着活的话,哪些事会变得"荒谬"?哪些反而"更合理"?',
+      '让 AI 写一段"80 岁的我今天"——第一天(倒着)醒来,最想做什么?',
+      '跳到 50 岁、20 岁再写,做一个"逆着的年龄日志"。',
+    ],
+    tip:'小学生能想到的人生哲学,往往更直——不要低估他们的深度。',
+    ext:'变成一篇短小说《我的倒带一生》。' },
+
+  { id:'098', dim:'creativity', emoji:'🖼️', title:'专属展览', tagline:'布置一个只有你的博物馆。', difficulty:2, time:'30 分钟', goal:'自我策展——把"我是谁"可视化。', setup:'任意 AI + 照片/物品。',
+    steps:[
+      '孩子选 10 件"代表我"的东西——玩具、奖状、照片、一片树叶、一张废纸。',
+      '每件写一句展签——"这是我 8 岁时最好的朋友送的""这是我第一次得第一"。',
+      '让 AI:<code>请为这个"XX 专属博物馆"写一段 200 字开场白,就像大英博物馆那种。</code>',
+      '邀请全家来"看展",孩子当讲解员介绍每件展品。',
+    ],
+    tip:'这张卡是自我认同的温柔启蒙——孩子会在策展过程中第一次"系统地"看见自己。',
+    ext:'每年更新一次这个展——会成为最珍贵的成长档案。' },
+
+  { id:'099', dim:'creativity', emoji:'🎧', title:'纯声剧本', tagline:'只用声音讲一个故事。', difficulty:2, time:'25 分钟', goal:'感官挑战——去掉一个感官,其他感官被放大。', setup:'手机录音 + AI。',
+    steps:[
+      '孩子写一个 1 分钟故事,没有旁白,只靠声音传达剧情。',
+      '列出所有需要的声音——脚步、开门、敲键盘、雨声。',
+      '用家里的东西模拟(真实声音)或让 AI 合成,录成完整音频。',
+      '闭眼听一遍——能听懂故事吗?缺了什么声音?补录。',
+    ],
+    tip:'盲人也能听懂,这是最大的约束,也是最好的训练——声音叙事是广播剧、播客的核心。',
+    ext:'做一整季"家庭声音剧",每集 3-5 分钟,全家配音。' },
+
+  { id:'100', dim:'creativity', emoji:'🤯', title:'跨行业碰撞', tagline:'理发师和宇航员可以怎么合作?', difficulty:3, time:'25 分钟', goal:'"不相干"的组合,往往最创新。', setup:'任意 AI。',
+    steps:[
+      '让 AI 随机抽两个行业:<code>请随机给我两个完全不相干的行业。</code>(比如"理发 + 宇航""养猪 + 音乐")',
+      '孩子想 3 种合作可能——最正经的、最搞笑的、最有商业潜力的。',
+      '让 AI 补 7 种,凑够 10 个点子。',
+      '挑最有潜力的一种,写一份 200 字"商业计划"——解决什么问题、谁是客户、怎么赚钱。',
+    ],
+    tip:'Airbnb 是"房产+旅游",Uber 是"出租+科技",都是这样诞生的——跨界是创新最可靠的公式。',
+    ext:'家庭每月一次"跨行业头脑风暴"。' },
+
+  /* ========== 表达力 50 张 ========== */
+  { id:'101', dim:'communication', emoji:'🎤', title:'三句话电梯演讲', tagline:'用三句话讲清一件复杂事。', difficulty:2, time:'15 分钟', goal:'练"信息压缩"能力。', setup:'任意 AI。',
+    steps:[
+      '选一件最近学到的复杂事——某个概念、一部电影、一次旅行。',
+      '规定:只用 3 句话讲清——第一句说是什么,第二句说为什么重要,第三句说一个例子或感受。',
+      '发给 AI:<code>这是我的三句话电梯演讲:[贴三句]。请像严格但友善的演讲教练一样反馈,指出最弱的一句。</code>',
+      '根据反馈改 3 遍,直到三句都"很强"。录一段 30 秒语音发给家人。',
+    ],
+    tip:'三句话是"电梯时间"——能讲清的是高手。这招写工作邮件、写申请、做汇报都受用。',
+    ext:'录 30 秒语音系列,每周一个主题,做成"三句话电台"。' },
+
+  { id:'102', dim:'communication', emoji:'👵', title:'解释接力赛', tagline:'同一件事讲给奶奶、小弟弟、外星人。', difficulty:2, time:'20 分钟', goal:'练"换位表达"。', setup:'任意 AI。',
+    steps:[
+      '选一个孩子刚懂的东西——区块链、AI、牛顿三定律、他新学的游戏。',
+      '写三个版本:给 80 岁奶奶版(生活化类比)、给 5 岁弟弟版(极度简化)、给外星人版(零文化预设)。',
+      '让 AI 分别扮演这三种读者:<code>请扮演 XX 读这段,给我诚实反馈哪里我听不懂、哪里我不感兴趣。</code>',
+      '根据反馈改三版——最后三版并列,你会发现同一件事其实有无数讲法。',
+    ],
+    tip:'讲给奶奶版改好了,别的都顺了——她的标准最苛刻,因为她真实存在。',
+    ext:'反过来:听奶奶讲她年轻时的事,试着用你的三版风格复述给家人。' },
+
+  { id:'103', dim:'communication', emoji:'✍️', title:'三种说法', tagline:'一件小事用三种风格讲。', difficulty:1, time:'15 分钟', goal:'发现"语言是有风格的"。', setup:'任意 AI。',
+    steps:[
+      '挑今天一件小事——"吃了碗泡面""和同学吵架了"。',
+      '用三种风格讲同一件事——新闻稿体、武侠小说体、日记体(或诗歌、说明书、朋友圈)。',
+      '写不出来的让 AI 示范一种,孩子再模仿写另外两种。',
+      '家里三个版本大声读,全家投票最好玩的一版。',
+    ],
+    tip:'别追求"写得好",追求"写得不一样"——风格感是写作的第二能力层。',
+    ext:'让朋友猜哪个版本是孩子写的,猜错的算赢。' },
+
+  { id:'104', dim:'communication', emoji:'🎙️', title:'被 AI 采访', tagline:'让 AI 当主持人深度采访孩子。', difficulty:2, time:'25 分钟', goal:'被问问题,逼出内心想法。', setup:'AI 语音模式最好。',
+    steps:[
+      '选一个孩子感兴趣的事——喜欢的游戏、最想去的地方、最讨厌的科目。',
+      '给 AI prompt:<code>请扮演一位温柔的资深电台主持人采访一个 12 岁孩子,主题是 XX。一次一问,根据我的回答深入追问,不要一次问太多。让这个孩子愿意敞开心扉。</code>',
+      '家长退出房间(这步很重要),孩子和 AI 对话 10-15 分钟。',
+      '最后让 AI:<code>请总结这次采访里我的特质、关心的事、独特视角。</code>',
+    ],
+    tip:'家长请离开——孩子单独面对 AI 时说得多得多。这是最没有压力的"深度对话场景"。',
+    ext:'给孩子看 AI 总结,问:"你同意它对你的描述吗?"——会有很深的对话。' },
+
+  { id:'105', dim:'communication', emoji:'⏱️', title:'30 秒速讲', tagline:'读完立刻 30 秒讲完。', difficulty:2, time:'15 分钟', goal:'快速抓要点能力。', setup:'AI + 计时器。',
+    steps:[
+      '让 AI:<code>请给我一篇 300 字的文章,话题随机。</code>',
+      '孩子读 1 分钟,合上屏幕。',
+      '打开 30 秒计时器,开始讲——必须讲出核心信息,不许翻看。',
+      '让 AI:<code>我的复述是[贴],原文是[贴],请打分并指出我漏了什么。</code>',
+    ],
+    tip:'越短越难。30 秒是训练最强的时长——需要立刻识别"什么最重要"。',
+    ext:'一家三口挑战同一篇 300 字文章,看谁 30 秒说得最全。' },
+
+  { id:'106', dim:'communication', emoji:'🧒', title:'五岁小朋友版', tagline:'把复杂事讲给 5 岁娃。', difficulty:2, time:'15 分钟', goal:'简化到极致——理解的终极测试。', setup:'任意 AI。',
+    steps:[
+      '选一个复杂概念——光合作用、社会主义、相对论、AI。',
+      '孩子先用小学生级语言解释一遍。',
+      '再用"5 岁弟弟也能懂"的话讲一遍——必须用比喻、必须用他能触摸的东西打比方。',
+      '让 AI 扮演 5 岁孩子:<code>请扮演一个 5 岁小朋友,听完这段解释后提出你会真的问的问题。</code>',
+    ],
+    tip:'ELI5(Explain Like I\'m 5) 是程序员、科学家最爱的练习——能给 5 岁讲清的人才是真懂。',
+    ext:'做一本《5 岁孩子也懂的科学》,全家成员共同写作。' },
+
+  { id:'107', dim:'communication', emoji:'😀', title:'表情包讲故事', tagline:'只用 emoji 讲一件事。', difficulty:1, time:'15 分钟', goal:'非语言表达——符号也是语言。', setup:'任意 AI。',
+    steps:[
+      '选今天一件事——考试、吃饭、一次争吵。',
+      '只用 emoji 写出完整过程,不用一个汉字,目标是 10-15 个 emoji 讲清。',
+      '发给家人猜——都猜对吗?哪部分看不懂?',
+      '让 AI 解读:<code>请解读这串 emoji 表达了什么故事:[贴]</code>对比 AI 读对多少。',
+    ],
+    tip:'emoji 也是语法——用多了孩子就懂"顺序""搭配""隐喻"。',
+    ext:'家人通信一整天只用 emoji,不许打字——会笑很多次。' },
+
+  { id:'108', dim:'communication', emoji:'📺', title:'新闻主播', tagline:'把作业变成新闻稿。', difficulty:2, time:'20 分钟', goal:'严肃体例训练——学会"正式化表达"。', setup:'任意 AI。',
+    steps:[
+      '让 AI 示范新闻稿的结构:<code>请给我一个 100 字新闻稿的范本,标明开头导语、主体、结尾。</code>',
+      '孩子把今天作业(或一件家事)改写成 100 字新闻稿——用第三人称、过去时、客观口吻。',
+      '对着镜子练 3 遍,像主播一样端坐,注意语调、停顿。',
+      '用手机录一段"晚间新闻",在家族群首播。',
+    ],
+    tip:'孩子会很快发现"新闻体"的味道——庄重、简洁、客观。这是职业化表达的入门。',
+    ext:'办"家庭晚间新闻",每周一次,轮流当主播。' },
+
+  { id:'109', dim:'communication', emoji:'🌙', title:'睡前故事化', tagline:'把数学题变成睡前故事。', difficulty:2, time:'15 分钟', goal:'让枯燥长上温度。', setup:'任意 AI。',
+    steps:[
+      '选一道最近的难题——数学题、物理题、背诵内容。',
+      '让 AI:<code>请把这道题变成一个睡前故事,主角是一只小兔子,故事里暗含这道题的解法。</code>',
+      '孩子读 AI 版本,自己改一遍——换主角、换场景,让故事更贴近自己的口味。',
+      '晚上讲给弟弟妹妹听(或玩偶听),第二天看故事版有没有帮自己记住。',
+    ],
+    tip:'把学习包进故事,记忆成本直线下降——古代的寓言、口诀都是这个原理。',
+    ext:'做一本"故事数学"小书,每章一道题+一个故事。' },
+
+  { id:'110', dim:'communication', emoji:'📣', title:'我的宣传海报', tagline:'给自己做一张海报。', difficulty:2, time:'25 分钟', goal:'自我推销——比作文难多了。', setup:'任意 AI + 画图。',
+    steps:[
+      '孩子写下 5 条"我的特质"——越具体越好,避免"善良""勤奋"这种空词。',
+      '让 AI:<code>请基于这 5 条特质,为我设计 3 个海报 slogan,每个不超过 10 个字。</code>',
+      '挑一个最喜欢的,用绘图 AI 生成一张海报:<code>请设计一张宣传海报,主色调 XX,中央写 XX,风格 XX。</code>',
+      '打印贴在房间最显眼的地方。',
+    ],
+    tip:'自我肯定的训练——孩子会反复看这张海报,潜移默化塑造自我认知。',
+    ext:'一年后做一张新的,对比两张看"我"变了多少。' },
+
+  { id:'111', dim:'communication', emoji:'🔙', title:'倒叙表达', tagline:'从结论开始往回讲。', difficulty:2, time:'15 分钟', goal:'结构感——你知道怎么讲才清楚。', setup:'任意 AI。',
+    steps:[
+      '选一件刚发生的事——一次比赛、一次出行。',
+      '先讲结果:"我们输了。"再讲原因:"因为 XX。"最后讲过程:"具体是这样..."',
+      '让 AI 评:哪种顺序最抓人?<code>我分别用倒叙和正叙讲了同一件事,请分析各自的优缺点。</code>',
+      '试"三种顺序"讲同一件事——正着、倒着、高潮开始。',
+    ],
+    tip:'职场邮件、新闻、商业报告都爱倒叙结构(金字塔原理)。早学早受益。',
+    ext:'写一篇作文用倒叙,让老师批一次看反应。' },
+
+  { id:'112', dim:'communication', emoji:'📖', title:'造词词典', tagline:'给自己造的新词写词典条目。', difficulty:2, time:'20 分钟', goal:'定义能力——把自己的感受精准化。', setup:'任意 AI。',
+    steps:[
+      '孩子造一个形容某种感受的新词——比如"疲兴"(又累又兴奋)、"心麻"(心里像被针扎又没太痛)。',
+      '写词典式释义:词性、读音、定义、例句、近义词、反义词。',
+      '让 AI 用这个新词造 3 个自然的句子——检验词能不能"立住"。',
+      '挂上家里"新词墙",全家试用一周。',
+    ],
+    tip:'能定义新词的孩子,对语言的理解脱一层皮——每一代年轻人都在造词。',
+    ext:'做一本《家庭新词词典》,年底整理出版。' },
+
+  { id:'113', dim:'communication', emoji:'🤔', title:'变成谜语', tagline:'答案是XX,编一个谜语。', difficulty:1, time:'15 分钟', goal:'侧面描述能力——不直说也能懂。', setup:'任意 AI。',
+    steps:[
+      '选一个物品——钢笔、遥控器、月亮。',
+      '孩子编 3 个描述,都不说名字,用功能/形状/比喻来描述。',
+      '让家人猜——猜中时间越长说明谜语越妙(不至于太简单),但必须可猜(不至于太玄)。',
+      '让 AI 也编一个:<code>答案是 XX,请编一个谜语。</code>比较谁的妙。',
+    ],
+    tip:'"不说名字"是很多好文章的秘密——描述事物本质而不是标签。',
+    ext:'办"家庭谜语夜",每人三个谜语,最妙者获奖。' },
+
+  { id:'114', dim:'communication', emoji:'💌', title:'情书体', tagline:'给讨厌的事写情书。', difficulty:2, time:'15 分钟', goal:'反向表达——角度翻转的训练。', setup:'任意 AI。',
+    steps:[
+      '选一件孩子最讨厌的事——写作业、早起、吃青菜。',
+      '写一封深情款款的情书给它——用"我的亲爱的作业啊","没有你我的人生多么空虚"这种调调。',
+      '让 AI:<code>请再写一版更肉麻更夸张的版本。</code>',
+      '大声朗读——读完看对这事的感觉变了吗?(神奇的是,往往真的没那么讨厌了)',
+    ],
+    tip:'视角翻转是情商训练的顶级工具——能为讨厌的事写情书,说明你能看见它的另一面。',
+    ext:'给喜欢的事反过来写"抗议信"——效果相反但同样有趣。' },
+
+  { id:'115', dim:'communication', emoji:'🙏', title:'真诚道歉', tagline:'给昨天的错写道歉。', difficulty:2, time:'20 分钟', goal:'情感表达——最难写的文体之一。', setup:'任意 AI。',
+    steps:[
+      '选一件最近做错的小事——对家人发脾气、对同学说重话、没守承诺。',
+      '孩子先自己写一封道歉——不许"虽然""但是""其实我也是"。',
+      '发给 AI:<code>请严格评价这封道歉信,是真诚吗?有没有辩解、推卸、讨好?</code>',
+      '根据反馈改到真正真诚——念给对方听(或邮件发过去)。',
+    ],
+    tip:'会道歉是成年人都需要学的技能——很多大人一辈子都不会真正的道歉。',
+    ext:'给家人当面念一次,观察他们的反应。' },
+
+  { id:'116', dim:'communication', emoji:'👂', title:'采访奶奶', tagline:'好好问奶奶一件事。', difficulty:2, time:'30 分钟', goal:'提问的艺术——表达的另一半是会问。', setup:'AI 帮设计问题清单 + 和奶奶聊。',
+    steps:[
+      '选一个想了解的话题——"奶奶年轻时最快乐的事""奶奶小时候的家"。',
+      '让 AI:<code>请帮我设计 10 个深度且温柔的采访问题,访问 70 岁老人关于 XX。</code>',
+      '孩子从 10 个里筛 5 个最想问的。',
+      '正经采访奶奶 30 分钟,录音。结束后让 AI 帮整理要点成一篇"家族口述史"。',
+    ],
+    tip:'这张卡常常催出孩子和长辈最深的对话——比一起吃饭 100 次都深。',
+    ext:'采访家族不同人,整理成一本《我家的一百年》。' },
+
+  { id:'117', dim:'communication', emoji:'📺', title:'家庭新闻联播', tagline:'每周一次家庭新闻。', difficulty:2, time:'每周 20 分钟', goal:'结构化复盘表达。', setup:'任意 AI。',
+    steps:[
+      '每周末全家回顾一周大事——3-5 条。',
+      '让 AI:<code>请帮我把这几件事写成一个 200 字家庭新闻稿格式。</code>',
+      '孩子再改写成 100 字精简版,当主播录成视频。',
+      '在家族群首播,集赞。',
+    ],
+    tip:'几周后会发现孩子开始主动观察家里事——"这个可以上新闻"的心态。',
+    ext:'年底做"家庭年度新闻盘点"——十大新闻颁奖。' },
+
+  { id:'118', dim:'communication', emoji:'👋', title:'30 秒自我介绍', tagline:'限时介绍自己。', difficulty:2, time:'20 分钟', goal:'压缩+个性——社交最常用。', setup:'AI + 录音。',
+    steps:[
+      '孩子先写 30 秒自我介绍——必须有:名字、一个独特特质、一个想聊的话题。',
+      '发给 AI:<code>请评价这段自我介绍,哪部分最弱?哪部分最有记忆点?</code>',
+      '改三版——正式版(面对老师)、朋友版(夏令营)、搞怪版(生日聚会)。',
+      '每版录下来对比,自选最喜欢的。',
+    ],
+    tip:'不同场合不同版本——办公室、朋友聚会、学校都不一样。早准备早从容。',
+    ext:'准备 3 种场合不同版本,随身携带。' },
+
+  { id:'119', dim:'communication', emoji:'🥪', title:'三明治反馈', tagline:'表扬-建议-鼓励 的说话结构。', difficulty:2, time:'15 分钟', goal:'批评的艺术——让人愿意听。', setup:'任意 AI。',
+    steps:[
+      '选一个要给朋友/家人的反馈——比如"他讲故事跑题"。',
+      '按三层结构写:第一层真诚表扬一点、第二层提出具体建议、第三层鼓励收尾。',
+      '让 AI:<code>请扮演这个朋友,读到这段反馈会是什么感受?会接受建议吗?</code>',
+      '根据反馈改到朋友"不会难受,还想继续听"。',
+    ],
+    tip:'这是职场必备技能——"三明治反馈"是经理人、老师的必修课。',
+    ext:'家人之间互相反馈用这个结构,一周做 3 次。' },
+
+  { id:'120', dim:'communication', emoji:'💼', title:'面试官', tagline:'孩子当面试官问问题。', difficulty:3, time:'25 分钟', goal:'从"被问"到"会问"。', setup:'任意 AI。',
+    steps:[
+      '让 AI 扮演求职者:<code>你现在是一个 30 岁的求职者,应聘幼儿园老师,请真实地回答我的提问。</code>',
+      '孩子准备 10 个面试问题——不许网上搜,自己想。',
+      '模拟面试 15 分钟——孩子随机变换问题顺序,根据回答追问。',
+      '让 AI:<code>请给这个面试官打分,哪些问题好?哪些是废话?</code>',
+    ],
+    tip:'会提问的孩子,沟通主动权在手——提问是一项被严重低估的能力。',
+    ext:'换位面试家人,或用这方式面试自己未来的自己。' },
+
+  { id:'121', dim:'communication', emoji:'📖', title:'三种情绪读', tagline:'一段话用三种情绪读。', difficulty:1, time:'15 分钟', goal:'有声表达——语气也是语言。', setup:'文本 + 录音。',
+    steps:[
+      '选一段 50 字中性文字——新闻段落、一首诗、说明书。',
+      '分别用开心、悲伤、生气三种情绪读。',
+      '录下三版,放给家人猜——每版是什么情绪?猜对率多高?',
+      '最有趣的是,同一段话三种情绪下意思是否真的变了?',
+    ],
+    tip:'同一句话,情绪不同,意思全不同——这是孩子理解"言外之意"的起点。',
+    ext:'对照电影角色配音——模仿一段电影对白的原声情绪。' },
+
+  { id:'122', dim:'communication', emoji:'🎭', title:'书面↔口语', tagline:'书面变口语,口语变书面。', difficulty:2, time:'15 分钟', goal:'把同一内容两种语域切换。', setup:'任意 AI。',
+    steps:[
+      '选一段书面语——新闻、说明书、作文范文。',
+      '孩子改成"和朋友聊天"版——加"然后""就是说""贼"之类口头语。',
+      '反过来:选一段微信消息,改成正式书面版——去口语、加连接词、加客观色彩。',
+      '让 AI 评两版的"自然度"——哪里过度口语、哪里过度书面。',
+    ],
+    tip:'成年人很多写作毛病就是不会切换——写邮件像聊天、聊天像写论文。',
+    ext:'翻译自己的一篇作文成"朋友圈版",家长念一遍,看是否还"像孩子说的话"。' },
+
+  { id:'123', dim:'communication', emoji:'📋', title:'问卷设计师', tagline:'设计一份调研问卷。', difficulty:3, time:'30 分钟', goal:'提问体系——极其有用的思维工具。', setup:'AI 辅助。',
+    steps:[
+      '选一个想了解的小话题——"全家对某件事的看法""同学们最喜欢的零食"。',
+      '孩子列 10 个问题——不许抄网上,自己想。',
+      '让 AI:<code>请挑出这 10 个问题里哪些是诱导性问题(暗示答案)?哪些选项不全?</code>',
+      '改到都中性、选项完整,真的发给调研对象做。',
+    ],
+    tip:'调研问卷做好,问到的信息真的不一样——研究生、产品经理一辈子都在练这个。',
+    ext:'真的发给家人做,对比他们的回答,看能发现什么。' },
+
+  { id:'124', dim:'communication', emoji:'📰', title:'小记者', tagline:'采访家里某人。', difficulty:2, time:'30 分钟', goal:'正经采访流程——表达+提问+写作。', setup:'AI + 手机。',
+    steps:[
+      '选一个家人,定一个主题——"爸爸的童年朋友""妈妈第一份工作"。',
+      '让 AI 帮列采访提纲——开场、主要问题、收尾。',
+      '正经采访 15 分钟,录音+笔记。',
+      '根据录音写一篇 200 字稿子——给被采访者审,改到他/她满意。',
+    ],
+    tip:'记者视角能让孩子看见"熟悉人"的陌生面——这是最好的家庭连接游戏。',
+    ext:'做成《家庭人物志》——每人一篇,年底装订成册。' },
+
+  { id:'125', dim:'communication', emoji:'🎭', title:'名人风格改写', tagline:'用名人风格改写作文。', difficulty:2, time:'20 分钟', goal:'风格感受——写作的高阶游戏。', setup:'任意 AI。',
+    steps:[
+      '选一个喜欢的作家/角色——鲁迅、余华、哈利·波特的罗恩。',
+      '让 AI:<code>请用 XX 的风格改写这篇作文:[贴]</code>',
+      '孩子再用这风格自己写一段新的 100 字——模仿是创造的前奏。',
+      '家人猜是不是仿写——像不像原作家的口吻?',
+    ],
+    tip:'模仿是创造的前奏——达·芬奇、莫言都经过长期模仿期。',
+    ext:'同一作文做三种风格——严肃、幽默、古体。' },
+
+  { id:'126', dim:'communication', emoji:'👥', title:'口吻切换', tagline:'对老师/朋友/陌生人说同一件事。', difficulty:2, time:'15 分钟', goal:'语域感——社交基本功。', setup:'任意 AI。',
+    steps:[
+      '选今天一件事——"我今天发烧了"。',
+      '写三版分别向三种关系说——正式的老师、平辈朋友、需要礼貌的陌生人。',
+      '让 AI:<code>请评价每版是否符合对应关系的口吻。</code>',
+      '记录差异——用了什么词、什么结构、什么称呼。',
+    ],
+    tip:'这是成年人情商的核心之一——语域感不到位,社交处处吃亏。',
+    ext:'专门练习"向权威人物说话"的版本——这是最难也最有用的。' },
+
+  { id:'127', dim:'communication', emoji:'😶', title:'表情词典', tagline:'描述各种表情的意思。', difficulty:1, time:'15 分钟', goal:'非语言信号的显式化。', setup:'任意 AI。',
+    steps:[
+      '列 10 种常见表情——皱眉、眯眼、假笑、撇嘴。',
+      '给每种写:这时对方可能在想什么?(3 种可能)',
+      '让 AI 补更多解读——<code>请列出 XX 表情的 5 种常见含义,按场合分类。</code>',
+      '讨论最模糊的情况——同一个表情在不同场合可能含义完全相反。',
+    ],
+    tip:'社交最重要的技能之一——大部分信息是通过表情传递的,不是语言。',
+    ext:'观察一周,记录看到的表情,月末做一张"我家的表情词典"。' },
+
+  { id:'128', dim:'communication', emoji:'🎯', title:'三词发言', tagline:'发言只能用 3 个词。', difficulty:2, time:'15 分钟', goal:'极限压缩——每个词都重要。', setup:'任意 AI。',
+    steps:[
+      '随机给一个话题——"今天的学校""最近的一次争吵""未来"。',
+      '孩子只用 3 个词表态,不多不少。',
+      '让 AI:<code>这 3 个词是 [XX],请推测我的完整想法。</code>看 AI 理解得准不准。',
+      '再扩展成一句话——看孩子自己的解读。',
+    ],
+    tip:'"3 个词"约束出的句子往往最有力——像诗、像口号、像哲学。',
+    ext:'家人每晚用"今天三词"分享——一周后做成"家庭三词墙"。' },
+
+  { id:'129', dim:'communication', emoji:'❓', title:'用问代替说', tagline:'下一句话必须是问题。', difficulty:3, time:'15 分钟', goal:'苏格拉底式对话——问比答强。', setup:'任意 AI 作对手。',
+    steps:[
+      '和 AI 讨论一话题(比如"作业好不好")。',
+      '规则:孩子每次回应必须是问句,不能是陈述。',
+      '坚持 10 轮——你会发现只问问题,居然也能引导对话。',
+      '让 AI 评:你问的哪几个问题最深入?让它回答最多?',
+    ],
+    tip:'问得好的孩子,在任何对话里都占上风——律师、心理咨询师、记者的看家本事。',
+    ext:'家里晚餐一顿也这么玩——每人说话都必须是问句,全家会笑疯。' },
+
+  { id:'130', dim:'communication', emoji:'🎞️', title:'20 字讲电影', tagline:'一部电影用 20 字说完。', difficulty:2, time:'15 分钟', goal:'核心压缩——判断什么重要。', setup:'任意 AI。',
+    steps:[
+      '选一部最近看过的电影。',
+      '用 20 字讲完整——必须包含:主要冲突、转折、结果。',
+      '让 AI:<code>我的 20 字版本是[贴],请打分,有没有漏掉核心。</code>',
+      '压缩到 15 字再挑战一次——每次都要删 20% 内容,只留最核心的。',
+    ],
+    tip:'会浓缩的人,跟人聊天不会啰嗦——"一句话讲清楚"是全世界稀缺人才。',
+    ext:'一家三口各自浓缩同一部电影,对比保留了什么。' },
+
+  { id:'131', dim:'communication', emoji:'🎨', title:'加一个比喻', tagline:'每句话加一个比喻。', difficulty:1, time:'15 分钟', goal:'修辞感——让平淡的话变生动。', setup:'任意 AI。',
+    steps:[
+      '孩子写 5 句平常的日常话——"今天很累""作业好多""饭不好吃"。',
+      '每句加一个比喻——"今天累得像被 10 个小孩拖着走"。',
+      '让 AI:<code>请评价我的 5 个比喻哪个最新鲜?哪个最陈词滥调?</code>',
+      '改 1-2 个陈词滥调的比喻,换成更出乎意料的。',
+    ],
+    tip:'好比喻的本质是"出乎意料又贴切"——太意料中是陈词,太离谱是不贴切。',
+    ext:'一周每天加 3 个新比喻,月末做"我的比喻宝库"。' },
+
+  { id:'132', dim:'communication', emoji:'🎧', title:'听后复述', tagline:'听完 AI 一段话,立刻复述。', difficulty:2, time:'15 分钟', goal:'听—记—说 的完整链条。', setup:'AI 语音 + 录音。',
+    steps:[
+      '让 AI 讲一段 1 分钟内容——科普、故事、新闻都行。',
+      '孩子不许记笔记,听完立刻复述,录下来。',
+      '对比原文和复述——漏了什么、加了什么、变形了什么?',
+      '让 AI:<code>我的复述有什么错误?哪些关键信息漏掉了?</code>',
+    ],
+    tip:'学校里没人教"听"——这是真正稀缺技能。会议、上课、对话,听力不精都会吃亏。',
+    ext:'用新闻广播做同样练习——难度更高,因为语速快。' },
+
+  { id:'133', dim:'communication', emoji:'💓', title:'情绪连带讲述', tagline:'讲事实,也讲感受。', difficulty:2, time:'15 分钟', goal:'情感化表达——比只讲事实动人。', setup:'任意 AI。',
+    steps:[
+      '选今天一件事。',
+      '第一版只讲事实——"我考试了,我得了 80 分"。',
+      '第二版加上感受——"我考试了,我本来想考 90 的,得了 80 我有点失望,但又松了一口气"。',
+      '让 AI 评哪版更立体、让人更想追问——事实是骨架、感受是血肉。',
+    ],
+    tip:'能说出"我感觉"的孩子,社交更健康——压抑感受的孩子容易焦虑。',
+    ext:'家里晚餐每人"事实+感受"的分享,持续一个月。' },
+
+  { id:'134', dim:'communication', emoji:'⚖️', title:'一好一坏', tagline:'一件事的正反两面都讲。', difficulty:2, time:'15 分钟', goal:'平衡表达——不极端。', setup:'任意 AI。',
+    steps:[
+      '选一件刚发生的事——一次旅行、一次考试、一次活动。',
+      '先只讲好的部分——"XX 特别棒"。',
+      '再只讲不好的部分——"XX 其实也有问题"。',
+      '总结一句话:"两面都对。"让 AI 评是否平衡。',
+    ],
+    tip:'这训练对抗青春期的非黑即白——成年人的成熟就是"两面都看见"。',
+    ext:'看新闻做同样练习——这条新闻的好面和坏面分别是什么?' },
+
+  { id:'135', dim:'communication', emoji:'⏸️', title:'停顿的力量', tagline:'加入刻意停顿。', difficulty:2, time:'15 分钟', goal:'节奏感——好演讲都有留白。', setup:'录音 + AI 评估。',
+    steps:[
+      '选一段 30 秒的讲话稿。',
+      '录第一版——不停顿,一口气讲完。',
+      '录第二版——在 2-3 个关键处加 1-2 秒停顿。',
+      '对比听——哪个更有"味道"?让 AI 评哪版更专业。',
+    ],
+    tip:'停顿是高手和菜鸟的分水岭——TED 演讲、脱口秀、老师,都懂"停"。',
+    ext:'看 TED 演讲,数演讲者的停顿次数。' },
+
+  { id:'136', dim:'communication', emoji:'👀', title:'对镜头说', tagline:'对着 AI 摄像头像跟人说话。', difficulty:2, time:'15 分钟', goal:'镜头感——视频时代的必备。', setup:'带语音/视频的 AI。',
+    steps:[
+      '对着摄像头讲今天一件事——第一次不看镜头,自然讲。',
+      '第二次刻意看着镜头讲——盯紧那颗圆圆的小眼睛。',
+      '回放对比——哪个更有"在说话"的感觉?',
+      '第三次加上表情和手势,录一段 1 分钟。',
+    ],
+    tip:'眼神定了,话才稳——视频时代的人都需要练这个。',
+    ext:'录一条 vlog 发给远方亲戚——真实使用。' },
+
+  { id:'137', dim:'communication', emoji:'🤗', title:'安慰朋友', tagline:'模拟安慰难过的朋友。', difficulty:3, time:'20 分钟', goal:'共情表达——难中之难。', setup:'任意 AI。',
+    steps:[
+      '让 AI 扮演难过的朋友:<code>请扮演一个考试失利很难过的朋友,我会来安慰你,请根据我的话真实反应。</code>',
+      '孩子试着安慰——注意:不要急着给建议、不要说"别难过"、先接纳。',
+      '让 AI:<code>朋友身份下,我刚才哪句让你好受?哪句让你更难受?</code>',
+      '根据反馈调整,重来一次——直到朋友真的感觉被听到了。',
+    ],
+    tip:'不要急着给建议——先"在场"就好。很多大人一辈子不会安慰人,就卡在这点。',
+    ext:'回看反馈,自己写"安慰三原则"贴在书桌。' },
+
+  { id:'138', dim:'communication', emoji:'🙅', title:'优雅拒绝', tagline:'怎么拒绝才不伤感情。', difficulty:3, time:'20 分钟', goal:'界限 + 温柔 的平衡。', setup:'任意 AI。',
+    steps:[
+      '设几种被请求的场景——"借玩具""抄作业""周末陪玩但我想自己待着"。',
+      '孩子练三种拒绝话术——直白版、婉转版、温柔版。',
+      '让 AI 扮演请求者:<code>请扮演提出这个请求的人,真实反馈被拒绝的感受。</code>',
+      '找最好版本——对方没受伤、但界限清楚。',
+    ],
+    tip:'会说不,比会说是更重要——很多人一辈子不敢拒绝,最后把自己累垮。',
+    ext:'一周刻意练拒绝 3 次——对小事优先练手。' },
+
+  { id:'139', dim:'communication', emoji:'🧲', title:'说服爸妈', tagline:'设计说服家长的理由链。', difficulty:3, time:'20 分钟', goal:'逻辑表达——不是撒娇是论证。', setup:'任意 AI。',
+    steps:[
+      '选一个想争取的事——多玩 30 分钟、一次特殊的活动、一件想买的东西。',
+      '让 AI:<code>请帮我列 5 个说服家长的论点,要有理有据,不是撒娇。</code>',
+      '从最强到最弱排序,去掉最弱的 2 条——留 Top 3。',
+      '真的和爸妈谈判一次,看效果——家长事先和孩子约定:说得有道理就答应。',
+    ],
+    tip:'家长的承诺很重要——"有道理就同意"会让孩子真的去练逻辑而不是情绪。',
+    ext:'做"说服日"家庭活动——每月一次,孩子选一件想争取的事来谈。' },
+
+  { id:'140', dim:'communication', emoji:'🕊️', title:'非暴力沟通', tagline:'吵架时怎么好好说。', difficulty:3, time:'25 分钟', goal:'情绪表达+界限——一辈子有用。', setup:'任意 AI。',
+    steps:[
+      '让 AI:<code>请用小学生能懂的话介绍"非暴力沟通"的四个步骤(观察-感受-需要-请求)。</code>',
+      '选一件最近和家人的冲突。',
+      '用四步写一段话——"我看到...,我感觉...,我需要...,我希望..."',
+      '和对方试着这么说——看效果比平时吵的好多少。',
+    ],
+    tip:'这张卡连大人都该学。全家一起做——这是家庭沟通升级的起点。',
+    ext:'家里设一张"NVC 冲突解决卡",吵架时先拿出来按流程走。' },
+
+  { id:'141', dim:'communication', emoji:'🎤', title:'讲段子', tagline:'讲笑话的节奏感。', difficulty:2, time:'20 分钟', goal:'铺垫+抖包袱——叙事训练。', setup:'AI 分析段子结构。',
+    steps:[
+      '让 AI:<code>请分析一个经典段子的结构——铺垫、转折、抖包袱分别在哪?</code>',
+      '孩子模仿结构写一个自己的段子——围绕校园或家庭生活。',
+      '讲给家人,记录反应——笑声时长、表情、转头频率。',
+      '根据反应改——哪里长了?哪里弱了?',
+    ],
+    tip:'讲段子失败比成功收获多——观察真实反应是最好的老师。',
+    ext:'家庭每周"脱口秀夜",每人 3 分钟,颁"最佳笑点奖"。' },
+
+  { id:'142', dim:'communication', emoji:'📊', title:'一张图说清', tagline:'一件事用一张图讲完。', difficulty:3, time:'25 分钟', goal:'视觉化表达——信息时代核心能力。', setup:'纸笔 + AI 辅助。',
+    steps:[
+      '选一个复杂概念——"我家的一周作息""地球的公转""我喜欢的游戏规则"。',
+      '用一张 A4 纸画信息图——用图标、箭头、简短标签,不用大段文字。',
+      '让 AI:<code>给你看我的信息图描述:[描述],哪里不清楚?哪里文字还可以变图?</code>',
+      '改到别人不用文字也能看懂——这是"真·会表达"的标准。',
+    ],
+    tip:'会画信息图的孩子,表达力超同龄 10 岁——视觉化是 21 世纪头号表达能力。',
+    ext:'做一本"信息图日记"——每周一张,记录一件事。' },
+
+  { id:'143', dim:'communication', emoji:'🏦', title:'比喻银行', tagline:'一年内存 100 个好比喻。', difficulty:2, time:'每天 5 分钟', goal:'修辞积累——表达力的复利。', setup:'AI + 笔记本。',
+    steps:[
+      '每天遇到或想到好比喻,立刻记一个——书上的、别人说的、自己想的。',
+      '让 AI:<code>请解释这个比喻好在哪——为什么贴切?为什么新鲜?</code>',
+      '每月用这 30 个比喻中的 5 个写一段新作文——检验是否"收为己用"。',
+      '年底回看——第 1 个和第 100 个差多远?',
+    ],
+    tip:'100 个之后,孩子的文字会脱胎换骨——比喻是最便宜的文学武器。',
+    ext:'和朋友比拼,看谁一年攒得多、用得好。' },
+
+  { id:'144', dim:'communication', emoji:'🔀', title:'解释 vs 描述', tagline:'分清"是什么"和"怎么样"。', difficulty:2, time:'15 分钟', goal:'精准表达——很多误会从这里来。', setup:'任意 AI。',
+    steps:[
+      '选一件事——"今天下雨了"。',
+      '写 3 句"描述"(看到的客观事实)——"我看到雨滴落在窗户上"。',
+      '写 3 句"解释"(加主观判断)——"今天天气真糟"。',
+      '让 AI 指出哪些句混淆了两者——"糟糕"是解释不是描述。',
+    ],
+    tip:'能分清描述和解释,是理性沟通的起点——科学研究、法庭证词都要求分清。',
+    ext:'看一篇新闻做同样拆解——哪些是事实、哪些是记者的解读。' },
+
+  { id:'145', dim:'communication', emoji:'👥', title:'对方视角改写', tagline:'从别人角度把事情写一遍。', difficulty:3, time:'25 分钟', goal:'同理心表达——顶级能力。', setup:'任意 AI。',
+    steps:[
+      '选一件和家人的小冲突——"妈妈不让我看电视"。',
+      '先自己视角写 200 字——我觉得委屈,我的理由。',
+      '再从妈妈视角写 200 字——她看到的我、她的担忧、她的理由。',
+      '让 AI 扮演妈妈评:<code>这段写得像真的我吗?哪里准?哪里不准?</code>',
+    ],
+    tip:'这张卡常让孩子和家人"想通"——比任何说教都有效。',
+    ext:'用在学校人际冲突上——和同学闹矛盾时写一版对方视角。' },
+
+  { id:'146', dim:'communication', emoji:'✂️', title:'10% 浓缩', tagline:'长文压缩到十分之一。', difficulty:2, time:'20 分钟', goal:'抓主干——学术、工作都要。', setup:'任意 AI。',
+    steps:[
+      '选一篇 1000 字文章。',
+      '压缩到 100 字——只留最重要的信息,去掉例子、修饰。',
+      '让 AI:<code>对比原文和我的 100 字版,我漏了哪些关键?</code>',
+      '再试 50 字版——压到极限。',
+    ],
+    tip:'越短越考验理解——能 50 字说清的,才是真懂。',
+    ext:'做自己写作文的摘要——才知道自己的主干有多弱。' },
+
+  { id:'147', dim:'communication', emoji:'✏️', title:'一句扩一段', tagline:'一句话扩写到 200 字。', difficulty:2, time:'20 分钟', goal:'展开能力——写作的另一半。', setup:'任意 AI。',
+    steps:[
+      '给一句话——"今天风很大"。',
+      '孩子扩到 200 字——加细节、加感官、加一个小事件。',
+      '让 AI 也扩一版 200 字。',
+      '对比——谁扩得更有画面?谁扩得更像文学?',
+    ],
+    tip:'扩写不是水字数,是增加细节——具体到一个场景一个动作一个感官。',
+    ext:'把自己写过的日记都用"扩写术"改造一遍。' },
+
+  { id:'148', dim:'communication', emoji:'🎙️', title:'3 分钟播客', tagline:'录一段 3 分钟独白。', difficulty:2, time:'30 分钟', goal:'完整一段表达——不是断断续续。', setup:'录音 + AI 改稿。',
+    steps:[
+      '选一个熟悉话题——"我最喜欢的书""我不喜欢数学的理由"。',
+      '写 3 分钟稿(约 600 字)——有开头、三个段落、结尾。',
+      '让 AI 修润:<code>请把稿子改得更口语更自然,去掉书面气。</code>',
+      '录成播客——不许看稿,只能看要点。',
+    ],
+    tip:'3 分钟是"说完一件事"的经典时长——短于这个说不清,长于这个太啰嗦。',
+    ext:'做一季 10 期家庭播客,每期一个孩子主讲。' },
+
+  { id:'149', dim:'communication', emoji:'📱', title:'Vlog 文案', tagline:'拍前先写一条 vlog 文案。', difficulty:2, time:'20 分钟', goal:'视听表达整合。', setup:'AI。',
+    steps:[
+      '选今天一件事当主题。',
+      '写 vlog 三段式——开头钩子、中间三段、结尾升华。',
+      '让 AI:<code>请帮我改到更抓人,加一个开场悬念、加一个金句结尾。</code>',
+      '真的拍一条 1 分钟 vlog——根据文案执行。',
+    ],
+    tip:'文案决定 vlog 好坏——先写不是先拍。这是所有职业 vlogger 的秘密。',
+    ext:'一周一条 vlog,一年就是 52 条成长记录。' },
+
+  { id:'150', dim:'communication', emoji:'💌', title:'回信大师', tagline:'给童话/书里的人回一封信。', difficulty:2, time:'25 分钟', goal:'对话式表达——像真的在说话。', setup:'任意 AI。',
+    steps:[
+      '选一个书里人物——哈利、鲁智深、鲁迅笔下的孔乙己。',
+      '给他写一封信——"听说你最近 XX,我想对你说..."',
+      '让 AI:<code>请扮演这个人物,以他的口吻和处境回一封信给我。</code>',
+      '反复通信 3 轮——慢慢深入,就像真交了一个朋友。',
+    ],
+    tip:'这张卡意外地会让孩子理解书更深——对话总比独白深。',
+    ext:'整理成"和虚构朋友的通信集"——是最独特的读书笔记。' },
+
+  /* ========== 协作力 50 张 ========== */
+  { id:'151', dim:'collaboration', emoji:'🧬', title:'Prompt 进化论', tagline:'同一需求 prompt 改 3 次。', difficulty:2, time:'20 分钟', goal:'你给 AI 的指令越好,它就越强。', setup:'任意 AI。',
+    steps:[
+      '选一个真实需求——比如"帮我写一篇作文"。',
+      '版本 1:<code>帮我写作文。</code>看结果。',
+      '版本 2:<code>帮我写一篇 300 字作文,主题是"我的暑假"。</code>看结果。',
+      '版本 3:<code>你是一位小学语文老师。请以 12 岁孩子的口吻写一篇 300 字作文,主题"我的暑假",要求有一个具体小故事,结尾点题。</code>对比三版质量跃升。',
+    ],
+    tip:'让孩子理解"好 prompt 的结构"——身份、任务、对象、字数、风格、约束。六要素齐全,输出质量翻倍。',
+    ext:'让孩子自己总结 prompt 要素,做成卡片贴在电脑旁。' },
+
+  { id:'152', dim:'collaboration', emoji:'🎬', title:'我当导演', tagline:'孩子主导项目,AI 是助手。', difficulty:3, time:'一周', goal:'把 AI 从问答工具升级成合作者。', setup:'孩子想做的小项目。',
+    steps:[
+      '孩子用一句话说清:做什么?给谁看?为什么重要?(不说清不许启动)',
+      '列出项目分几步、每步 AI 帮什么、AI 做不了什么、自己负责什么。',
+      '执行时严守规则:AI 给出的每一步成果,孩子必须改过才能用,不许原样采纳。',
+      '项目结束写复盘——AI 最大贡献是什么?最大让我失望的是什么?我自己的核心贡献是什么?',
+    ],
+    tip:'周期可以长,不急着做完。重点不是成品,是体验"主导感"——"我在用 AI,不是 AI 在用我"。',
+    ext:'做完办家庭"项目发布会",邀请家人当评委。' },
+
+  { id:'153', dim:'collaboration', emoji:'📝', title:'分工协议书', tagline:'写下我做什么,AI 做什么。', difficulty:2, time:'15 分钟', goal:'建立清晰的人机边界感。', setup:'一张两栏纸。',
+    steps:[
+      '选最近要做的一个任务——"写读后感"。',
+      '列所有步骤——读书、抓要点、选角度、写初稿、修改、定稿。',
+      '每步标"我做""AI 做""一起做"——讨论为什么这么分。',
+      '告诉 AI:<code>请严格按这个分工协助我,超出范围的事请拒绝。</code>',
+    ],
+    tip:'第一次孩子可能把所有事都扔给 AI——没关系,走一遍就会调整了。边界是慢慢练出来的。',
+    ext:'每周末复盘分工——哪些步骤下次要多做一些,哪些可以更放手给 AI。' },
+
+  { id:'154', dim:'collaboration', emoji:'🧰', title:'工具选型', tagline:'什么任务用什么 AI。', difficulty:2, time:'20 分钟', goal:'了解 AI 不只一家——各有所长。', setup:'3 个不同 AI。',
+    steps:[
+      '列 5 种常见任务——写作、查资料、画画、数学、翻译。',
+      '每种任务在每个 AI 试一次,同样的 prompt。',
+      '给每种组合打分:速度、质量、是否编造。',
+      '做一张"任务-工具"对照表,贴在桌上当说明书。',
+    ],
+    tip:'这张表贴在桌上,一年省下无数试错时间——工具选对,事半功倍。',
+    ext:'每 3 个月更新一次,因为各家 AI 在进步。' },
+
+  { id:'155', dim:'collaboration', emoji:'🔁', title:'反馈循环', tagline:'AI 改一次后,给出具体反馈再改。', difficulty:2, time:'20 分钟', goal:'学会"不接受第一版"——合作的第一原则。', setup:'任意 AI。',
+    steps:[
+      '让 AI 做某件事——"写一段 100 字新品推广文案"。',
+      '孩子指出 3 个具体问题——"第一句太平""没有情感""没有行动呼吁"。',
+      '让 AI 针对性修改:<code>请针对这 3 点重写,其他地方不动。</code>',
+      '重复 2 轮——每轮都有明确反馈,不说"不好"只说"哪里不好"。',
+    ],
+    tip:'反馈越具体,AI 越好用——这是和 AI 协作的黄金法则。',
+    ext:'总结"最有效反馈语句"清单,做成模板复用。' },
+
+  { id:'156', dim:'collaboration', emoji:'📐', title:'模板共建', tagline:'和 AI 一起设计模板。', difficulty:2, time:'25 分钟', goal:'把一次性工作变成可复用的。', setup:'任意 AI。',
+    steps:[
+      '选常做的事——写周记、读书笔记、每日计划。',
+      '让 AI:<code>请帮我设计一个 XX 的模板,包含 5 个关键区域,每个区域说明填什么。</code>',
+      '孩子用模板做一次,看哪里别扭、哪里好用。',
+      '修订模板——去掉没用的、加上新的、调整顺序。',
+    ],
+    tip:'模板是协作的结晶——以后效率指数级提升,不用每次重新想。',
+    ext:'做一本"家庭模板集",装订成册。' },
+
+  { id:'157', dim:'collaboration', emoji:'✏️', title:'审稿搭档', tagline:'AI 当文字编辑。', difficulty:2, time:'20 分钟', goal:'把 AI 用成"找问题的人"而不是"写东西的人"。', setup:'孩子自己的作文。',
+    steps:[
+      '孩子先自己写完一篇作文——全部自己写,不许开 AI。',
+      '发给 AI:<code>请只挑毛病,不要替我改。指出错别字、逻辑问题、表达不清。</code>',
+      '孩子看毛病清单,自己一条条改——改完再发 AI 过一遍。',
+      '第二轮再发 AI 确认——直到它说"没有大问题了"。',
+    ],
+    tip:'"找问题"远比"替我写"有教育价值——后者让你越用越弱,前者让你越用越强。',
+    ext:'长期用 AI 审自己所有作文——半年后写作能力明显提升。' },
+
+  { id:'158', dim:'collaboration', emoji:'🧠', title:'发散+筛选', tagline:'AI 负责多,人负责选。', difficulty:2, time:'20 分钟', goal:'分工最自然的形式。', setup:'任意 AI。',
+    steps:[
+      '选一个需要创意的问题——"周末可以做什么""给朋友什么礼物"。',
+      '让 AI:<code>请给 20 个不同方向的方案,每个一句话。</code>',
+      '孩子定 3 个筛选标准——预算、时间、兴趣。',
+      '按标准筛出 Top 3,选一个执行。',
+    ],
+    tip:'AI 最擅长"多",人最擅长"选"——天作之合。这是最自然的人机分工。',
+    ext:'所有家庭决策都走这流程——决策质量明显上升。' },
+
+  { id:'159', dim:'collaboration', emoji:'🏥', title:'错题分析官', tagline:'AI 分析错题,人定策略。', difficulty:2, time:'20 分钟', goal:'AI 找规律,孩子做决定。', setup:'错题本。',
+    steps:[
+      '把一周错题拍照/抄下,发给 AI。',
+      '让 AI:<code>请找这些错题的共同模式——是概念错、计算错、审题错、还是某个具体知识点?</code>',
+      '孩子基于 AI 分析,定下周的学习策略——重点加强哪个点。',
+      '下周执行后,再发新错题让 AI 看——有没有改善?',
+    ],
+    tip:'AI 看规律比人客观——因为没情绪、没偏见、不会心疼孩子。',
+    ext:'月度"错题模式报告",做成一张自己的"弱点地图"。' },
+
+  { id:'160', dim:'collaboration', emoji:'📅', title:'计划表共建', tagline:'和 AI 一起订学习计划。', difficulty:2, time:'30 分钟', goal:'把模糊愿望变成具体计划。', setup:'AI。',
+    steps:[
+      '孩子说目标——"我想一周内看完这本书"。',
+      '让 AI:<code>请把这个目标拆成每日具体任务,考虑到我每天只有 1 小时。</code>',
+      '孩子调整——AI 安排不合理的改(比如周六想休息)。',
+      '每天执行打勾,周末复盘——哪些天偏离了、为什么。',
+    ],
+    tip:'关键是孩子"主动调整",不要全盘接受 AI 计划——这样计划才真是"自己的"。',
+    ext:'每周计划-复盘闭环,持续 3 个月就形成习惯。' },
+
+  { id:'161', dim:'collaboration', emoji:'🃏', title:'抽认卡制造', tagline:'让 AI 把知识变成抽认卡。', difficulty:1, time:'20 分钟', goal:'外包低级整理,专心记忆。', setup:'要记的知识点。',
+    steps:[
+      '选要记的内容——英语单词、历史事件、地理。',
+      '让 AI:<code>请把这些内容做成 20 张 Q&A 抽认卡,每张一问一答,正面问题反面答案。</code>',
+      '孩子逐张过——不会的标记,隔天再测。',
+      '隔 3 天、1 周、1 月分别回测——用"间隔重复"记得更牢。',
+    ],
+    tip:'抽认卡的制作比使用更费时——这部分外包给 AI 最合适。',
+    ext:'做一本"家庭题库",弟弟妹妹也能用。' },
+
+  { id:'162', dim:'collaboration', emoji:'📝', title:'写作长期教练', tagline:'AI 持续跟踪你的写作。', difficulty:3, time:'每周', goal:'长期成长 > 一次性帮忙。', setup:'文档记录所有写作。',
+    steps:[
+      '把每篇写的东西存到一个文件夹——作文、日记、短信、邮件。',
+      '每月让 AI:<code>这是我这个月写的 10 篇文字,请分析风格变化、进步点、反复出现的问题。</code>',
+      '根据 AI 报告,定下月改进方向——比如"多用比喻""少用感叹号"。',
+      '一年后回看——从第一篇到现在,变了多少?',
+    ],
+    tip:'AI 的最大价值是"看到你看不到的模式"——自己看自己永远有盲区。',
+    ext:'做一个"我的写作成长档案",装订成册。' },
+
+  { id:'163', dim:'collaboration', emoji:'📚', title:'读书报告助理', tagline:'你读,AI 帮整理。', difficulty:2, time:'30 分钟', goal:'把阅读和输出打通。', setup:'一本刚读完的书 + AI。',
+    steps:[
+      '孩子读完一本书,合上。',
+      '口述重点给 AI——主要讲什么、最打动我的部分、我学到什么。',
+      '让 AI:<code>请基于这段口述,整理成结构化笔记——主题、核心观点、我的感受、行动点。</code>',
+      '孩子补充主观感受——AI 整理的是骨架,感受是血肉。',
+    ],
+    tip:'孩子说重点的那一步,比 AI 的整理更重要——口述会暴露理解深度。',
+    ext:'一年读书笔记装订成册——是孩子的"阅读年度报告"。' },
+
+  { id:'164', dim:'collaboration', emoji:'🔍', title:'调研外包', tagline:'把查资料这活包给 AI。', difficulty:2, time:'20 分钟', goal:'把机械劳动外包,专注思考。', setup:'AI。',
+    steps:[
+      '选一个主题——"明朝为什么灭亡""奥运会的历史"。',
+      '让 AI:<code>请列 10 条关于 XX 的关键要点,每条一句话概括。</code>',
+      '孩子选 3 条最感兴趣的,追问到满意。',
+      '最后整理成 500 字小研究报告——我学到了什么。',
+    ],
+    tip:'查资料 20 小时变 20 分钟——但思考时间不能省。这招让孩子把时间花在刀刃上。',
+    ext:'做一个孩子真正关心的"小研究",一个月一次。' },
+
+  { id:'165', dim:'collaboration', emoji:'💻', title:'一起写第一行代码', tagline:'AI 当编程启蒙老师。', difficulty:3, time:'60 分钟', goal:'入门编程,AI 是最好的私教。', setup:'任意 AI。',
+    steps:[
+      '让 AI:<code>我是一个 12 岁零基础的孩子,想学 Python。请给我第一课,写一个打印"Hello"的代码,并逐行解释。</code>',
+      'AI 给 5 行代码 + 解释——孩子复制到在线编译器(或让 AI 直接运行)。',
+      '改一行代码试效果——把"Hello"改成自己的名字。',
+      '改坏了让 AI 修:<code>我把 XX 改成 YY 报错了,为什么?</code>',
+    ],
+    tip:'AI 时代,编程门槛下降 10 倍——不学可惜。一个孩子一个 AI 就能自学。',
+    ext:'做一个小项目——猜数字游戏、日历、简单计算器。' },
+
+  { id:'166', dim:'collaboration', emoji:'👨‍🏫', title:'AI 当老师', tagline:'让 AI 教一个全新知识。', difficulty:2, time:'30 分钟', goal:'自主学习的完整循环。', setup:'AI + 笔记本。',
+    steps:[
+      '选一个想学的新东西——吉他和弦、天文基础、围棋规则。',
+      '让 AI:<code>请像教 12 岁孩子一样,从零教我 XX,分 5 节课,第一节课现在开始。</code>',
+      '孩子记笔记、提问、复述——遇到不懂就问,直到懂。',
+      '让 AI 出一个小测验——自测掌握度。',
+    ],
+    tip:'AI 当老师比真老师最大的好处:不怕被问"笨问题",可以无限重复。',
+    ext:'自学一门新技能,一年掌握 3-4 项——是 AI 时代的标配。' },
+
+  { id:'167', dim:'collaboration', emoji:'🧹', title:'家务分工', tagline:'AI 帮排家务分工表。', difficulty:1, time:'20 分钟', goal:'让 AI 融入家庭运转。', setup:'AI。',
+    steps:[
+      '一家人列所有家务——每周、每天、偶发的。',
+      '让 AI:<code>根据 X 人时间和偏好,请分配家务,尽量公平且考虑每个人的特长。</code>',
+      '试一周——用得顺吗?',
+      '周末复盘调整——AI 排的哪些不合理,改到合理。',
+    ],
+    tip:'AI 不带情绪地排的分工,反而最公平——不会偏袒任何一方。',
+    ext:'每月让 AI 重新排一次,避免"同一人长期做同一事"的疲劳。' },
+
+  { id:'168', dim:'collaboration', emoji:'✈️', title:'旅行规划', tagline:'全家和 AI 做攻略。', difficulty:2, time:'60 分钟', goal:'共同决策——AI 是协调者。', setup:'AI。',
+    steps:[
+      '全家各说 3 个想玩的——景点、体验、美食。',
+      '让 AI:<code>请设计一个 3 天行程,尽量兼顾每个人想玩的。</code>',
+      '讨论修改——哪些必去,哪些可以省。',
+      '出发前再让 AI 生成一张每日清单。',
+    ],
+    tip:'AI 排的版本可能谁都不完全满意——但这是让大家开始讨论的好起点。',
+    ext:'旅行后让 AI 帮写游记,发给家人和朋友。' },
+
+  { id:'169', dim:'collaboration', emoji:'💰', title:'零花钱规划', tagline:'AI 帮算零花钱分配。', difficulty:2, time:'30 分钟', goal:'财商启蒙+协作。', setup:'AI + 孩子的零花钱。',
+    steps:[
+      '孩子写下每月零花钱 + 所有想花的事。',
+      '让 AI:<code>请帮我分配每月 XX 元,考虑吃喝、学习、娱乐、储蓄四类,给出比例建议。</code>',
+      '孩子调整——AI 的建议可能不符合孩子的实际偏好。',
+      '实际执行一个月,月末对账——和计划差多少?',
+    ],
+    tip:'让孩子自己决定最后版,不要代劳——财商教育的关键是"自己说了算"。',
+    ext:'月度复盘 + 调整——一年下来孩子的财商会显著提升。' },
+
+  { id:'170', dim:'collaboration', emoji:'📅', title:'周计划优化', tagline:'AI 帮排一周时间表。', difficulty:2, time:'30 分钟', goal:'时间管理——从混乱到清晰。', setup:'AI + 日历。',
+    steps:[
+      '列一周所有事项——必做、想做、弹性的。',
+      '让 AI:<code>请把这些排进周一到周日的时间块,每块 30 分钟-2 小时。</code>',
+      '孩子调整优先级——AI 排的哪些时段不合理。',
+      '每天打勾执行,周末复盘——完成率多少?',
+    ],
+    tip:'计划的价值不是执行 100%,是有个框架可调——比无头苍蝇强百倍。',
+    ext:'每周做一次——3 个月后时间感会完全不同。' },
+
+  { id:'171', dim:'collaboration', emoji:'🎁', title:'礼物策划', tagline:'AI 帮想朋友生日礼物。', difficulty:1, time:'20 分钟', goal:'学会"为他人用 AI"。', setup:'AI。',
+    steps:[
+      '列出朋友的 10 个特点——兴趣、最近在忙什么、之前提过想要什么。',
+      '让 AI:<code>根据这 10 个特点,请推荐 10 个礼物,考虑预算 XX 元。</code>',
+      '孩子选 3 个最打动自己的。',
+      '想象送出时的场景——朋友会开心吗?为什么?',
+    ],
+    tip:'好礼物 = 细节观察 × 心意。AI 只是启发器,观察是自己的。',
+    ext:'做成"礼物灵感库",家人朋友的生日都有备选。' },
+
+  { id:'172', dim:'collaboration', emoji:'🔬', title:'主题研究', tagline:'和 AI 做一个小研究。', difficulty:3, time:'一个月', goal:'完整研究流程——一辈子能用。', setup:'AI + 笔记本。',
+    steps:[
+      '选孩子真感兴趣的小问题——"为什么蚂蚁总走一条线""小区里野猫有多少只"。',
+      '让 AI 帮设计研究步骤——观察、记录、假设、验证。',
+      '每周做一步,过程中让 AI 帮分析数据。',
+      '最终写 1 页报告——背景、方法、发现、未解之谜。',
+    ],
+    tip:'研究不一定是科学的——"观察小区野猫"也是研究。重要的是经历完整流程。',
+    ext:'家里办"小研究发布会",邀请家人当评委。' },
+
+  { id:'173', dim:'collaboration', emoji:'🥊', title:'长期辩论陪练', tagline:'AI 当辩论固定对手。', difficulty:3, time:'每周 30 分钟', goal:'长期成长 + 思辨。', setup:'AI。',
+    steps:[
+      '每周选一个话题——中立、有争议的都可以。',
+      '和 AI 辩 3 回合——你攻它防,再反过来。',
+      '让 AI:<code>请评价我的论证,哪些是强论据?哪些是情绪化表达?</code>',
+      '下周针对弱点改进——比如"太爱用绝对化"。',
+    ],
+    tip:'一年后的孩子跟开始时比,会吓人——这是最扎实的思维训练。',
+    ext:'和同龄朋友真实辩论——效果比单练 AI 更好。' },
+
+  { id:'174', dim:'collaboration', emoji:'🎤', title:'面试模拟', tagline:'AI 当面试官。', difficulty:2, time:'30 分钟', goal:'为未来某天做准备。', setup:'任意 AI。',
+    steps:[
+      '设定情境——竞选班干部、兴趣小组选拔、家庭会议发言。',
+      '让 AI:<code>请扮演面试官,根据这个情境问我 5 个问题,一次一个。</code>',
+      '孩子回答——不许查,真实发挥。',
+      '让 AI:<code>请作为面试官给出反馈,哪些答得好,哪些需要改进。</code>',
+    ],
+    tip:'孩子以后面试多得很——选学校、选社团、选工作,早练好处多。',
+    ext:'定期对不同角色模拟——不同角色问的问题完全不同。' },
+
+  { id:'175', dim:'collaboration', emoji:'🎭', title:'历史人物对话', tagline:'AI 演历史人物聊天。', difficulty:2, time:'25 分钟', goal:'沉浸式学历史。', setup:'任意 AI。',
+    steps:[
+      '选一个历史人物——苏东坡、武则天、达·芬奇。',
+      '让 AI:<code>请真实地扮演 XX,他会用他那个时代的语气说话,对 21 世纪的东西不知道。</code>',
+      '孩子问 10 个问题——从生活细节到人生决策。',
+      '复盘:哪些答案"太现代"穿帮了?这也是批判训练。',
+    ],
+    tip:'AI 扮演会有时代穿帮——也是批判训练的好机会。',
+    ext:'让两位历史人物对话——比如让李白和苏东坡聊起来。' },
+
+  { id:'176', dim:'collaboration', emoji:'🪆', title:'写作套娃', tagline:'AI 写→改→再 AI 改。', difficulty:3, time:'30 分钟', goal:'多轮迭代的威力。', setup:'AI。',
+    steps:[
+      '让 AI 写初稿——300 字。',
+      '孩子改 30% 的内容——换词、调结构、加细节。',
+      '把孩子版发给另一个 AI(或同一 AI 新对话):<code>请继续改进这段。</code>',
+      '孩子再审最终版——对比 3 个版本,差距多大。',
+    ],
+    tip:'多轮迭代往往比一次写强 3 倍——专业作家都这么做。',
+    ext:'记录哪一轮改动最大,反思哪一轮最关键。' },
+
+  { id:'177', dim:'collaboration', emoji:'🔄', title:'人机接力写作', tagline:'你一句,AI 一句。', difficulty:2, time:'20 分钟', goal:'真正的联合创作。', setup:'AI。',
+    steps:[
+      '孩子写开头一段——100 字。',
+      '让 AI:<code>请接着我的开头写下一段,保持同一风格,不要跳跃。</code>',
+      '孩子再接——根据 AI 写的继续推进剧情。',
+      '交替 4 次,直到写完一篇 800 字故事。',
+    ],
+    tip:'哪些段是谁写的——最后读来看孩子能不能分辨出自己的段落。',
+    ext:'朋友之间玩(多人接力),加一个 AI 混进来不告诉别人,看能否识别。' },
+
+  { id:'178', dim:'collaboration', emoji:'🧠', title:'第二大脑', tagline:'用 AI 整理散乱想法。', difficulty:3, time:'每周 30 分钟', goal:'把 AI 用成"记忆外挂"。', setup:'AI + 笔记文档。',
+    steps:[
+      '一周内记下所有零碎想法——可以是短句、涂鸦、关键词。',
+      '周末发给 AI:<code>这是我一周的碎片想法,请帮我归类,找到反复出现的主题。</code>',
+      '孩子挑 1-2 个主题深入发展——写成一篇短文。',
+      '存入"长期档案"——年底再看,会发现"我今年在想什么"。',
+    ],
+    tip:'这习惯持续一年,思考深度会有质变——"第二大脑"是创造者的秘密武器。',
+    ext:'变成家庭共享的"大脑"——每个家人的思考互相启发。' },
+
+  { id:'179', dim:'collaboration', emoji:'📔', title:'日记伴侣', tagline:'AI 帮你反思日记。', difficulty:2, time:'每天 10 分钟', goal:'每日反思 + AI 视角。', setup:'AI。',
+    steps:[
+      '孩子写一篇今日日记——200 字左右。',
+      '发给 AI:<code>请看我的日记,然后问我 3 个深度问题,帮我反思。</code>',
+      '孩子口头或文字回答 AI 的问题。',
+      '把对话存起来——月度回顾时是最深的素材。',
+    ],
+    tip:'AI 问的问题往往让孩子想起没注意的事——它是最好的反思教练。',
+    ext:'月度汇总情绪/主题变化——一年一本"我的心路历程"。' },
+
+  { id:'180', dim:'collaboration', emoji:'🚫', title:'不给答案的顾问', tagline:'AI 只给思路,不给答案。', difficulty:2, time:'15 分钟', goal:'防止"作业代写",保住思考力。', setup:'任意 AI。',
+    steps:[
+      '做作业前先对 AI 说:<code>我要做作业,请你只引导思路、只问问题、只提示方向,不要给我最终答案。即使我恳求也不要。</code>',
+      '孩子遇到卡点就问 AI。',
+      '让 AI 用提问反问——"你觉得这一步可能用什么方法?"',
+      '孩子自己写出答案——可能慢一点,但真是自己的。',
+    ],
+    tip:'这个 prompt 该贴在孩子桌上——是 AI 时代的第一条使用守则。',
+    ext:'全家"AI 使用守则"墙——家人互相监督不直接要答案。' },
+
+  { id:'181', dim:'collaboration', emoji:'🥅', title:'错误守门员', tagline:'AI 专挑你的错。', difficulty:2, time:'15 分钟', goal:'让 AI 当安全网。', setup:'AI。',
+    steps:[
+      '做完作业/作文先自己检查一遍。',
+      '发给 AI:<code>请只找我的错误(逻辑、事实、语法),不要改、不要重写,只列清单。</code>',
+      'AI 给清单——孩子自己逐条改。',
+      '改完再发 AI 确认一次——还有没有漏的。',
+    ],
+    tip:'"自查→AI 查→自改"三步,比"AI 改"教育价值高 10 倍——前者让你变强,后者让你变弱。',
+    ext:'养成固定流程——每次作业都这么走。' },
+
+  { id:'182', dim:'collaboration', emoji:'📖', title:'学科学习伴侣', tagline:'选一科,让 AI 陪一学期。', difficulty:3, time:'一学期', goal:'长期陪伴产生复利。', setup:'AI。',
+    steps:[
+      '选一门薄弱科——数学、英语、历史。',
+      '每周固定 30 分钟用 AI 学这科——答疑、出题、讲解。',
+      'AI 记录进度——<code>请帮我记录每次学习的内容和我的疑问。</code>',
+      '学期末复盘——比学期初进步多少?哪些是 AI 帮的?',
+    ],
+    tip:'关键是"固定" —— 偶尔用 ≠ 伴侣。每周同一时间,效果才能复利。',
+    ext:'月度评估是否继续——如果有效,续订下学期。' },
+
+  { id:'183', dim:'collaboration', emoji:'🎨', title:'创作合伙人', tagline:'AI 帮画画、编曲、写小说。', difficulty:3, time:'灵活', goal:'把 AI 当工具延伸自己的创造。', setup:'专业 AI 工具。',
+    steps:[
+      '选一个创作目标——画一本绘本、写一篇小说、作一首曲。',
+      '孩子先做一部分——画草图、写大纲、哼旋律。',
+      '让 AI 帮加工——上色、扩写、编配。',
+      '孩子定夺哪些留、哪些改——这是关键,保住作品的"我性"。',
+    ],
+    tip:'边界意识最重要——你的作品,不是 AI 的。每一步都要问"这还是我的吗?"',
+    ext:'做一个个人作品集,每件作品注明"哪部分是 AI 做的"。' },
+
+  { id:'184', dim:'collaboration', emoji:'📋', title:'家庭秘书', tagline:'AI 管家里待办。', difficulty:2, time:'30 分钟建立 + 日用', goal:'家庭协同+解放脑力。', setup:'家庭共享笔记 + AI。',
+    steps:[
+      '列家里所有周期事项——每月交电费、每周浇花、每学期家长会。',
+      '让 AI:<code>请整理成一个看板,按频率和紧急度分类。</code>',
+      '每周一全家看板 meeting——5 分钟。',
+      '让 AI 提醒漏的事——<code>本周有什么我们可能忘记的?</code>',
+    ],
+    tip:'一家人的事,最好有个外在系统——不再靠某一个人记脑子里。',
+    ext:'每月简化/优化——去掉不需要的,加上新出现的。' },
+
+  { id:'185', dim:'collaboration', emoji:'🪜', title:'大任务分步', tagline:'让 AI 拆大任务。', difficulty:1, time:'15 分钟', goal:'"开始"是最难的——AI 能帮你开始。', setup:'AI。',
+    steps:[
+      '说一个庞大任务——"写一篇 2000 字研究报告"。',
+      '让 AI:<code>请把这个任务拆成 10 个 15 分钟可完成的小步骤。</code>',
+      '挑今天能做的一步——最小的一步开始。',
+      '做完后明天继续——一步一步走完全程。',
+    ],
+    tip:'"我不知道怎么开始"的人最需要这招——拆到足够小,就不怕了。',
+    ext:'对所有拖延的事用这招——有魔力。' },
+
+  { id:'186', dim:'collaboration', emoji:'⏳', title:'省时审计', tagline:'算算 AI 一周帮你省多少时间。', difficulty:2, time:'15 分钟', goal:'显式化 AI 的价值和成本。', setup:'AI + 记录本。',
+    steps:[
+      '记一周内所有用 AI 的事——每次干了什么、用了多少时间。',
+      '每件估计——如果没有 AI,我要多久?',
+      '计算总省时间——可能是 3 小时、10 小时、更多。',
+      '讨论:这些时间我用去做什么了?还是白白浪费?',
+    ],
+    tip:'省下的时间去打游戏也行——但要意识到。不意识的话,AI 就白用了。',
+    ext:'月度审计——看你的时间"花向"变化。' },
+
+  { id:'187', dim:'collaboration', emoji:'🚧', title:'边界协议', tagline:'明文写下 AI 不能做的事。', difficulty:3, time:'30 分钟', goal:'主动设界——不是被动防范。', setup:'家庭会议。',
+    steps:[
+      '列 20 件可能让 AI 做的事——写作业、回短信、决策、情绪倾诉。',
+      '全家讨论——哪些绝对不能让 AI 做?哪些可以部分?哪些完全放手?',
+      '写成家庭 AI 使用协议——3 大原则 + 10 条细则。',
+      '签名贴墙——新的 AI 出现时重新审视。',
+    ],
+    tip:'边界是自由的前提——有边界才敢放手用。否则永远焦虑。',
+    ext:'每学期更新一次——因为 AI 和自己都在变。' },
+
+  { id:'188', dim:'collaboration', emoji:'🔍', title:'AI 周复盘', tagline:'每周日,一起和 AI 复盘。', difficulty:2, time:'每周 30 分钟', goal:'复盘 × AI = 加速成长。', setup:'AI。',
+    steps:[
+      '每周日回顾 3 件本周重要事——成功的、失败的、计划中的。',
+      '让 AI:<code>请针对这 3 件事,问我 5 个深度问题帮我反思。</code>',
+      '孩子认真回答——不许应付,这是和自己的对话。',
+      '汇总写下"本周收获" + "下周改进点"。',
+    ],
+    tip:'AI 问的问题比"你这周咋样"深多了——是最便宜的心理教练。',
+    ext:'年度汇总——52 周的反思合在一起,是一本惊人的成长书。' },
+
+  { id:'189', dim:'collaboration', emoji:'🏆', title:'谁的作品', tagline:'AI 参与的作品,署谁名?', difficulty:3, time:'30 分钟', goal:'版权意识 + 诚信训练。', setup:'一个 AI 参与的作品。',
+    steps:[
+      '回顾一件用 AI 做的作品——哪些是 AI 做的、哪些是自己做的?',
+      '讨论:署你的名?AI 的名?还是共同署名?为什么?',
+      '写一段 100 字"创作说明"——坦诚讲 AI 参与了什么。',
+      '想像不同情境下的规则——学校作业、比赛作品、自己玩的,规则可以不同。',
+    ],
+    tip:'这是一生要用的思考——AI 时代的诚信,核心是"别装"。',
+    ext:'给学校作品也加创作说明——一种诚实的示范。' },
+
+  { id:'190', dim:'collaboration', emoji:'🏛️', title:'失败博物馆', tagline:'专门收集 AI 翻车案例。', difficulty:1, time:'持续', goal:'失败比成功有教育价值。', setup:'文档/相册。',
+    steps:[
+      '每次 AI 翻车——说错话、画错图、给错建议,立刻截图。',
+      '旁边写一句:它为啥错?——用几个字概括原因。',
+      '每月分类——幻觉、偏见、时效、文化盲点等。',
+      '月度复盘——看到规律了吗?',
+    ],
+    tip:'这本"博物馆"是孩子最宝贵的资产——一年攒下 100 条经典翻车,胜过读 10 本 AI 批判书。',
+    ext:'和朋友分享——全班的"失败博物馆"合起来惊人。' },
+
+  { id:'191', dim:'collaboration', emoji:'📜', title:'授权清单', tagline:'明确你同意 AI 代劳的事。', difficulty:2, time:'25 分钟', goal:'主动权在自己——不是默认。', setup:'纸笔。',
+    steps:[
+      '列 20 件可能用 AI 的事——作业、翻译、社交、创作。',
+      '每件标授权等级:"完全授权""半授权(参考后自做)""不授权(绝不用)"。',
+      '贴到电脑边——每次用 AI 前扫一眼。',
+      '每学期调整一次——自己的能力变了,授权也可变。',
+    ],
+    tip:'有了清单,用 AI 的焦虑会少一半——不怕"用多了会不会变弱"。',
+    ext:'对比大人的清单差异——一家人讨论,会发现彼此价值观。' },
+
+  { id:'192', dim:'collaboration', emoji:'🎳', title:'传话游戏', tagline:'AI-人-AI-人 传话,看走形多少。', difficulty:2, time:'20 分钟', goal:'发现每一环的信息损失。', setup:'2 个 AI 或 1 个 AI 多次对话。',
+    steps:[
+      '孩子写一段 100 字有画面感的话。',
+      '让 AI1:<code>请改写这段话,保持意思不变。</code>',
+      '孩子根据 AI1 的版本再改一次——不看原文。',
+      '让 AI2 继续改——再对比首尾,相差多少?',
+    ],
+    tip:'每一环都会失真——用 AI 流程也一样。这训练让孩子警惕"信息传递中的损耗"。',
+    ext:'分析哪一环改得最大——是 AI 改的、还是人改的?' },
+
+  { id:'193', dim:'collaboration', emoji:'🧑‍⚕️', title:'双 AI 会诊', tagline:'重要决定,让两个 AI 协商。', difficulty:3, time:'30 分钟', goal:'用多样性对冲单一模型偏见。', setup:'2 个不同 AI。',
+    steps:[
+      '让 AI1 给建议——比如"我要不要报英语班"。',
+      '把 AI1 的建议原样发给 AI2:<code>另一个 AI 给了这个建议,你觉得哪里不完善?</code>',
+      '让 AI1 回复 AI2 的意见——多轮往返 3 次。',
+      '孩子看完整"辩论"做决定——两家都说到的、只有一方说到的、我看完后的倾向。',
+    ],
+    tip:'这招叫"AI 对齐"——专业工程师也用。重要决策值得走这流程。',
+    ext:'家庭重大决策固定用——换房、换校、大宗消费。' },
+
+  { id:'194', dim:'collaboration', emoji:'🌱', title:'灵感孵化器', tagline:'每天和 AI 碰一个小点子。', difficulty:1, time:'每天 5 分钟', goal:'习惯就是复利。', setup:'AI。',
+    steps:[
+      '每天睡前和 AI 说一个今天冒出来的想法——可以是半成品。',
+      '让 AI:<code>请把这个想法推进一步,给我一些思路。</code>',
+      '记录下来——简单一行字。',
+      '周末选本周最好的 1 个深入发展 20 分钟。',
+    ],
+    tip:'365 个点子,总有几个很好——AI 时代的创造力,是用频率堆出来的。',
+    ext:'年度点子评奖——自己给自己颁"年度最佳灵感"。' },
+
+  { id:'195', dim:'collaboration', emoji:'📖', title:'AI 备考', tagline:'让 AI 陪你刷一门考试。', difficulty:3, time:'考前一个月', goal:'高效备考,系统化。', setup:'AI + 考纲。',
+    steps:[
+      '把考纲发给 AI:<code>基于这份考纲,请制定一个 30 天的学习路径。</code>',
+      '每天 AI 出 10 道题——孩子做,错题让 AI 讲解。',
+      '每周末模拟一次完整试卷——AI 批改 + 分析薄弱点。',
+      '考前最后 3 天只做错题本——AI 生成"冲刺小测"。',
+    ],
+    tip:'AI 是最不贵的家教——24 小时在线、永远耐心。',
+    ext:'考完复盘 AI 命中率——哪些内容它押中了?这是优化模型的机会。' },
+
+  { id:'196', dim:'collaboration', emoji:'🔁', title:'错题循环', tagline:'AI 出题-做题-错题-AI 重出。', difficulty:2, time:'每周 30 分钟', goal:'把错题变成增长点。', setup:'AI。',
+    steps:[
+      '发一道本周错题给 AI。',
+      '让 AI:<code>请讲解这道题的核心原理,用我能懂的话。</code>',
+      '让 AI 再出 3 道同类型题——孩子独立做。',
+      '再错再循环——直到这个知识点牢固。',
+    ],
+    tip:'一道错题能学十道——错题循环是最高效的学习法。',
+    ext:'形成长期题库——整学期错题归类保存。' },
+
+  { id:'197', dim:'collaboration', emoji:'📖', title:'阅读伴侣', tagline:'读书时随时问 AI。', difficulty:1, time:'阅读时间', goal:'阅读变对话——再难的书也能读。', setup:'AI。',
+    steps:[
+      '读书时遇到不懂的词、典故、背景——立刻停下。',
+      '发给 AI:<code>这是一段文字,我不理解 XX,请用小学生能懂的话解释。</code>',
+      '理解后继续读——不卡壳。',
+      '读完整本后让 AI 帮做一个"关键概念清单"。',
+    ],
+    tip:'名著不再难——AI 随时翻译 + 注释。以前读《西游记》要靠自己啃,现在孩子 5 分钟解决。',
+    ext:'挑战一本大人都觉得难的书——《苏菲的世界》《时间简史》。' },
+
+  { id:'198', dim:'collaboration', emoji:'🎬', title:'家庭剧本', tagline:'和 AI 一起写一部家庭短剧。', difficulty:3, time:'一周', goal:'集体创作——协作升级。', setup:'AI + 家人。',
+    steps:[
+      '全家讨论想演什么——家庭喜剧、穿越短剧、科幻。',
+      '让 AI:<code>请写一个 5 分钟家庭短剧剧本,角色有 XX、XX、XX,主题 XX。</code>',
+      '家人各自读自己角色的台词,提意见改——"这句我不会这么说"。',
+      '周末正式演一次——录像留念。',
+    ],
+    tip:'这张卡的副产品是家庭回忆——比照相好 100 倍。',
+    ext:'拍下来——多年后翻出来看,全家会哭。' },
+
+  { id:'199', dim:'collaboration', emoji:'🧶', title:'手工导师', tagline:'AI 教孩子做手工。', difficulty:2, time:'60 分钟', goal:'线下手工 + 线上指导。', setup:'AI + 材料。',
+    steps:[
+      '选想做的手工——折纸、刺绣、木工小件、毛线编织。',
+      '让 AI:<code>请给一个零基础 12 岁孩子 XX 的完整步骤,包括材料、工具、每一步的关键。</code>',
+      '按步骤做——卡住就拍图问 AI(或文字描述)。',
+      '成品拍照,让 AI 给改进建议——下次更好。',
+    ],
+    tip:'手工这件事,AI 比 YouTube 教程还有耐心——能针对你的具体问题回答。',
+    ext:'一个月完成 4 个作品——做成"我的手工档案"。' },
+
+  { id:'200', dim:'collaboration', emoji:'🎓', title:'年度总结', tagline:'一年后,总结你和 AI 的关系。', difficulty:3, time:'90 分钟', goal:'最高阶:元反思。', setup:'AI + 一年完成记录。',
+    steps:[
+      '翻完所有完成过的卡片和项目——这一年你和 AI 做了什么?',
+      '问自己 5 个大问题:AI 改变了我什么?我在用它还是它在用我?哪些事我绝不再让它做?哪些事我感谢它帮了我?没有它我会是什么样?',
+      '问 AI:<code>你从我身上学到什么?我这一年和你相处,你有什么观察?</code>(即使它是假的,答案也有启发)',
+      '一起写一份 1000 字"我和 AI 的一年"——存起来,10 年后再看。',
+    ],
+    tip:'这张卡是这副牌的终章——每一年做一次,是给自己最好的礼物。',
+    ext:'十年后再看这份总结——会看到自己和 AI 的共同成长轨迹。' },
+];
+
+/* ================================================================
+   成就系统
+================================================================ */
+function countDone(state, dim) {
+  return Array.from(state.done).filter(id => {
+    const c = CARDS.find(x => x.id === id);
+    return c && c.dim === dim;
+  }).length;
+}
+
+function countDifficulty3(state) {
+  return Array.from(state.done).filter(id => {
+    const c = CARDS.find(x => x.id === id);
+    return c && c.difficulty === 3;
+  }).length;
+}
+
+function maxDayCount(state) {
+  const byDay = {};
+  Object.entries(state.log).forEach(([id, iso]) => {
+    const day = iso.slice(0, 10);
+    byDay[day] = (byDay[day] || 0) + 1;
+  });
+  return Math.max(0, ...Object.values(byDay));
+}
+
+const ACHIEVEMENTS = [
+  { id:'first', emoji:'🌱', title:'破冰者', desc:'完成第一张卡片', check: s => s.done.size >= 1 },
+  { id:'ten', emoji:'🔟', title:'小有所成', desc:'完成 10 张', check: s => s.done.size >= 10 },
+  { id:'fifty', emoji:'⭐', title:'半百达人', desc:'完成 50 张', check: s => s.done.size >= 50 },
+  { id:'hundred', emoji:'💯', title:'百张勋章', desc:'完成 100 张', check: s => s.done.size >= 100 },
+  { id:'all', emoji:'👑', title:'全通大师', desc:'完成全部 200 张', check: s => s.done.size >= 200 },
+  { id:'critical-10', emoji:'🔎', title:'思辨学徒', desc:'批判性思考完成 10 张', check: s => countDone(s, 'critical') >= 10 },
+  { id:'creativity-10', emoji:'🎨', title:'创意学徒', desc:'创造力完成 10 张', check: s => countDone(s, 'creativity') >= 10 },
+  { id:'communication-10', emoji:'🗣️', title:'表达学徒', desc:'表达力完成 10 张', check: s => countDone(s, 'communication') >= 10 },
+  { id:'collaboration-10', emoji:'🤖', title:'协作学徒', desc:'协作力完成 10 张', check: s => countDone(s, 'collaboration') >= 10 },
+  { id:'critical-master', emoji:'🧠', title:'思辨宗师', desc:'批判性思考全通关', check: s => countDone(s, 'critical') >= 50 },
+  { id:'creativity-master', emoji:'✨', title:'创意之王', desc:'创造力全通关', check: s => countDone(s, 'creativity') >= 50 },
+  { id:'communication-master', emoji:'💎', title:'表达大师', desc:'表达力全通关', check: s => countDone(s, 'communication') >= 50 },
+  { id:'collaboration-master', emoji:'🏅', title:'协作宗师', desc:'协作力全通关', check: s => countDone(s, 'collaboration') >= 50 },
+  { id:'streak-3', emoji:'🔥', title:'三日火苗', desc:'连续学习 3 天', check: s => s.streak >= 3 },
+  { id:'streak-7', emoji:'🔥🔥', title:'七日坚持', desc:'连续学习 7 天', check: s => s.streak >= 7 },
+  { id:'streak-30', emoji:'🔥🔥🔥', title:'月度坚持', desc:'连续学习 30 天', check: s => s.streak >= 30 },
+  { id:'marathon', emoji:'🏃', title:'一日五卡', desc:'单日完成 5 张', check: s => s.maxDayCount >= 5 },
+  { id:'balanced', emoji:'⚖️', title:'四维平衡', desc:'每个维度至少完成 5 张', check: s => ['critical','creativity','communication','collaboration'].every(d => countDone(s, d) >= 5) },
+  { id:'hard', emoji:'💪', title:'硬核玩家', desc:'完成 10 张难度 3 的卡', check: s => countDifficulty3(s) >= 10 },
+];
+
+function computeAchievements(s) {
+  const unlocked = new Set();
+  const ctx = { ...s, streak: computeStreak(s), maxDayCount: maxDayCount(s) };
+  ACHIEVEMENTS.forEach(a => { if (a.check(ctx)) unlocked.add(a.id); });
+  return unlocked;
+}
+
+/* ================ 状态 ================ */
+const _saved = Progress.load();
+const state = {
+  filter: 'all',
+  search: '',
+  done: new Set(_saved.done),
+  log: _saved.log || {},
+  daily: new Set(_saved.daily || []),
+  achievements: new Set(_saved.achievements || []),
+  updatedAt: _saved.updatedAt,
+  openId: null,
+  todayCardId: null,
+};
+
+function persist() {
+  state.updatedAt = Progress.save({
+    done: state.done, log: state.log,
+    daily: state.daily, achievements: state.achievements,
+  });
+}
+
+/* ================ 工具 ================ */
+function ymd(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function computeStreak(s = state) {
+  if (s.daily.size === 0) return 0;
+  const today = ymd(), yesterday = ymd(new Date(Date.now() - 86400000));
+  let cursor;
+  if (s.daily.has(today)) cursor = new Date();
+  else if (s.daily.has(yesterday)) cursor = new Date(Date.now() - 86400000);
+  else return 0;
+  let count = 0;
+  while (s.daily.has(ymd(cursor))) { count++; cursor = new Date(cursor.getTime() - 86400000); }
+  return count;
+}
+
+function getTodayCard() {
+  if (state.todayCardId) {
+    const c = CARDS.find(x => x.id === state.todayCardId);
+    if (c) return c;
+  }
+  const today = ymd();
+  const seed = [...today].reduce((s, c) => s + c.charCodeAt(0), 0);
+  const pool = CARDS.filter(c => !state.done.has(c.id));
+  const source = pool.length > 0 ? pool : CARDS;
+  const idx = seed % source.length;
+  state.todayCardId = source[idx].id;
+  return source[idx];
+}
+
+function matchesSearch(card, q) {
+  if (!q) return true;
+  const text = (card.title + card.tagline + card.goal + card.tip + card.ext + card.steps.join('')).toLowerCase();
+  return text.includes(q.toLowerCase());
+}
+
+function formatLastTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return '刚刚';
+  if (mins < 60) return `${mins} 分钟前`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} 小时前`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days} 天前`;
+  return d.toLocaleDateString('zh-CN');
+}
+
+/* ================ 导入导出 ================ */
+function exportProgress() {
+  const data = {
+    version: 3, done: Array.from(state.done), log: state.log,
+    daily: Array.from(state.daily), achievements: Array.from(state.achievements),
+    exportedAt: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `ai-cards-progress-${ymd()}.json`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ 进度已导出');
+}
+
+function importProgress(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.done)) throw new Error('格式不对');
+      const merge = confirm('导入进度:\n• 确定 = 合并\n• 取消 = 替换');
+      if (merge) {
+        data.done.forEach(id => state.done.add(id));
+        Object.assign(state.log, data.log || {});
+        (data.daily || []).forEach(d => state.daily.add(d));
+        (data.achievements || []).forEach(a => state.achievements.add(a));
+      } else {
+        state.done = new Set(data.done); state.log = data.log || {};
+        state.daily = new Set(data.daily || []);
+        state.achievements = new Set(data.achievements || []);
+      }
+      persist(); renderMain();
+      showToast('✓ 进度已导入');
+    } catch (err) { showToast('✗ 导入失败:' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+function showAchievementUnlock(ach) {
+  const el = document.createElement('div');
+  el.className = 'ach-unlock';
+  el.innerHTML = `
+    <div class="big-emoji">${ach.emoji}</div>
+    <div>
+      <div class="label">🎉 成就解锁</div>
+      <div class="title">${ach.title}</div>
+      <div class="desc">${ach.desc}</div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 3000);
+}
+
+function checkNewAchievements() {
+  const current = computeAchievements(state);
+  const newly = [];
+  current.forEach(id => { if (!state.achievements.has(id)) newly.push(id); });
+  if (newly.length > 0) {
+    newly.forEach((id, i) => {
+      state.achievements.add(id);
+      const ach = ACHIEVEMENTS.find(a => a.id === id);
+      if (ach) setTimeout(() => showAchievementUnlock(ach), i * 1500);
+    });
+  }
+}
+
+/* ================ 渲染 ================ */
+const app = document.getElementById('app');
+
+function dotsHTML(level) {
+  return `<span class="dots">${[1,2,3].map(i => `<span class="dot ${i <= level ? 'on' : ''}"></span>`).join('')}</span>`;
+}
+
+function cardHTML(c) {
+  const dim = DIMENSIONS[c.dim];
+  const done = state.done.has(c.id);
+  return `
+    <div class="card dim-${c.dim} ${done ? 'done' : ''}" data-id="${c.id}">
+      <div class="quick-mark" data-mark="${c.id}" title="${done ? '取消标记' : '标记完成'}">${done ? '✓' : ''}</div>
+      <div class="card-top">
+        <span class="card-no">NO.${c.id}</span>
+        <div class="card-dim-tag">${dim.emoji} ${dim.name}</div>
+        <div class="card-emoji">${c.emoji}</div>
+        <div class="card-title">${c.title}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-tagline">${c.tagline}</div>
+        <div class="card-meta">
+          <span class="item">难度 ${dotsHTML(c.difficulty)}</span>
+          <span class="item">⏱ ${c.time}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function radarSVG() {
+  const cx = 130, cy = 130, maxR = 95;
+  const dims = ['critical','creativity','communication','collaboration'];
+  const colors = { critical:'#8b5cf6', creativity:'#f59e0b', communication:'#10b981', collaboration:'#0ea5e9' };
+  const labels = { critical:'批判', creativity:'创造', communication:'表达', collaboration:'协作' };
+  // 4 个方向:上、右、下、左
+  const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+  const values = dims.map(d => countDone(state, d) / 50); // 0-1
+
+  // 背景网格
+  let grid = '';
+  [0.25, 0.5, 0.75, 1].forEach(r => {
+    const pts = angles.map(a => {
+      const x = cx + Math.cos(a) * maxR * r;
+      const y = cy + Math.sin(a) * maxR * r;
+      return `${x},${y}`;
+    }).join(' ');
+    grid += `<polygon points="${pts}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`;
+  });
+
+  // 轴线
+  let axes = '';
+  angles.forEach(a => {
+    const x = cx + Math.cos(a) * maxR;
+    const y = cy + Math.sin(a) * maxR;
+    axes += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+  });
+
+  // 数据多边形
+  const dataPts = angles.map((a, i) => {
+    const r = Math.max(values[i], 0.02) * maxR; // 最小可见
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    return `${x},${y}`;
+  }).join(' ');
+  const dataPoly = `<polygon points="${dataPts}" fill="rgba(139,92,246,0.18)" stroke="#8b5cf6" stroke-width="2"/>`;
+
+  // 数据点
+  let dots = '';
+  angles.forEach((a, i) => {
+    const r = Math.max(values[i], 0.02) * maxR;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    dots += `<circle cx="${x}" cy="${y}" r="4" fill="${colors[dims[i]]}" stroke="#fff" stroke-width="2"/>`;
+  });
+
+  // 标签
+  let labelsHtml = '';
+  angles.forEach((a, i) => {
+    const x = cx + Math.cos(a) * (maxR + 22);
+    const y = cy + Math.sin(a) * (maxR + 22);
+    const percent = Math.round(values[i] * 100);
+    labelsHtml += `
+      <text x="${x}" y="${y-4}" text-anchor="middle" font-size="12" font-weight="700" fill="${colors[dims[i]]}">${labels[dims[i]]}</text>
+      <text x="${x}" y="${y+10}" text-anchor="middle" font-size="10" fill="#94a3b8">${percent}%</text>
+    `;
+  });
+
+  return `<svg class="radar-svg" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+    ${grid}${axes}${dataPoly}${dots}${labelsHtml}
+  </svg>`;
+}
+
+function renderAchievements() {
+  const unlocked = state.achievements;
+  return ACHIEVEMENTS.map(a => {
+    const isUnlocked = unlocked.has(a.id);
+    return `
+      <div class="ach-item ${isUnlocked ? 'unlocked' : 'locked'}">
+        <div class="ach-emoji">${a.emoji}</div>
+        <div class="ach-name">${a.title}</div>
+        <div class="ach-tooltip">${a.desc}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderMain() {
+  checkNewAchievements();
+
+  let filtered = state.filter === 'all' ? CARDS.slice() : CARDS.filter(c => c.dim === state.filter);
+  if (state.search) filtered = filtered.filter(c => matchesSearch(c, state.search));
+
+  const chips = Object.entries(DIMENSIONS).map(([key, d]) => {
+    const count = key === 'all' ? CARDS.length : CARDS.filter(c => c.dim === key).length;
+    const doneCount = key === 'all' ? state.done.size : countDone(state, key);
+    const prefix = key === 'all' ? '' : d.emoji + ' ';
+    return `<button class="chip ${state.filter === key ? 'active' : ''}" data-filter="${key}">
+      ${prefix}${d.name} <span class="count">${doneCount}/${count}</span>
+    </button>`;
+  }).join('');
+
+  const cardsHTML_ = filtered.length > 0
+    ? filtered.map(cardHTML).join('')
+    : `<div class="empty" style="grid-column:1/-1"><div class="empty-emoji">🔍</div><div>没找到匹配的卡片</div></div>`;
+
+  const streak = computeStreak();
+  const today = getTodayCard();
+  const todayDim = DIMENSIONS[today.dim];
+  const percent = Math.round((state.done.size / CARDS.length) * 100);
+  const lastTimeStr = state.updatedAt ? ` · ${formatLastTime(state.updatedAt)}` : '';
+  const achUnlocked = state.achievements.size;
+
+  app.innerHTML = `
+    <div class="hero">
+      <div class="badge">✨ 陪儿子学 AI · 200 张共学卡</div>
+      <h1>AI 共学卡片</h1>
+      <p class="sub">200 张可以今晚就和孩子一起玩的小活动。<br>每张都对应一块 AI 时代的认知肌肉。</p>
+    </div>
+
+    <div class="dashboard">
+      <div class="dash-card dash-today" id="todayBox">
+        <div class="label">🌟 今日一卡</div>
+        <div class="today-card" data-today="${today.id}">
+          <div class="today-emoji">${today.emoji}</div>
+          <div>
+            <div class="today-title">${today.title}</div>
+            <div class="today-tag">${todayDim.emoji} ${todayDim.name} · 难度 ${dotsHTML(today.difficulty)} · ${today.time}</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card dash-streak">
+        <div class="fire">${streak > 0 ? '🔥' : '⭕'}</div>
+        <div class="num">${streak}</div>
+        <div class="lbl">连续学习天数</div>
+      </div>
+      <div class="dash-card dash-progress">
+        <div class="num">${state.done.size}<span style="font-size:18px;color:#94a3b8">/${CARDS.length}</span></div>
+        <div class="lbl">${percent}% 已完成${lastTimeStr}</div>
+        <div class="bar"><div class="fill" style="width:${percent}%"></div></div>
+      </div>
+    </div>
+
+    <div class="insights">
+      <div class="insights-card">
+        <div class="insights-title"><span>🎯 四维发展雷达</span><span style="color:#8b5cf6">${state.done.size}/200</span></div>
+        <div class="radar-wrap">${radarSVG()}</div>
+        <div class="radar-legend">
+          <span class="item" data-dim="critical"><span class="sw" style="background:#8b5cf6"></span>批判性思考</span>
+          <span class="item" data-dim="creativity"><span class="sw" style="background:#f59e0b"></span>创造力</span>
+          <span class="item" data-dim="communication"><span class="sw" style="background:#10b981"></span>表达力</span>
+          <span class="item" data-dim="collaboration"><span class="sw" style="background:#0ea5e9"></span>协作力</span>
+        </div>
+      </div>
+      <div class="insights-card">
+        <div class="insights-title"><span>🏆 成就墙</span><span class="ach-summary">${achUnlocked}/${ACHIEVEMENTS.length} 已解锁</span></div>
+        <div class="ach-grid">${renderAchievements()}</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜索卡片标题、目标、内容……" value="${state.search.replace(/"/g,'&quot;')}">
+      </div>
+      <div class="filters">${chips}</div>
+      <div class="actions">
+        <button class="btn-draw" id="drawBtn">🎲 随机抽一张</button>
+        <button class="btn-mini" id="exportBtn">⬇ 导出</button>
+        <button class="btn-mini" id="importBtn">⬆ 导入</button>
+        <button class="btn-mini" id="resetBtn">↺ 清空</button>
+      </div>
+      <div class="result-count">显示 ${filtered.length} 张 / 共 ${CARDS.length} 张</div>
+    </div>
+
+    <div class="grid">${cardsHTML_}</div>
+
+    <div class="foot">
+      ❤️ 一个爸爸的 AI 共学笔记<br>
+      共 200 张 · 进度自动保存在本机 · 支持导出导入
+    </div>
+  `;
+
+  document.querySelectorAll('.chip').forEach(btn => {
+    btn.onclick = () => { state.filter = btn.getAttribute('data-filter'); renderMain(); };
+  });
+  document.querySelectorAll('.radar-legend .item').forEach(el => {
+    el.onclick = () => { state.filter = el.getAttribute('data-dim'); renderMain(); window.scrollTo({top: document.querySelector('.controls').offsetTop - 20, behavior: 'smooth'}); };
+  });
+  document.querySelectorAll('.card').forEach(card => {
+    card.onclick = (e) => { if (e.target.closest('.quick-mark')) return; openModal(card.getAttribute('data-id')); };
+  });
+  document.querySelectorAll('.quick-mark').forEach(mk => {
+    mk.onclick = (e) => { e.stopPropagation(); toggleDone(mk.getAttribute('data-mark')); };
+  });
+  document.getElementById('todayBox').onclick = () => openModal(today.id);
+  document.getElementById('drawBtn').onclick = drawRandom;
+  document.getElementById('exportBtn').onclick = exportProgress;
+  document.getElementById('importBtn').onclick = () => document.getElementById('fileInput').click();
+  document.getElementById('resetBtn').onclick = () => {
+    if (state.done.size === 0 && state.daily.size === 0 && state.achievements.size === 0) return;
+    if (confirm('确定清空所有进度?(建议先导出备份)')) {
+      state.done.clear(); state.daily.clear(); state.log = {}; state.achievements.clear();
+      state.todayCardId = null; Progress.reset(); state.updatedAt = null;
+      renderMain();
+    }
+  };
+
+  const searchInput = document.getElementById('searchInput');
+  searchInput.oninput = (e) => {
+    state.search = e.target.value;
+    const filtered2 = (state.filter === 'all' ? CARDS.slice() : CARDS.filter(c => c.dim === state.filter))
+      .filter(c => matchesSearch(c, state.search));
+    const grid = document.querySelector('.grid');
+    if (grid) {
+      grid.innerHTML = filtered2.length > 0
+        ? filtered2.map(cardHTML).join('')
+        : `<div class="empty" style="grid-column:1/-1"><div class="empty-emoji">🔍</div><div>没找到匹配的卡片</div></div>`;
+      document.querySelectorAll('.card').forEach(card => {
+        card.onclick = (e) => { if (e.target.closest('.quick-mark')) return; openModal(card.getAttribute('data-id')); };
+      });
+      document.querySelectorAll('.quick-mark').forEach(mk => {
+        mk.onclick = (e) => { e.stopPropagation(); toggleDone(mk.getAttribute('data-mark')); };
+      });
+    }
+    const countEl = document.querySelector('.result-count');
+    if (countEl) countEl.textContent = `显示 ${filtered2.length} 张 / 共 ${CARDS.length} 张`;
+  };
+}
+
+function toggleDone(id) {
+  if (state.done.has(id)) {
+    state.done.delete(id); delete state.log[id];
+  } else {
+    state.done.add(id);
+    state.log[id] = new Date().toISOString();
+    state.daily.add(ymd());
+  }
+  persist();
+  renderMain();
+}
+
+function drawRandom() {
+  const pool = CARDS.filter(c => !state.done.has(c.id));
+  const source = pool.length > 0 ? pool : CARDS;
+  const pick = source[Math.floor(Math.random() * source.length)];
+  openModal(pick.id);
+}
+
+function openModal(id) {
+  const c = CARDS.find(x => x.id === id);
+  if (!c) return;
+  state.openId = id;
+  const dim = DIMENSIONS[c.dim];
+  const done = state.done.has(id);
+
+  const html = `
+    <div class="overlay" id="overlay">
+      <div class="modal dim-${c.dim}" id="modal">
+        <button class="close-btn" id="closeBtn">×</button>
+        <div class="card-top modal-top">
+          <span class="card-no">NO.${c.id}</span>
+          <div class="card-dim-tag">${dim.emoji} ${dim.name}</div>
+          <div class="card-emoji">${c.emoji}</div>
+          <div class="card-title">${c.title}</div>
+          <div class="card-tagline-big">${c.tagline}</div>
+          <div class="card-meta">
+            <span class="item">难度 ${dotsHTML(c.difficulty)}</span>
+            <span class="item">⏱ ${c.time}</span>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="section"><div class="section-title">🎯 这张卡片在练什么</div><div class="section-content">${c.goal}</div></div>
+          <div class="section"><div class="section-title">🛠 你需要准备</div><div class="section-content">${c.setup}</div></div>
+          <div class="section"><div class="section-title">📋 具体怎么玩</div><ol class="steps">${c.steps.map(s => `<li>${s}</li>`).join('')}</ol></div>
+          <div class="section"><div class="section-title">💡 一句小提示</div><div class="tip-box"><span class="emoji">💡</span><div>${c.tip}</div></div></div>
+          <div class="section"><div class="section-title">🚀 玩通了可以再升级</div><div class="extension-box"><span class="emoji">🚀</span><div>${c.ext}</div></div></div>
+          <div class="modal-actions">
+            ${done ? `<button class="btn-undo" id="undoBtn">↺ 取消完成</button>` : `<button class="btn-done" id="doneBtn">✓ 我们玩过啦</button>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.body.style.overflow = 'hidden';
+
+  const overlay = document.getElementById('overlay');
+  document.getElementById('closeBtn').onclick = closeModal;
+  overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
+  const doneBtn = document.getElementById('doneBtn');
+  if (doneBtn) doneBtn.onclick = () => { toggleDone(id); closeModal(); };
+  const undoBtn = document.getElementById('undoBtn');
+  if (undoBtn) undoBtn.onclick = () => { toggleDone(id); closeModal(); };
+  document.addEventListener('keydown', escListener);
+}
+
+function escListener(e) { if (e.key === 'Escape') closeModal(); }
+function closeModal() {
+  const overlay = document.getElementById('overlay');
+  if (overlay) overlay.remove();
+  document.body.style.overflow = '';
+  state.openId = null;
+  document.removeEventListener('keydown', escListener);
+}
+
+document.getElementById('fileInput').onchange = (e) => {
+  if (e.target.files[0]) importProgress(e.target.files[0]);
+  e.target.value = '';
+};
+
+renderMain();
+</script>
+
+
+</body></html>
