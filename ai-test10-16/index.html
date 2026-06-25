@@ -56,6 +56,7 @@
   }
   .btn:active { transform:scale(0.97); }
   .btn.ghost { background:rgba(255,255,255,0.08); box-shadow:none; font-size:15px; padding:13px; }
+  .btn.save { background:linear-gradient(90deg,#2cb1bc,#7f5af0); }
 
   .progress-wrap { margin-bottom:18px; }
   .progress-top { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#9b97bd; margin-bottom:8px; }
@@ -114,10 +115,46 @@
 
   .quote { font-size:13px; color:#9b97bd; text-align:center; margin-top:20px; font-style:italic; line-height:1.7; }
   .hidden { display:none; }
+
+  /* 推荐资源二维码 —— 二维码居右，整行高度≈按钮高度 */
+  .qr-list { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+  .qr-item {
+    display:flex; flex-direction:row-reverse; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px; padding:6px 12px;
+  }
+  .qr-item img {
+    width:40px; height:40px; flex-shrink:0; border-radius:6px;
+    background:#fff; padding:3px; object-fit:contain; display:block;
+  }
+  .qr-item .qr-text { flex:1; min-width:0; text-align:left; }
+  .qr-item .qr-text b { font-size:13px; color:#fff; font-weight:700; display:block; line-height:1.3; }
+  .qr-item .qr-text small { font-size:10px; color:#9b97bd; }
+
+  /* 图片保存模态 */
+  .modal-mask {
+    position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:18px;
+    animation:fade .3s ease;
+  }
+  .modal-box {
+    width:100%; max-width:420px; max-height:90vh; overflow:auto;
+    background:#1a1730; border:1px solid rgba(255,255,255,0.12);
+    border-radius:18px; padding:18px; text-align:center;
+  }
+  .modal-box h3 { font-size:17px; margin-bottom:6px; }
+  .modal-box .hint { font-size:13px; color:#9b97bd; margin-bottom:12px; line-height:1.6; }
+  .modal-box img { width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.1); display:block; }
+  .spinner {
+    width:38px; height:38px; border:4px solid rgba(255,255,255,0.15);
+    border-top-color:#7f5af0; border-radius:50%; margin:20px auto;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg);} }
 </style>
 </head>
 <body>
-<div class="app">
+<div class="app" id="app">
 
   <!-- 封面 -->
   <div class="screen" id="cover">
@@ -136,7 +173,6 @@
     <p class="hook">用 AI 的时候，你是<span class="hl">在思考</span>，还是<span class="hl">让它替你思考</span>？</p>
     <p class="sub">真正的高手，用 AI 越用脑子越灵；</p>
     <p class="sub">而有些人，正在不知不觉地把"思考"外包出去。</p>
-    <div class="notice">每次从 <b>300 道题库</b>里随机抽 <b>20 道</b>，难度由浅入深。没有"一眼能看出来"的标准答案——尤其那些"显得努力、全面、聪明"的选项，往往才是陷阱。测完还会附上一份<b>家长报告</b>。</div>
     <div class="meta">
       <span><i class="dot"></i>适合 10–18 岁</span>
       <span><i class="dot"></i>每次随机 20 题</span>
@@ -166,6 +202,17 @@
 
 </div>
 
+<!-- 图片保存模态（内联 display:none，开机绝不弹出） -->
+<div class="modal-mask" id="imgModal" style="display:none">
+  <div class="modal-box">
+    <h3>📸 报告图片已生成</h3>
+    <p class="hint" id="modalHint">电脑端点下方「下载图片」即可保存；<br>手机端请<b style="color:#f9d423">长按下方图片</b>保存到相册。</p>
+    <div id="modalBody"><div class="spinner"></div></div>
+    <a class="btn save" id="dlLink" download="AI学习力评测报告.png" style="display:none">⬇ 下载图片</a>
+    <button class="btn ghost" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+
 <script>
 /* ===================== 配置 ===================== */
 const LVL=["","Lv.1 热身","Lv.2 进阶","Lv.3 烧脑","Lv.4 高手","Lv.5 终极"];
@@ -174,13 +221,7 @@ const LVLC=["","#2cb1bc","#2cb1bc","#7f5af0","#f5576c","#f5576c"];
 const DEFAULT_SUBS = ["数学","语文","英语","物理","化学","生物","历史","地理","科学","道德与法治"];
 const CREATIVE_SUBS = ["作文","英语作文","美术作品","手抄报","科学小报","历史小报","板报设计","演讲稿","主题绘画","班会创意"];
 
-/* ===== 30 个情景模板 × 10 学科 = 300 题池 =====
-   d: T独立思考 B批判性思维 X创造力 Q提问力 M元认知
-   每题 4 选项，s 越高=越会用脑；s:3 为最优。出题时选项顺序随机打乱。
-   【选项字数已平衡：最优答案简洁，干扰项往往更长，避免"挑最长"作弊】
-*/
 const TEMPLATES = [
-/* ---------- Lv.1 ---------- */
 {lvl:1,d:"T",tag:"查资料",q:s=>`你要做一份关于「${s}」某主题的小报告，AI 给了一段看起来很完整的解释。接下来你最该做的是？`,o:[
   {t:"读着挺顺，直接挑重点复制进我的报告里",s:0},
   {t:"让它换个说法再生成一遍，读起来更像我自己写的口吻",s:1},
@@ -211,7 +252,6 @@ const TEMPLATES = [
   {t:"抄下来，顺便把它的步骤背熟",s:1},
   {t:"盖住答案自己先做，卡住再对照",s:3},
   {t:"让它再出一道同类题，我抄第二遍练熟",s:1}]},
-/* ---------- Lv.2 ---------- */
 {lvl:2,d:"B",tag:"它很自信",q:s=>`你查一个关于「${s}」的具体数据，AI 答得非常肯定还补了一堆细节，但和你印象里的不太一样。你会？`,o:[
   {t:"它知道得比我多，应该是我记错了",s:0},
   {t:"它说得这么细致，细节这么多就肯定靠谱，信它",s:1},
@@ -242,7 +282,6 @@ const TEMPLATES = [
   {t:"AI 都夸我了，说明我水平确实不错",s:1},
   {t:"它爱顺着夸人，让它专挑我的毛病",s:3},
   {t:"再换个 AI 问问，看是不是也夸我",s:1}]},
-/* ---------- Lv.3 ---------- */
 {lvl:3,d:"B",tag:"正反两方",q:s=>`就一个关于「${s}」的争议话题，你让 AI 写了正反两方，都引经据典、看起来都有理。接下来最该做的是？`,o:[
   {t:"两边讲得都有道理，说明这事没标准答案，随便选一边",s:1},
   {t:"哪方举的例子和数据更多就站哪边",s:1},
@@ -273,7 +312,6 @@ const TEMPLATES = [
   {t:"数字越大越能说明问题，信",s:0},
   {t:"先问这数据哪来的、怎么统计的",s:3},
   {t:"记下来，以后引用显得有说服力",s:1}]},
-/* ---------- Lv.4 ---------- */
 {lvl:4,d:"X",tag:"高质量诱惑",q:s=>`AI 给的「${s}」成品，质量明显比你自己做的高。长远看，下面哪种选择对你最好？`,o:[
   {t:"用它的成品，反正结果好看分数高",s:0},
   {t:"自己做，再拿它的成品对照找差距",s:3},
@@ -304,7 +342,6 @@ const TEMPLATES = [
   {t:"先关掉 AI 放进我的想法，再让它润色",s:3},
   {t:"干脆让 AI 故意生成一个『与众不同』的版本",s:1},
   {t:"多生成几版，从中挑最特别的一版",s:1}]},
-/* ---------- Lv.5 ---------- */
 {lvl:5,d:"M",tag:"何时关掉",q:s=>`关于学「${s}」，下面哪种情况「故意不用 AI、硬着头皮自己来」，对你长远最划算？`,o:[
   {t:"赶时间、想快点交差的时候",s:0},
   {t:"正在练我最想变强的那项能力时",s:3},
@@ -337,7 +374,6 @@ const TEMPLATES = [
   {t:"「有没有更快记住它的口诀？」",s:1}]},
 ];
 
-/* ===== 家长评估 8 题（选项字数同样已平衡） ===== */
 const PARENT = [
 {tag:"对待作业",q:"孩子用 AI 做作业，你通常的态度是？",o:[
   {t:"只要按时完成就行，过程不太管",s:0},
@@ -381,7 +417,6 @@ const PARENT = [
   {t:"让他再去问问 AI 到底是谁对",s:1}]},
 ];
 
-/* ===== 家长报告：四套总体模板（按孩子总分命中） ===== */
 const PARENT_TYPE = {
   driver: { emoji:"🏆", code:"FOR PARENTS · DRIVER", title:"驾驭者", color:"#2cb1bc",
     summary:"您的孩子已经能把 AI 当成『磨刀石』——用它把自己的思考磨得更锋利，而不是用它替自己思考。这是 AI 时代最难得的能力。此时家长最该做的，是『别打扰』，并不断给他更难、更开放的真实问题去折腾。",
@@ -397,7 +432,6 @@ const PARENT_TYPE = {
     advice:"从最小一步开始：今晚就陪孩子把一道题先自己想、再问 AI；并和他约定每天一段『无 AI 时间』，重建『我能想明白』的信心。" },
 };
 
-/* ===== 家长报告：五维度各自的『表现好 / 待加强』两句 ===== */
 const DIM_PARENT = {
   T:{ name:"独立思考",
     good:"独立思考——孩子遇到问题会先自己动脑，不急着伸手要答案，这个习惯请务必保护好。",
@@ -424,11 +458,8 @@ function buildPool(){
   TEMPLATES.forEach((tpl,ti)=>{
     const subs = tpl.d==="X" ? CREATIVE_SUBS : DEFAULT_SUBS;
     subs.forEach(s=>{
-      pool.push({
-        tid: ti, lvl: tpl.lvl, d: tpl.d, tag: tpl.tag,
-        q: tpl.q(s),
-        o: tpl.o.map(op=>({ t: op.t, s: op.s }))
-      });
+      pool.push({ tid: ti, lvl: tpl.lvl, d: tpl.d, tag: tpl.tag, q: tpl.q(s),
+        o: tpl.o.map(op=>({ t: op.t, s: op.s })) });
     });
   });
   return pool;
@@ -437,20 +468,19 @@ const POOL = buildPool();
 
 function cloneQ(q){
   const opts = q.o.map(o=>({t:o.t, s:o.s}));
-  shuffle(opts);                      // 关键：打乱选项 → 正确答案随机落在 A/B/C/D
+  shuffle(opts);
   return { lvl:q.lvl, d:q.d, tag:q.tag, q:q.q, opts };
 }
 
-/* 从 300 池抽 20：难度梯度 + 维度均衡 + 不重复模板 */
 function sampleTest(){
-  const levelDist = {1:3,2:4,3:5,4:4,5:4};   // 共 20，难度递增
+  const levelDist = {1:3,2:4,3:5,4:4,5:4};
   const picked=[], usedTid=new Set();
   const dimCount={T:0,B:0,X:0,Q:0,M:0};
   for(let lv=1; lv<=5; lv++){
     let need=levelDist[lv];
     const cands=shuffle(POOL.filter(q=>q.lvl===lv));
     while(need>0 && cands.length){
-      cands.sort((a,b)=> dimCount[a.d]-dimCount[b.d]);   // 优先补维度
+      cands.sort((a,b)=> dimCount[a.d]-dimCount[b.d]);
       let idx=cands.findIndex(q=>!usedTid.has(q.tid));
       if(idx<0) idx=0;
       const q=cands.splice(idx,1)[0];
@@ -459,11 +489,12 @@ function sampleTest(){
       need--;
     }
   }
-  return picked; // 已按难度从低到高分组
+  return picked;
 }
 
 /* ===================== 流程 ===================== */
 let state={ mode:"student", list:[], cur:0, answers:[] };
+let reportData=null;
 
 function start(mode){
   state.mode=mode;
@@ -507,7 +538,6 @@ function render(){
 function next(){ if(state.cur<state.list.length-1){ state.cur++; render(); } else finish(); }
 function goBack(){ if(state.cur>0){ state.cur--; render(); } }
 
-/* ===== 雷达图（viewBox 留边距，标签不再被裁切） ===== */
 function buildRadar(vals, labels, colors){
   const cx=150, cy=150, R=100, n=vals.length;
   const ang=i=> -Math.PI/2 + i*2*Math.PI/n;
@@ -570,18 +600,15 @@ function finishStudent(){
   const radarSvg=buildRadar(vals, order.map(k=>dimNames[k]), order.map(k=>dimColors[k]));
   const legend=order.map((k,i)=>`<span><i class="lg-dot" style="background:${dimColors[k]}"></i>${dimNames[k]} ${vals[i]}</span>`).join("");
 
-  /* ===== 家长报告：按总分选模板 + 逐维度挑句子（本地组合） ===== */
   let pt;
   if(pct>=80) pt=PARENT_TYPE.driver;
   else if(pct>=60) pt=PARENT_TYPE.collaborator;
   else if(pct>=40) pt=PARENT_TYPE.dependent;
   else pt=PARENT_TYPE.substitute;
 
-  const parentDimHtml = order.map((k,i)=>{
-    const ok = vals[i] >= 60;
-    const sentence = ok ? DIM_PARENT[k].good : DIM_PARENT[k].bad;
-    return `<div class="tip-item"><span class="ico">${ok?'🟢':'🔧'}</span><span>${sentence}</span></div>`;
-  }).join("");
+  const parentDims = order.map((k,i)=>({ ok: vals[i]>=60, text: (vals[i]>=60?DIM_PARENT[k].good:DIM_PARENT[k].bad) }));
+  const parentDimHtml = parentDims.map(x=>
+    `<div class="tip-item"><span class="ico">${x.ok?'🟢':'🔧'}</span><span>${x.text}</span></div>`).join("");
 
   const parentReport = `
     <div class="section-divider">— 家长报告 —</div>
@@ -592,8 +619,44 @@ function finishStudent(){
     </div>
     <div class="card"><h3>📊 五维度逐项解读</h3>${parentDimHtml}</div>
     <div class="card" style="background:rgba(127,90,240,0.1)"><h3>🧭 家长行动建议</h3><p>${pt.advice}</p></div>
+
+    <div class="section-divider">— 推荐资源 · 扫码了解 —</div>
+    <div class="card"><h3>📚 给孩子的能力加油站</h3>
+      <div class="qr-list">
+        <div class="qr-item">
+          <img src="qr1.png" alt="QR">
+          <div class="qr-text"><b>一目十行的超级阅读力训练</b><small>长按二维码了解</small></div>
+        </div>
+        <div class="qr-item">
+          <img src="qr2.png" alt="QR">
+          <div class="qr-text"><b>AI时代孩子的核心能力</b><small>长按二维码了解</small></div>
+        </div>
+        <div class="qr-item">
+          <img src="qr3.png" alt="QR">
+          <div class="qr-text"><b>暑期AI家庭共学卡</b><small>长按二维码了解</small></div>
+        </div>
+      </div>
+    </div>
+
     <div class="notice" style="margin-top:14px">说明：本家长报告由系统依据孩子的得分，从预设文案库中按规则自动组合而成，用于快速参考，不能替代您对孩子的真实了解与陪伴。</div>
   `;
+
+  reportData={
+    emoji:type.emoji, code:type.code, title:type.title, color:type.color, pct,
+    indexLabel:"AI 思考力指数",
+    levelLabels:["被替代","依赖","清醒","增强"],
+    pictureTitle:"🔍 你的思考画像",
+    picture:type.desc,
+    radar:{ vals, labels:order.map(k=>dimNames[k]), colors:order.map(k=>dimColors[k]) },
+    prescriptionTitle:"🌱 给你的成长处方",
+    tips:type.tips,
+    parent:{
+      code:pt.code, emoji:pt.emoji, title:pt.title, color:pt.color,
+      summary:pt.summary, dims:parentDims, advice:pt.advice,
+      notice:"本家长报告由系统依据孩子得分自动组合生成，仅供快速参考。"
+    },
+    quote:"AI 应该是孩子的脚手架，\n而不是孩子的轮椅。"
+  };
 
   document.getElementById("result").innerHTML=`
     <div class="result-emoji">${type.emoji}</div>
@@ -614,6 +677,7 @@ function finishStudent(){
       ${type.tips.map(t=>`<div class="tip-item"><span class="ico">✅</span><span>${t}</span></div>`).join("")}</div>
     ${parentReport}
     <div class="quote">「AI 应该是孩子的脚手架，<br>而不是孩子的轮椅。」</div>
+    <button class="btn save" onclick="saveReport()">💾 保存报告为图片</button>
     <button class="btn" onclick="start('student')">换一批题再测一次</button>
     <button class="btn ghost" onclick="restart()">返回首页</button>`;
   show("result");
@@ -639,6 +703,19 @@ function finishParent(){
     desc:"说句实在话，现在的用法更可能让孩子把 AI 当成「替自己思考的人」。但你愿意来做这份评估，本身就是改变的开始。",
     tips:["从最小的一步开始：今晚就和孩子一起，把一道题先自己想再问 AI。","把「快点做完」的期待，换成「慢一点、想明白」。","你自己用 AI 时也说出判断过程，孩子会照着学。"]};
 
+  reportData={
+    emoji:type.emoji, code:type.code, title:type.title, color:type.color, pct,
+    indexLabel:"家庭引导力指数",
+    levelLabels:["需重启","待调整","引导","教练"],
+    pictureTitle:"🔍 你的家庭画像",
+    picture:type.desc,
+    radar:null,
+    prescriptionTitle:"🌱 给你的引导处方",
+    tips:type.tips,
+    parent:null,
+    quote:"让孩子和 AI 相处的方式，\n就是他未来和世界相处的方式。"
+  };
+
   document.getElementById("result").innerHTML=`
     <div class="result-emoji">${type.emoji}</div>
     <div class="result-type">${type.code}</div>
@@ -655,6 +732,7 @@ function finishParent(){
     <div class="card"><h3>🌱 给你的引导处方</h3>
       ${type.tips.map(t=>`<div class="tip-item"><span class="ico">✅</span><span>${t}</span></div>`).join("")}</div>
     <div class="quote">「让孩子和 AI 相处的方式，<br>就是他未来和世界相处的方式。」</div>
+    <button class="btn save" onclick="saveReport()">💾 保存报告为图片</button>
     <button class="btn" onclick="start('student')">让孩子也来测一测 →</button>
     <button class="btn ghost" onclick="restart()">返回首页</button>`;
   show("result");
@@ -662,6 +740,212 @@ function finishParent(){
 }
 
 function restart(){ show("cover"); }
+
+/* ===================== Canvas 绘制报告 ===================== */
+function drawReportCanvas(){
+  const d=reportData;
+  if(!d) throw new Error("暂无报告数据");
+  const W=760, PAD=44, CW=W-PAD*2, IPAD=22, IX=PAD+IPAD, IW=CW-IPAD*2;
+  const FF='-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif';
+  const meas=document.createElement('canvas').getContext('2d');
+
+  function sf(ctx,size,w){ ctx.font=(w||'400')+' '+size+'px '+FF; }
+  function wrap(ctx,text,maxW){
+    const arr=[...String(text)], ls=[]; let ln='';
+    for(const c of arr){
+      if(c==='\n'){ ls.push(ln); ln=''; continue; }
+      const t=ln+c;
+      if(ctx.measureText(t).width>maxW && ln){ ls.push(ln); ln=c; } else ln=t;
+    }
+    if(ln) ls.push(ln);
+    return ls;
+  }
+  function rr(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  const blocks=[];
+  const spacer=h=>blocks.push({h:h,draw:()=>{}});
+  function center(text,size,w,color,mb){
+    blocks.push({h:size*1.25+(mb||0),draw:(ctx,y)=>{
+      sf(ctx,size,w); ctx.fillStyle=color; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(text,W/2,y);
+    }});
+  }
+  function fullParas(text,color,size){
+    size=size||12; const lh=1.5; sf(meas,size,'400');
+    const ls=wrap(meas,text,CW);
+    blocks.push({h:ls.length*size*lh+8,draw:(ctx,y)=>{
+      sf(ctx,size,'400'); ctx.fillStyle=color; ctx.textAlign='left'; ctx.textBaseline='top';
+      let yy=y; for(const l of ls){ ctx.fillText(l,PAD,yy); yy+=size*lh; }
+    }});
+  }
+  function iHeading(text,color){
+    return {h:17*1.3+12,draw:(ctx,y)=>{
+      sf(ctx,17,'700'); ctx.fillStyle=color||'#ffffff'; ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText(text,IX,y);
+    }};
+  }
+  function iParas(text,color,size,lh){
+    size=size||14; lh=lh||1.5; sf(meas,size,'400');
+    const ls=wrap(meas,text,IW);
+    return {h:ls.length*size*lh,draw:(ctx,y)=>{
+      sf(ctx,size,'400'); ctx.fillStyle=color||'#cfcce4'; ctx.textAlign='left'; ctx.textBaseline='top';
+      let yy=y; for(const l of ls){ ctx.fillText(l,IX,yy); yy+=size*lh; }
+    }};
+  }
+  function iTip(icon,text){
+    const size=14, lh=1.45, ind=26; sf(meas,size,'400');
+    const ls=wrap(meas,text,IW-ind);
+    return {h:ls.length*size*lh+10,draw:(ctx,y)=>{
+      sf(ctx,size,'400'); ctx.textBaseline='top'; ctx.textAlign='left';
+      ctx.fillStyle='#ffffff'; ctx.fillText(icon,IX,y);
+      ctx.fillStyle='#cfcce4'; let yy=y;
+      for(const l of ls){ ctx.fillText(l,IX+ind,yy); yy+=size*lh; }
+    }};
+  }
+  function iRadar(){
+    const H=300, vals=d.radar.vals, labels=d.radar.labels, colors=d.radar.colors, n=vals.length;
+    return {h:H,draw:(ctx,y)=>{
+      const cxr=W/2, cyr=y+135, R=105;
+      const ang=i=>-Math.PI/2+i*2*Math.PI/n;
+      const pt=(i,r)=>[cxr+r*Math.cos(ang(i)),cyr+r*Math.sin(ang(i))];
+      ctx.strokeStyle='rgba(255,255,255,0.14)'; ctx.lineWidth=1;
+      for(let g=1;g<=4;g++){ const r=R*g/4; ctx.beginPath();
+        for(let i=0;i<n;i++){ const [x,yy]=pt(i,r); i?ctx.lineTo(x,yy):ctx.moveTo(x,yy); }
+        ctx.closePath(); ctx.stroke(); }
+      for(let i=0;i<n;i++){ const [x,yy]=pt(i,R); ctx.beginPath(); ctx.moveTo(cxr,cyr); ctx.lineTo(x,yy); ctx.stroke(); }
+      ctx.beginPath();
+      for(let i=0;i<n;i++){ const [x,yy]=pt(i,R*vals[i]/100); i?ctx.lineTo(x,yy):ctx.moveTo(x,yy); }
+      ctx.closePath();
+      const grad=ctx.createRadialGradient(cxr,cyr,0,cxr,cyr,R);
+      grad.addColorStop(0,'rgba(127,90,240,0.55)'); grad.addColorStop(1,'rgba(44,177,188,0.32)');
+      ctx.fillStyle=grad; ctx.fill(); ctx.strokeStyle='#a18bff'; ctx.lineWidth=2; ctx.stroke();
+      for(let i=0;i<n;i++){ const [x,yy]=pt(i,R*vals[i]/100);
+        ctx.beginPath(); ctx.arc(x,yy,4,0,Math.PI*2); ctx.fillStyle=colors[i]; ctx.fill();
+        ctx.strokeStyle='#1a1730'; ctx.lineWidth=1.5; ctx.stroke(); }
+      for(let i=0;i<n;i++){ const [lx,ly]=pt(i,R+22);
+        const al=lx>cxr+5?'left':lx<cxr-5?'right':'center';
+        sf(ctx,13,'400'); ctx.fillStyle='#cfcce4'; ctx.textAlign=al; ctx.textBaseline='top'; ctx.fillText(labels[i],lx,ly);
+        sf(ctx,12,'700'); ctx.fillStyle=colors[i]; ctx.fillText(String(vals[i]),lx,ly+16); }
+    }};
+  }
+  function card(border,bg,inner){
+    let ih=0; inner.forEach(b=>ih+=b.h);
+    const h=ih+IPAD*2;
+    blocks.push({h:h+14,draw:(ctx,y)=>{
+      rr(ctx,PAD,y,CW,h,16); ctx.fillStyle=bg; ctx.fill();
+      ctx.lineWidth=1; ctx.strokeStyle=border; ctx.stroke();
+      let yy=y+IPAD; inner.forEach(b=>{ b.draw(ctx,yy); yy+=b.h; });
+    }});
+  }
+
+  spacer(PAD);
+  center(d.emoji,54,'400','#ffffff',8);
+  center(d.code,12,'700','#9b97bd',8);
+  center(d.title,26,'800',d.color,18);
+
+  blocks.push({h:84,draw:(ctx,y)=>{
+    const num=String(d.pct);
+    sf(ctx,46,'800'); const nw=ctx.measureText(num).width;
+    sf(ctx,18,'400'); const sw=ctx.measureText('/100').width;
+    const sx=W/2-(nw+sw)/2;
+    sf(ctx,46,'800'); ctx.fillStyle=d.color; ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(num,sx,y);
+    sf(ctx,18,'400'); ctx.fillStyle='#9b97bd'; ctx.fillText('/100',sx+nw,y+24);
+    sf(ctx,12,'400'); ctx.fillStyle='#9b97bd'; ctx.textAlign='center'; ctx.fillText(d.indexLabel,W/2,y+58);
+  }});
+
+  blocks.push({h:60,draw:(ctx,y)=>{
+    const bx=PAD, bw=CW;
+    rr(ctx,bx,y,bw,14,7);
+    const g=ctx.createLinearGradient(bx,0,bx+bw,0);
+    g.addColorStop(0,'#f5576c'); g.addColorStop(.5,'#f9d423'); g.addColorStop(1,'#2cb1bc');
+    ctx.fillStyle=g; ctx.fill();
+    const mx=bx+bw*d.pct/100;
+    ctx.fillStyle='#ffffff'; rr(ctx,mx-2,y-6,4,26,2); ctx.fill();
+    sf(ctx,11,'400'); ctx.fillStyle='#9b97bd'; ctx.textBaseline='top';
+    const L=d.levelLabels, n=L.length;
+    for(let i=0;i<n;i++){
+      const tx=bx+bw*i/(n-1);
+      ctx.textAlign=i===0?'left':i===n-1?'right':'center';
+      ctx.fillText(L[i],tx,y+22);
+    }
+  }});
+
+  const cb='rgba(255,255,255,0.12)', cbg='rgba(255,255,255,0.05)';
+  card(cb,cbg,[iHeading(d.pictureTitle),iParas(d.picture)]);
+  if(d.radar) card(cb,cbg,[iHeading('📡 五维思考力雷达'),iRadar()]);
+  card(cb,cbg,[iHeading(d.prescriptionTitle)].concat(d.tips.map(t=>iTip('✅',t))));
+
+  if(d.parent){
+    const p=d.parent;
+    center('— 家长报告 —',12,'700','#9b97bd',8);
+    card(p.color+'66',cbg,[iHeading(p.emoji+' 孩子目前属于「'+p.title+'」',p.color),iParas(p.summary)]);
+    card(cb,cbg,[iHeading('📊 五维度逐项解读')].concat(p.dims.map(x=>iTip(x.ok?'🟢':'🔧',x.text))));
+    card('rgba(127,90,240,0.35)','rgba(127,90,240,0.12)',[iHeading('🧭 家长行动建议'),iParas(p.advice)]);
+    if(p.notice) fullParas(p.notice,'#9b97bd',12);
+  }
+
+  spacer(10);
+  d.quote.split('\n').forEach(l=>center(l,14,'400','#9b97bd',4));
+  spacer(8);
+  center('AI 学习力自我评测 · 测评报告',11,'400','#6b6890',0);
+  spacer(PAD);
+
+  /* —— 尺寸上限保护，防手机端画布过高变空白 —— */
+  let H=0; blocks.forEach(b=>H+=b.h); H=Math.ceil(H);
+  let scale=2;
+  if(H*scale>4000) scale=4000/H;
+  if(scale<1) scale=1;
+  const cv=document.createElement('canvas');
+  cv.width=Math.round(W*scale); cv.height=Math.round(H*scale);
+  const ctx=cv.getContext('2d');
+  ctx.scale(scale,scale);
+  const bgg=ctx.createLinearGradient(0,0,0,H);
+  bgg.addColorStop(0,'#1b1733'); bgg.addColorStop(1,'#221d3a');
+  ctx.fillStyle=bgg; ctx.fillRect(0,0,W,H);
+  let y=0; blocks.forEach(b=>{ b.draw(ctx,y); y+=b.h; });
+  return cv;
+}
+
+/* ===================== 保存为图片 ===================== */
+function closeModal(){
+  document.getElementById("imgModal").style.display="none";
+}
+
+function saveReport(){
+  const modal=document.getElementById("imgModal");
+  const body=document.getElementById("modalBody");
+  const dl=document.getElementById("dlLink");
+  if(!reportData){ alert("请先完成测评再保存报告"); return; }
+
+  body.innerHTML='<div class="spinner"></div>';
+  dl.style.display="none";
+  modal.style.display="flex";
+
+  setTimeout(function(){
+    try{
+      const canvas=drawReportCanvas();
+      let dataURL;
+      try{ dataURL=canvas.toDataURL("image/png"); }
+      catch(err){ dataURL=canvas.toDataURL("image/jpeg",0.92); }
+      if(!dataURL || dataURL.length<200) throw new Error("画布导出为空");
+      const img=new Image();
+      img.alt="评测报告";
+      img.src=dataURL;
+      body.innerHTML=""; body.appendChild(img);
+      dl.href=dataURL; dl.style.display="block";
+    }catch(e){
+      body.innerHTML='<p style="color:#f5576c;font-size:14px;padding:18px 0;line-height:1.7">生成图片失败：'+(e&&e.message?e.message:e)+'<br>请改用手机系统自带的「截屏」功能保存本页。</p>';
+    }
+  },50);
+}
 </script>
 
 
