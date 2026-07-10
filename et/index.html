@@ -1,1 +1,353 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>词境 · 英语记忆训练</title>
+  <style>
+    :root{--ink:#17332b;--muted:#687a73;--paper:#f7f4ec;--card:#fffefa;--green:#1f765c;--green2:#dceade;--orange:#ee8c53;--red:#b74848;--line:#d9ded6;--shadow:0 18px 50px rgba(30,52,43,.12)}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 15% 10%,#fff 0,#f7f4ec 35%,#edf2ea 100%);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;min-height:100vh}
+    button,input{font:inherit} button{cursor:pointer}.app{max-width:1120px;margin:auto;padding:28px 22px 60px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:13px}.mark{width:45px;height:45px;border-radius:14px;background:var(--ink);color:#fff;display:grid;place-items:center;font:bold 24px Georgia}.brand h1{font-size:20px;margin:0;letter-spacing:.06em}.brand small{color:var(--muted)}.nav{display:flex;gap:8px}.nav button,.ghost{border:1px solid var(--line);background:rgba(255,255,255,.65);padding:10px 15px;border-radius:12px;color:var(--ink)}.nav button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .view{display:none}.view.active{display:block}.hero{background:var(--ink);border-radius:28px;padding:38px;color:white;display:grid;grid-template-columns:1.25fr .75fr;gap:30px;box-shadow:var(--shadow);overflow:hidden;position:relative}.hero:after{content:"A";position:absolute;right:-20px;bottom:-90px;font:260px Georgia;color:rgba(255,255,255,.04)}.eyebrow{color:#b9d9cc;font-size:13px;letter-spacing:.16em;font-weight:700}.hero h2{font:700 clamp(36px,6vw,68px)/1.03 Georgia,"Microsoft YaHei";margin:14px 0 18px;max-width:670px}.hero p{color:#d5e2dc;line-height:1.8;max-width:650px}.primary{border:0;background:var(--orange);color:#2f241d;border-radius:14px;padding:14px 22px;font-weight:800;box-shadow:0 8px 18px rgba(238,140,83,.25)}.primary:hover{filter:brightness(.97);transform:translateY(-1px)}.hero-side{display:flex;align-items:end}.memory-note{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);padding:22px;border-radius:20px;backdrop-filter:blur(5px)}.memory-note b{display:block;font:24px Georgia;margin-bottom:9px}.memory-note span{color:#d5e2dc;line-height:1.7;font-size:14px}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}.stat.reward{background:linear-gradient(145deg,#fff6dc,#fffefa);border-color:#ead18b}.stat b{display:block;font:32px Georgia;margin-bottom:5px}.stat span{color:var(--muted);font-size:13px}.score-chip{background:#fff3c8;border:1px solid #ead18b;color:#805d00!important;font-weight:800}.section-title{display:flex;justify-content:space-between;align-items:end;margin:34px 0 15px}.section-title h3{font-size:20px;margin:0}.section-title p{margin:0;color:var(--muted);font-size:13px}.how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.how article{padding:20px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.55)}.how i{font-style:normal;color:var(--orange);font:bold 26px Georgia}.how b{display:block;margin:12px 0 6px}.how p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .train-shell{max-width:790px;margin:20px auto}.progress-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;color:var(--muted);font-size:13px}.live-reward{display:flex;gap:7px;align-items:center}.progress{height:8px;background:#dfe5de;border-radius:99px;overflow:hidden;margin-bottom:17px}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--green),#61a87f);transition:width .35s}.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:34px;box-shadow:var(--shadow)}.mode{display:inline-flex;gap:7px;align-items:center;background:var(--green2);color:var(--green);padding:7px 11px;border-radius:99px;font-size:12px;font-weight:800;letter-spacing:.05em}.prompt{min-height:210px;display:grid;place-items:center;text-align:center;padding:25px 8px}.prompt-word{font:bold clamp(36px,7vw,66px)/1.15 Georgia;color:var(--ink)}.prompt-phrase{font:bold clamp(27px,5vw,44px)/1.28 Georgia;max-width:680px}.prompt-image{font-size:112px;filter:drop-shadow(0 12px 14px rgba(20,40,30,.12));animation:float 3s ease-in-out infinite}.sentence{font:600 clamp(17px,2.6vw,23px)/1.5 Georgia;max-width:680px;text-align:left}.sentence span{display:block;margin:11px 0;padding:10px 14px;background:#f3f5ef;border-radius:12px}.blank{display:inline-block;min-width:88px;border-bottom:3px solid var(--orange);color:transparent}.hint{color:var(--muted);font-size:13px;margin:0 0 9px}.answer-row{display:flex;gap:10px}.answer-row input{flex:1;border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff;outline:none}.answer-row input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(31,118,92,.1)}.answer-row .primary{min-width:110px}.feedback{display:none;margin-top:16px;border-radius:16px;padding:16px 18px}.feedback.show{display:block}.feedback.ok{background:#e2f2e6;color:#245e3d}.feedback.bad{background:#f8e5e1;color:#8c3535}.feedback-head{display:flex;justify-content:space-between;gap:15px}.feedback b{font-size:18px}.points-pop{font-weight:900;color:#b17400}.reference{margin-top:8px;line-height:1.65}.feedback-actions{display:flex;gap:8px;margin-top:12px}.feedback-actions button{border:1px solid currentColor;background:transparent;border-radius:9px;padding:7px 10px;color:inherit}.next{margin-left:auto}.keyboard{color:var(--muted);font-size:12px;text-align:center;margin-top:13px}
+    .summary{text-align:center;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:45px 30px;box-shadow:var(--shadow)}.summary .score{font:bold 72px Georgia;color:var(--green);margin:12px}.summary h2{margin:0}.summary p{color:var(--muted)}.summary-actions{display:flex;justify-content:center;gap:10px;margin-top:24px}.book-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:20px 0}.book-head h2{margin:0;font:38px Georgia}.book-head p{color:var(--muted)}.word-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.word-item{display:grid;grid-template-columns:1fr auto;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px}.word-item h4{margin:0 0 5px;font:24px Georgia}.word-item p{margin:0;color:var(--muted);font-size:13px}.badge{height:max-content;background:#fae6df;color:#9b482f;padding:6px 9px;border-radius:99px;font-size:12px}.empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:20px}.danger{color:var(--red)!important}.pill{display:inline-block;padding:6px 10px;border-radius:99px;background:#edf0ec;color:var(--muted);font-size:12px}@keyframes float{50%{transform:translateY(-8px)}}
+    @media(max-width:760px){.app{padding:18px 14px 40px}.topbar{align-items:flex-start}.brand small{display:none}.nav button{padding:9px 10px}.hero{grid-template-columns:1fr;padding:28px 23px}.hero-side{display:none}.stats{grid-template-columns:repeat(2,1fr)}.stat.reward{grid-column:1/-1}.how{grid-template-columns:1fr}.quiz-card{padding:22px 18px}.answer-row{flex-direction:column}.word-list{grid-template-columns:1fr}.book-head{align-items:flex-start;flex-direction:column}.prompt{min-height:190px}.prompt-image{font-size:90px}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand"><div class="mark">V</div><div><h1>词境 VOCAB</h1><small>把记忆放进语境里</small></div></div>
+    <nav class="nav"><span id="scoreChip" class="pill score-chip">⭐ 0 分 · Lv.1</span><button data-view="home" class="active">首页</button><button data-view="book">错题本</button></nav>
+  </header>
+  <section id="home" class="view active">
+    <div class="hero"><div><div class="eyebrow">30 WORDS · ONE FOCUSED SESSION</div><h2>看到中文，写出真正记住的英文。</h2><p>每轮随机训练 30 个词，重点练习中文填英文、图片填英文、词组反向翻译与三句完形。每个单词都有 9 个不重复句型，训练时随机抽取 3 句。</p><button id="startBtn" class="primary">开始今天的 30 词 →</button></div><div class="hero-side"><div class="memory-note"><b>积分与记忆系统</b><span>答对获得积分，连续答对还有连击奖励。错词会更快重现；掌握后复习间隔逐步延长到 3、7、15、30 天。</span></div></div></div>
+    <div class="stats"><div class="stat"><b id="totalCount">0</b><span>截图词库</span></div><div class="stat"><b id="learnedCount">0</b><span>已学习</span></div><div class="stat"><b id="dueCount">0</b><span>今日待复习</span></div><div class="stat"><b id="wrongCount">0</b><span>错题本</span></div><div class="stat reward"><b id="pointsCount">0</b><span id="levelText">总积分 · Lv.1</span></div></div>
+    <div class="section-title"><h3>一轮如何进行</h3><p>记录只保存在这台设备的浏览器中</p></div>
+    <div class="how"><article><i>01</i><b>主动拼写</b><p>大部分题目要求输入英文，真正练习从含义到拼写的回忆。</p></article><article><i>02</i><b>九句轮换</b><p>每词预置 9 个句型，每次随机选 3 句挖空核心词，不重复组合。</p></article><article><i>03</i><b>积分加练</b><p>答对得分、连对加成；30 题结束后再练一轮本次错题。</p></article></div>
+  </section>
+  <section id="train" class="view"><div class="train-shell"><div id="quizArea"><div class="progress-row"><span id="phaseText">主训练</span><span class="live-reward"><span id="comboLive">🔥 0 连击</span><span id="counter">1 / 30</span></span></div><div class="progress"><span id="bar" style="width:0"></span></div><div class="quiz-card"><div id="mode" class="mode">中文填英文</div><div id="prompt" class="prompt"></div><p id="hint" class="hint">请填写对应的英文单词</p><div class="answer-row"><input id="answer" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Type English here…"><button id="submitBtn" class="primary">提交</button></div><div id="feedback" class="feedback"></div></div><div class="keyboard">Enter 提交 / 继续　·　合理同义表达可手动改判</div></div><div id="summary" class="summary" style="display:none"></div></div></section>
+  <section id="book" class="view"><div class="book-head"><div><span class="pill">自动累积</span><h2>错题本</h2><p>答对会提高掌握度，但错题记录会保留，方便持续复习。</p></div><div><button id="practiceWrong" class="primary">专项练习</button> <button id="clearData" class="ghost danger">清空记录</button></div></div><div id="wordList" class="word-list"></div></section>
+</main>
+<script>
+// 词库来自当前文件夹中的 20 张词汇截图。字段：英文|中文关键词|图片线索|常用词组|词组中文。
+const RAW=`
+body|身体,躯干|🧍|parts of the body|身体部位
+back|背部,背|🔙|back to back|背靠背
+arm|手臂|💪|arm in arm|臂挽着臂
+ear|耳,耳朵|👂|be all ears|全神贯注地听
+eye|眼睛|👁️|open your eyes|睁开眼睛
+foot|脚|🦶|on foot|步行
+hand|手|✋|hand in hand|手拉手
+head|头,头脑|🗣️|nod your head|点头
+face|脸,面部|🙂|face to face|面对面
+leg|腿|🦵|chicken legs|鸡腿
+nose|鼻子|👃|a long nose|长鼻子
+mouth|嘴,嘴巴|👄|keep your mouth shut|守口如瓶,保持缄默
+knee|膝盖,膝关节|🦿|on one's knees|跪着
+neck|脖子,颈|🦒|neck and neck|并驾齐驱
+brain|脑,大脑|🧠|the human brain|人脑
+throat|喉咙,咽喉|🗣️|a sore throat|咽喉痛
+finger|手指|☝️|cross your fingers|祈求好运
+heart|心,心脏|❤️|heart disease|心脏病
+stomach|胃,腹部|🫃|have butterflies in your stomach|心慌紧张
+shoulder|肩,肩膀|🤷|shoulder to shoulder|肩并肩
+tooth|牙齿|🦷|brush your teeth|刷牙
+see|看见,看到,观看|👀|let me see|让我看看
+smell|闻,嗅,有气味|👃|smell trouble|感到有麻烦
+hear|听见,听到|👂|hear from somebody|收到某人的消息
+hair|头发,毛发|💇|brush your hair|梳头
+cute|可爱的,机灵的|🐶|a cute idea|好主意
+heavy|重的,沉的,厚的|🏋️|heavy work|沉重的工作
+lovely|可爱的,美丽的|🌸|lovely flowers|美丽的花朵
+long|长的,长时间的|📏|a long journey|长途旅行
+short|短的,矮的|🩳|a short walk|短距离步行
+strong|强壮的,强的,结实的|💪|a strong wind|大风
+tall|高的,高大的|🦒|a tall building|高层建筑
+thin|瘦的,薄的,细的|📄|a thin book|薄薄的书
+big|大的|🐘|a big city|大城市
+small|小的,小号的|🐭|a small town|小镇
+nice|令人愉快的,宜人的|🌤️|nice weather|好天气
+good|好的,擅长的|👍|be good at|擅长
+look|看,寻找,看起来|🔎|look for|寻找
+like|喜欢,喜爱|😍|would like|想要
+beautiful|美丽的,美好的|🌺|a beautiful face|漂亮的面孔
+build|建造,身材,体形|🧱|build a house|建造房子
+ugly|丑陋的,难看的|👹|an ugly face|丑陋的面孔
+handsome|英俊的,漂亮的|🤵|a handsome man|英俊的男人
+pretty|漂亮的,美观的|💃|a pretty girl|漂亮的女孩
+straight|直的,笔直的|📏|a straight line|直线
+thick|厚的,浓的,茂密的|📚|a thick book|一本厚书
+fat|肥的,肥胖的|🐷|a fat baby|胖乎乎的婴儿
+slim|苗条的,纤细的|🕴️|a slim figure|苗条的体形
+be|是,有,存在|🟰|there is|有,存在
+have|有,经历|🤲|have to|必须,不得不
+age|年龄|🎂|at the age of|在某岁的时候
+name|名字,名称|🏷️|first name|名
+come|来,来到|➡️|come in|进入
+from|来自,始于|📍|come from|来自,源于
+pet|宠物|🐕|a pet shop|宠物店
+boy|男孩|👦|a teenage boy|十几岁的男孩
+girl|女孩|👧|a baby girl|女婴
+born|出生,出世|👶|be born in|生于
+birth|出生,诞生,分娩|🤱|give birth|生孩子
+birthday|生日|🎉|a birthday present|生日礼物
+favourite|特别喜爱的,最喜欢的|⭐|my favourite song|我最喜欢的歌曲
+address|地址,通信处|📬|a home address|家庭住址
+hobby|业余爱好|🎨|as a hobby|作为一种爱好
+personal|个人的,私人的|🔒|personal opinion|个人意见
+information|信息,消息|ℹ️|collect information|收集信息
+basic|基本的,基础的|🔤|basic information|基本信息
+introduce|介绍,引见|🤝|introduce yourself|自我介绍
+habit|习惯|🔁|good habits|好习惯
+background|背景|🖼️|background knowledge|背景知识
+weigh|称重量,有重量|⚖️|weigh in|量体重
+weight|重量,分量|⚖️|lose weight|体重减轻,变瘦
+height|高度,身高|📐|of medium height|中等身高
+fact|事实,真相|✅|in fact|事实上,实际上
+education|教育,培养|🎓|primary education|初等教育
+clever|聪明的|💡|a clever child|聪明伶俐的孩子
+quiet|安静的,轻声的|🤫|in a quiet voice|轻声地
+kind|友好的,宽容的,种类|☂️|a kind action|友好的行为
+careful|小心的,仔细的,谨慎的|⚠️|a careful reply|谨慎的回答
+careless|粗心的,不小心的|🫣|careless driving|粗心的驾驶
+serious|严肃的,认真的,严重的|🧐|a serious student|严肃的学生
+funny|滑稽的,好笑的|🤣|a funny story|滑稽故事
+friendly|友好的|🤝|a friendly person|友好的人
+shy|害羞的,腼腆的|☺️|a shy smile|腼腆的微笑
+silent|沉默的,无声的|🤐|keep silent|保持沉默
+active|积极的,活跃的|🏃|active support|积极支持
+humour|幽默,幽默感|🤡|sense of humour|幽默感
+smart|聪明的,巧妙的|🧠|a smart question|巧妙的问题
+lively|精力充沛的,生气勃勃的|🕺|a lively mind|活跃敏锐的头脑
+lazy|懒散的,懒惰的|🛋️|a lazy yawn|懒洋洋的呵欠
+silly|愚蠢的,傻的|🤪|a silly mistake|愚蠢的错误
+crazy|疯狂的,着迷的|🤯|crazy about|对某人或某物着迷
+proud|骄傲的,自豪的|🏅|be proud of|为某事感到骄傲
+pride|自豪,骄傲|🦚|take pride in|为某事自豪
+positive|积极乐观的,自信的|☀️|a positive attitude|乐观的态度
+negative|消极的,负面的|🌧️|a negative attitude|消极态度
+strict|严格的,严厉的|📋|strict rules|严格的规则
+energy|精力,活力,能量|⚡|full of energy|充满活力
+energetic|精力充沛的,充满活力的|🔋|an energetic young woman|精力充沛的年轻女子
+bright|聪明的,明亮的|💡|bright sunshine|明媚的阳光
+character|性格,人物,特点|🎭|a strong character|个性强
+can|能,会|✅|as soon as you can|尽快
+could|能,可以|📱|could do with|需要,想要
+help|帮助|🆘|ask for help|请求帮助
+helpful|有帮助的,有用的|🛟|helpful information|有用的信息
+hard|努力地,困难的|🪨|hard to believe|很难相信
+brave|勇敢的,无畏的|🦸|brave men and women|英勇无畏的男女
+honest|诚实的,老实的,真诚的|🤞|to be honest|说实话
+create|创造,创作,创建|🛠️|create new jobs|创造新的就业机会
+creative|有创造力的,创造性的|🎨|creative thinking|创造性思维
+polite|有礼貌的|🙇|polite children|懂礼貌的孩子
+wise|明智的,聪明的|🦉|a wise choice|明智的选择
+courage|勇气,勇敢|🦁|take courage|鼓起勇气
+responsible|负责的,有责任心的|🫡|be responsible for|对某事负责
+patient|有耐心的,病人|⏳|be patient with|对某人有耐心
+talent|天赋,天才|🎤|talent show|才艺展示
+curious|好奇的|🧐|curious about|对某事感到好奇
+able|能,能够|💪|be able to|能够做某事
+ability|能力,才能|🧩|to the best of your ability|竭尽全力
+skill|技能,技巧|🧰|communication skills|沟通技巧
+power|能力,权力,力量|🔌|the power of speech|话语能力
+characteristic|品质,特征|🧬|physical characteristics|身体特征
+prove|证明,证实|🧾|prove yourself|展示自己,证明自己
+success|成功,胜利|🏆|a big success|大获成功
+succeed|成功,实现目标|🏁|succeed in doing|做成某事
+calm|平静的,镇定的|🧘|keep calm|保持镇静
+spirit|精神,心灵|🔥|in high spirits|情绪高涨
+manage|完成,应付,管理|🗂️|manage to do|设法做成
+confidence|自信,信心|✨|build confidence|树立信心
+home|家,住所|🏠|stay at home|待在家里
+door|门|🚪|open the door|开门
+window|窗,窗户|🪟|look out of a window|向窗外看
+floor|地板,地面,楼层|🧹|the first floor|一楼
+garden|花园,菜园|🌻|a vegetable garden|菜园
+house|房屋,房子|🏡|build a house|造房
+wall|墙,墙壁|🧱|city walls|城墙
+kitchen|厨房|🍳|a fitted kitchen|整体厨房
+toilet|厕所|🚻|public toilets|公共厕所
+study|书房,学习,研究|📖|make a study|进行一项研究
+room|房间,室,空间|🛏️|enter the room|进入房间
+bedroom|卧室|🛌|a guest bedroom|客卧
+bath|洗澡,浴缸|🛁|have a bath|洗澡
+bathroom|浴室,洗手间|🚿|go to the bathroom|上洗手间
+lift|电梯,举起,抬高|🛗|take the lift|乘电梯
+yard|院子,庭院|🏘️|a front yard|前院
+apartment|公寓套房|🏢|an apartment building|公寓大楼
+flat|公寓,单元房,平坦的|🏬|a two-bedroom flat|两居室公寓
+gate|大门|⛩️|the school gate|校门
+pool|游泳池,水塘|🏊|an indoor pool|室内游泳池
+step|台阶,迈步,步骤|🪜|step by step|一步一步地
+enter|进入,进来|🚶|enter into|进入
+dining|吃饭,进餐|🍽️|the dining area|用餐区
+hall|大厅,礼堂|🏛️|dining hall|食堂,餐厅
+umbrella|伞,雨伞|☂️|hold an umbrella|拿伞
+cup|杯子,一杯的量|☕|a cup of tea|一杯茶
+candle|蜡烛|🕯️|blow out the candles|吹熄蜡烛
+alarm|闹钟,警报器|⏰|an alarm clock|闹钟
+clock|时钟,钟|🕰️|the clock face|钟面
+photo|照片,相片|📷|take a photo|拍照
+toy|玩具|🧸|a toy train|玩具火车
+doll|玩偶,玩具娃娃|🪆|a rag doll|布娃娃
+box|盒,箱,匣|📦|a box of|一盒
+glass|玻璃,玻璃杯,一杯的量|🥛|a glass of water|一杯水
+map|地图|🗺️|read a map|查看地图
+picture|照片,图画|🖼️|take a picture|照相,摄影
+lamp|灯|💡|a street lamp|路灯
+mirror|镜子|🪞|look in the mirror|照镜子
+video|录像,录像带|🎬|a home video|家庭录像
+lock|锁上,锁|🔒|lock up a door|锁门
+camera|照相机,摄像机|📸|a TV camera|电视摄像机
+tool|工具,器械|🛠️|a set of tools|一套工具
+rope|粗绳,绳索|🪢|jump rope|跳绳
+brush|刷,刷子,画笔|🪥|toothbrush|牙刷
+bottle|瓶子|🍾|a milk bottle|牛奶瓶
+basket|篮,篓|🧺|a shopping basket|购物篮
+key|钥匙,关键|🔑|the key to the door|开门的钥匙
+scissors|剪刀|✂️|a pair of scissors|一把剪刀
+tape|磁带,录音带,录像带|📼|audio tape|录音带
+thing|物品,东西|🧱|living things|有生命的东西
+chore|杂务,杂活|🧽|do household chores|干家务杂活
+sweep|扫,打扫|🧹|sweep the floor|扫地
+clean|打扫,干净的|🧼|clean up|打扫干净
+wash|洗,洗涤|🫧|wash your hands|洗手
+tidy|整洁的,使整洁|🧺|tidy up|收拾妥,整理好
+make|制作,做|🧵|make a cake|做蛋糕
+bed|床|🛏️|make the bed|铺床
+table|桌子|🪑|set the table|摆餐具
+desk|书桌|🗄️|a school desk|课桌
+chair|椅子|🪑|a comfortable chair|舒适的椅子
+TV|电视|📺|turn on the television|打开电视机
+fan|风扇,狂热崇拜者,迷|🪭|football fans|足球迷
+housework|家务劳动,家务事|🧹|do the housework|做家务
+fix|修理,安装|🔧|fix a watch|修表
+repair|修理,修补|🧰|repair a house|修房屋
+pack|打包,装箱,收拾|🧳|pack up|收拾行装
+packet|小袋,小包,小盒|🍪|a packet of biscuits|一包饼干
+bin|垃圾箱,箱子|🗑️|a rubbish bin|垃圾箱
+hang|悬挂,吊|🪝|hang up|挂断电话
+mess|杂乱,不整洁|🌀|make a mess|弄乱,搞砸
+sofa|长沙发|🛋️|on the sofa|在沙发上
+shelf|架子,隔板|📚|a bookshelf|书架
+electric|用电的,电动的|🔌|an electric car|电动汽车
+electronic|电子的,电子设备的|💻|electronic games|电子游戏
+fridge|冰箱|🧊|in the fridge|在冰箱里
+modern|现代的,当代的|🏙️|modern society|现代社会
+class|班级,课|👩‍🏫|go to class|上课
+classroom|教室,课堂|🏫|classroom activities|课堂活动
+playground|操场|🏃|on the playground|在操场上
+middle|中间的,中部,中间|↔️|in the middle|在中间
+school|学校|🏫|go to school|上学
+library|图书馆|📚|a public library|公共图书馆
+blackboard|黑板|⬛|write on the blackboard|在黑板上写字
+ring|响铃,打电话,戒指|💍|ring the doorbell|按门铃
+bell|铃,钟|🔔|a bicycle bell|自行车铃铛
+lab|实验室|🧪|a science lab|自然科学实验室
+office|办公室|🏢|office workers|办公室人员
+building|建筑物,房子|🏙️|a tall building|高大的建筑物
+primary|初等的,小学的|🎒|primary school|小学
+junior|级别低的,青少年的|🧑|a junior officer|初级官员
+college|学院,大学|🎓|go to college|上大学
+university|大学,高等学府|🎓|at university|在大学学习
+grade|成绩等级,评分等级,年级|💯|passing grades|及格分数
+chalk|粉笔|🖍️|a piece of chalk|一支粉笔
+gym|健身房,体育馆|🏋️|in the gym|在体育馆
+field|田地,场地|🌾|a soccer field|足球场
+board|板,木板|🪵|a drawing board|画板
+flag|旗,旗帜|🚩|wave the flag|挥舞旗帜
+seat|座位|💺|a window seat|靠窗座位
+club|俱乐部,社团|♟️|join a club|加入俱乐部
+lesson|课,一节课,教训|📘|piano lessons|钢琴课
+English|英语学科,英语,英文|🔠|world Englishes|世界各地的英语
+Chinese|语文,中国人,汉语,中文|🀄|Chinese history|中国历史
+maths|数学|➗|maths lessons|数学课
+art|美术,艺术|🎨|modern art|现代艺术
+music|音乐,乐曲|🎵|classical music|古典音乐
+PE|体育课|⚽|a PE class|一堂体育课
+subject|学科,科目|📚|school subjects|学校科目
+bag|手提包,旅行袋|👜|shopping bags|购物袋
+card|贺卡,卡片|💌|a birthday card|生日贺卡
+pen|笔,钢笔|🖊️|pen and ink|钢笔和墨水
+pencil|铅笔|✏️|pencil box|铅笔盒,文具盒
+schoolbag|书包|🎒|a schoolbag|一个书包
+ruler|尺子,直尺|📏|a ruler|一把尺子
+paper|纸,纸张|📄|a piece of paper|一片纸
+book|书,预订|📖|a book about wildlife|有关野生生物的书
+history|历史,发展史|📜|the history of China|中国历史
+biology|生物学|🧫|human biology|人类生物学
+geography|地理,地理学|🌍|geography lessons|地理课
+physics|物理学|⚛️|a physics lab|物理实验室
+chemistry|化学|⚗️|a degree in chemistry|化学学位
+course|课程,学科|📋|a French course|法文课程
+eraser|橡皮|🧽|an eraser|一块橡皮
+notebook|笔记本,练习本|📓|exercise book|练习本
+glue|胶,胶水|🧴|a tube of glue|一管胶水
+dictionary|词典,字典|📕|a science dictionary|一部科学词典`;
 
+function makeSentenceBank(w){
+  const meaning=w.answers[0], blankPhrase=w.phrase.replace(new RegExp(w.en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),'_____');
+  return [
+    `The word “_____” means “${meaning}”.`,
+    `Complete this useful expression: “${blankPhrase}”.`,
+    `Our teacher used “_____” while explaining “${blankPhrase}”.`,
+    `I wrote “_____” beside the Chinese meaning “${meaning}”.`,
+    `The key word in the phrase “${blankPhrase}” is _____.`,
+    `My flashcard connects “_____” with “${meaning}”.`,
+    `To talk about “${meaning}” in English, I can use “_____”.`,
+    `I will remember “_____” through the example “${blankPhrase}”.`,
+    `Today I practised spelling “_____” and using “${blankPhrase}”.`
+  ];
+}
+const WORDS=RAW.trim().split('\n').map((line,id)=>{const [en,zh,emoji,phrase,phraseZh]=line.split('|');const w={id,en,answers:zh.split(','),emoji,phrase,phraseZh:phraseZh.split(',')};w.sentences=makeSentenceBank(w);return w});
+// 只让含义明确、图标能一眼对应的具体词进入图片题，抽象词和易混图示不再使用。
+const IMAGE_WORDS=new Set(`body arm ear eye foot hand head face leg nose mouth knee neck brain finger heart stomach shoulder tooth hair boy girl pet birthday home door window garden house wall kitchen toilet room bedroom bath bathroom lift yard apartment gate pool umbrella cup candle alarm clock photo toy doll box glass map picture lamp mirror camera rope brush bottle basket key scissors tape sweep wash bed table desk chair TV fan fridge school classroom playground library blackboard ring bell lab office building college university gym field flag seat bag card pen pencil schoolbag ruler paper book eraser notebook glue dictionary`.split(' '));
+const EN_ALIASES={favourite:['favorite'],maths:['math'],TV:['television'],PE:['physical education'],fridge:['refrigerator'],photo:['photograph'],lab:['laboratory'],gym:['gymnasium'],bike:['bicycle']};
+const ZH_GROUPS=[
+  ['厕所','洗手间','卫生间','盥洗室'],['房屋','房子','住宅'],['公寓','单元房'],['美丽','漂亮','好看','美观'],
+  ['聪明','聪慧','机灵','聪颖'],['愉快','快乐','开心','宜人'],['安静','寂静','轻声'],['帮助','协助','援助'],
+  ['勇敢','英勇','无畏'],['诚实','老实','真诚'],['生气','愤怒'],['错误','失误'],['书','书本'],['照片','相片'],
+  ['修理','修补','维修'],['垃圾箱','垃圾桶','废物箱'],['商店','店铺'],['小孩','孩子','儿童'],['工作','劳动'],
+  ['开始','起初'],['进入','进去','进来'],['寻找','查找'],['喜欢','喜爱'],['必须','不得不'],['有用','有帮助']
+];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const KEY='vocab-memory-v2';
+let memory=JSON.parse(localStorage.getItem(KEY)||'{"words":{},"wrong":{},"sessions":0,"points":0,"combo":0,"bestCombo":0,"sentenceCombos":{}}');
+memory.points=memory.points||0;memory.combo=memory.combo||0;memory.bestCombo=memory.bestCombo||0;memory.sentenceCombos=memory.sentenceCombos||{};
+let queue=[],mainQuestions=[],reviewQuestions=[],index=0,phase='main',answered=false,sessionWrong=[],rightCount=0,mainRight=0,sessionPoints=0;
+// 7/8 的题目需要学生主动输入英文；保留少量英译中训练理解。
+const modes=['zhWord','zhWord','zhPhrase','zhPhrase','image','sentence','sentence','enToZh'];
+
+function save(){localStorage.setItem(KEY,JSON.stringify(memory));updateStats()}
+function state(id){return memory.words[id]||(memory.words[id]={seen:0,correct:0,wrong:0,streak:0,interval:0,due:0,last:0})}
+function shuffle(a){for(let i=a.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function today(){return new Date().setHours(0,0,0,0)}
+function updateStats(){const vals=Object.values(memory.words),now=today(),level=Math.floor(memory.points/300)+1;$('#totalCount').textContent=WORDS.length;$('#learnedCount').textContent=vals.filter(x=>x.seen).length;$('#dueCount').textContent=vals.filter(x=>x.seen&&x.due<=now).length;$('#wrongCount').textContent=Object.keys(memory.wrong).length;$('#pointsCount').textContent=memory.points;$('#levelText').textContent=`总积分 · Lv.${level}`;$('#scoreChip').textContent=`⭐ ${memory.points} 分 · Lv.${level}`;renderBook()}
+function selectThirty(){const now=today();const ranked=WORDS.map(w=>({w,s:state(w.id)})).sort((a,b)=>{const ad=a.s.seen&&a.s.due<=now?0:a.s.seen?1:2,bd=b.s.seen&&b.s.due<=now?0:b.s.seen?1:2;return ad-bd||a.s.streak-b.s.streak||Math.random()-.5});return ranked.slice(0,30).map(x=>x.w)}
+function nextSentenceSet(w){const recent=memory.sentenceCombos[w.id]||[];let picks,sig,tries=0;do{picks=shuffle([0,1,2,3,4,5,6,7,8]).slice(0,3).sort((a,b)=>a-b);sig=picks.join('-');tries++}while(recent.includes(sig)&&tries<50);memory.sentenceCombos[w.id]=[sig,...recent.filter(x=>x!==sig)].slice(0,12);return picks.map(i=>w.sentences[i])}
+function makeQ(w,forced){let mode=forced||modes[Math.floor(Math.random()*modes.length)];if(mode==='image'&&!IMAGE_WORDS.has(w.en))mode='zhWord';return{w,mode,sentences:mode==='sentence'?nextSentenceSet(w):null,earned:0}}
+function startSession(custom){mainQuestions=(custom||selectThirty()).map(w=>makeQ(w));queue=mainQuestions;reviewQuestions=[];index=0;phase='main';answered=false;sessionWrong=[];rightCount=0;mainRight=0;sessionPoints=0;memory.combo=0;save();showView('train');$('#quizArea').style.display='block';$('#summary').style.display='none';renderQuestion()}
+function showView(id){$$('.view').forEach(v=>v.classList.toggle('active',v.id===id));$$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='book')renderBook();window.scrollTo({top:0,behavior:'smooth'})}
+function expected(q){if(q.mode==='enToZh')return q.w.answers;if(q.mode==='zhPhrase')return[q.w.phrase];return[q.w.en,...(EN_ALIASES[q.w.en]||[])]}
+function renderQuestion(){answered=false;const q=queue[index],total=queue.length;$('#phaseText').textContent=phase==='main'?'主训练 · 30 词':'错题巩固 · 再练一次';$('#counter').textContent=`${index+1} / ${total}`;$('#comboLive').textContent=`🔥 ${memory.combo} 连击`;$('#bar').style.width=`${index/total*100}%`;const labels={zhWord:'中文填英文',zhPhrase:'中文词组填英文',image:'看图填英文',sentence:'三句完形填英文',enToZh:'英文理解'};$('#mode').textContent=labels[q.mode];let html='';if(q.mode==='zhWord')html=`<div class="prompt-word">${q.w.answers.join(' / ')}</div>`;if(q.mode==='zhPhrase')html=`<div class="prompt-phrase">${q.w.phraseZh.join(' / ')}</div>`;if(q.mode==='image')html=`<div class="prompt-image" role="img" aria-label="校准后的图片线索">${q.w.emoji}</div>`;if(q.mode==='sentence')html=`<div class="sentence">${q.sentences.map((s,i)=>`<span>${i+1}. ${s.replaceAll('_____','<b class="blank">word</b>')}</span>`).join('')}</div>`;if(q.mode==='enToZh')html=`<div class="prompt-word">${q.w.en}</div>`;$('#prompt').innerHTML=html;const english=q.mode!=='enToZh';$('#hint').textContent=english?(q.mode==='zhPhrase'?'请填写完整英文词组':'请填写核心英文单词'):'请填写中文意思，系统会按关键词和相似度灵活判断';$('#answer').placeholder=english?'Type English here…':'在这里输入中文…';$('#answer').value='';$('#answer').disabled=false;$('#submitBtn').disabled=false;$('#feedback').className='feedback';$('#feedback').innerHTML='';setTimeout(()=>$('#answer').focus(),60)}
+function norm(s){return s.toLowerCase().replace(/[\s，。！？、；：,.!?;:'"“”‘’的了一个一种某事某人]/g,'')}
+function normEn(s){return s.toLowerCase().replace(/[^a-z]/g,'')}
+function chunks(list){return list.flatMap(x=>x.split(/[，,；;、\/]/)).map(norm).filter(x=>x.length>0)}
+function editDistance(a,b){const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=0;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+function bigramScore(a,b){if(a===b)return 1;if(a.length<2||b.length<2)return 0;const x=[];for(let i=0;i<a.length-1;i++)x.push(a.slice(i,i+2));let hit=0;const y=[];for(let i=0;i<b.length-1;i++)y.push(b.slice(i,i+2));x.forEach(g=>{const j=y.indexOf(g);if(j>=0){hit++;y.splice(j,1)}});return 2*hit/(x.length+(b.length-1))}
+function semanticMatch(a,b){return ZH_GROUPS.some(g=>g.some(x=>a.includes(norm(x)))&&g.some(x=>b.includes(norm(x))))}
+function judge(input,q){if(q.mode!=='enToZh'){const n=normEn(input);return expected(q).some(x=>{const e=normEn(x);return n===e||(e.length>=5&&editDistance(n,e)<=1)})}const n=norm(input);if(!n)return false;const keys=chunks(expected(q));return keys.some(k=>n.includes(k)||k.includes(n)&&n.length>=2||bigramScore(n,k)>=.62||semanticMatch(n,k))}
+function record(q,ok,input){const s=state(q.w.id),now=today();s.seen++;s.last=Date.now();let earned=0;if(ok){s.correct++;s.streak++;memory.combo++;memory.bestCombo=Math.max(memory.bestCombo,memory.combo);earned=(phase==='review'?5:10)+Math.min(10,(memory.combo-1)*2);memory.points+=earned;sessionPoints+=earned;q.earned=earned;const steps=[1,3,7,15,30,60];s.interval=steps[Math.min(s.streak-1,steps.length-1)];s.due=now+s.interval*86400000}else{s.wrong++;s.streak=0;memory.combo=0;s.interval=0;s.due=now;memory.wrong[q.w.id]={count:(memory.wrong[q.w.id]?.count||0)+1,last:Date.now(),answer:input};sessionWrong.push(q.w.id)}save();return earned}
+function submit(){if(answered){next();return}const q=queue[index],input=$('#answer').value.trim();if(!input){$('#answer').focus();return}const ok=judge(input,q);answered=true;const earned=record(q,ok,input);if(ok){rightCount++;if(phase==='main')mainRight++}const exp=expected(q).join('；');const f=$('#feedback');f.className=`feedback show ${ok?'ok':'bad'}`;f.innerHTML=`<div class="feedback-head"><b>${ok?'✓ 回答正确':'✕ 这次没答对'}</b><span>${ok?`<em class="points-pop">+${earned} 分</em>`:q.w.en}</span></div><div class="reference">参考：${exp}<br><small>${q.w.en} · ${q.w.phrase} — ${q.w.phraseZh.join('；')}</small></div><div class="feedback-actions"><button id="override">${ok?'改判为错误':'我的答案也正确'}</button><button class="next" id="nextBtn">继续 →</button></div>`;$('#comboLive').textContent=`🔥 ${memory.combo} 连击`;$('#answer').disabled=true;$('#submitBtn').disabled=true;$('#override').onclick=()=>override(ok);$('#nextBtn').onclick=next}
+function override(wasOk){const q=queue[index],s=state(q.w.id);if(wasOk){s.correct--;s.wrong++;s.streak=0;s.due=today();rightCount--;if(phase==='main')mainRight--;memory.points=Math.max(0,memory.points-q.earned);sessionPoints=Math.max(0,sessionPoints-q.earned);q.earned=0;memory.combo=0;memory.wrong[q.w.id]={count:(memory.wrong[q.w.id]?.count||0)+1,last:Date.now(),answer:$('#answer').value};sessionWrong.push(q.w.id)}else{s.wrong=Math.max(0,s.wrong-1);s.correct++;s.streak=1;s.interval=1;s.due=today()+86400000;memory.combo++;q.earned=(phase==='review'?5:10)+Math.min(10,(memory.combo-1)*2);memory.points+=q.earned;sessionPoints+=q.earned;rightCount++;if(phase==='main')mainRight++;sessionWrong=sessionWrong.filter((id,i,a)=>!(id===q.w.id&&i===a.lastIndexOf(id)));}save();$('#comboLive').textContent=`🔥 ${memory.combo} 连击`;const f=$('#feedback');f.className=`feedback show ${wasOk?'bad':'ok'}`;f.querySelector('b').textContent=wasOk?'✕ 已改判为错误':`✓ 已按你的判断记为正确（+${q.earned} 分）`;f.querySelector('#override').remove()}
+function next(){if(!answered)return submit();if(index<queue.length-1){index++;renderQuestion();return}if(phase==='main'){const ids=[...new Set(sessionWrong)];if(ids.length){phase='review';reviewQuestions=ids.map(id=>makeQ(WORDS[id],modes.filter(m=>m!==mainQuestions.find(q=>q.w.id===id)?.mode)[Math.floor(Math.random()*3)]));queue=reviewQuestions;index=0;renderQuestion();return}}finish()}
+function finish(){memory.sessions++;save();$('#quizArea').style.display='none';const total=mainQuestions.length,score=Math.round(mainRight/total*100),wrong=total-mainRight,level=Math.floor(memory.points/300)+1;$('#summary').style.display='block';$('#summary').innerHTML=`<span class="pill">训练完成 · Lv.${level}</span><div class="score">+${sessionPoints}</div><h2>${score>=90?'连胜！记忆很扎实。':score>=70?'不错，积分正在上涨。':'慢一点，记得更牢。'}</h2><p>本轮获得 ${sessionPoints} 积分，主训练答对 ${mainRight}/${total}（${score} 分），本轮错题 ${wrong} 个${reviewQuestions.length?`，已追加复习 ${reviewQuestions.length} 题`:''}。历史最佳连击：${memory.bestCombo}。</p><div class="summary-actions"><button class="primary" onclick="startSession()">再练 30 词</button><button class="ghost" onclick="showView('book')">查看错题本</button></div>`}
+function renderBook(){if(!$('#wordList'))return;const entries=Object.entries(memory.wrong).sort((a,b)=>b[1].last-a[1].last);$('#practiceWrong').disabled=!entries.length;$('#wordList').innerHTML=entries.length?entries.map(([id,x])=>{const w=WORDS[id],s=state(+id);return`<article class="word-item"><div><h4>${w.en}</h4><p>${w.answers.join('；')} · ${w.phrase}（${w.phraseZh.join('；')}）</p><p>连续答对 ${s.streak} 次 · 下次复习 ${s.due<=today()?'现在':new Date(s.due).toLocaleDateString()}</p></div><span class="badge">错 ${x.count} 次</span></article>`}).join(''):'<div class="empty">错题本还是空的。<br>完成一轮训练后，答错的词会自动来到这里。</div>'}
+$('#startBtn').onclick=()=>startSession();$('#submitBtn').onclick=submit;$('#answer').addEventListener('keydown',e=>{if(e.key==='Enter')submit()});$$('.nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));$('#practiceWrong').onclick=()=>{const ws=Object.keys(memory.wrong).map(Number).map(id=>WORDS[id]);startSession(shuffle(ws).slice(0,30))};$('#clearData').onclick=()=>{if(confirm('确定清空全部学习记录、积分和错题本吗？词库不会被删除。')){memory={words:{},wrong:{},sessions:0,points:0,combo:0,bestCombo:0,sentenceCombos:{}};save()}};
+updateStats();
+</script>
+</body>
+</html>
